@@ -1,5 +1,5 @@
-﻿using ReBuildTool.Common;
-using ReBuildTool.Internal;
+﻿using ReBuildTool.Internal;
+using ResetCore.Common;
 
 Log.Info("Main", "Begin Generate..");
 
