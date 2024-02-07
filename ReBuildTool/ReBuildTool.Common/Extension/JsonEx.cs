@@ -3,7 +3,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Common
+namespace ReBuildTool.Common
 {
     public static class JsonEx
     {

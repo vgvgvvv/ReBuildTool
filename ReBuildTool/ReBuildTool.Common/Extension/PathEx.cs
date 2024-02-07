@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Common
+namespace ReBuildTool.Common
 {
     public class PathEx
     {

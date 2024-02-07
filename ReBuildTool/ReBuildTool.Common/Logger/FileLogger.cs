@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common
+namespace ReBuildTool.Common
 {
     public class FileLogger : ILogger
     {

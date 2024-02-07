@@ -1,6 +1,6 @@
 using System;
 
-namespace Common
+namespace ReBuildTool.Common
 {
     public class DynamicLogger : ILogger
     {

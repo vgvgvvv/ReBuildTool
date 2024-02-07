@@ -1,7 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using Common;
-using ReBuildTool.Common;
+﻿using ReBuildTool.Common;
 using ReBuildTool.Internal;
 
 Log.Info("Main", "Begin Generate..");

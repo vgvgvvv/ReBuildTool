@@ -8,7 +8,7 @@ using System.Runtime.Loader;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common
+namespace ReBuildTool.Common
 {
     public static class AssemblyEx
     {

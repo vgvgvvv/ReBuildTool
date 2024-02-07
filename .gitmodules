@@ -1,0 +1,3 @@
+[submodule "Vendor/UniToLua"]
+	path = Vendor/UniToLua
+	url = git@github.com:vgvgvvv/UniToLua.git

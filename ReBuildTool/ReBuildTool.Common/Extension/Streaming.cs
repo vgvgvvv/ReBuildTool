@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Common.Extension
+namespace ReBuildTool.Common.Extension
 {
     public static class StreamingEx
     {
