@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReBuildTool.Common", "ReBui
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniToLua-NetCore", "..\Vendor\UniToLua\UniToLua-NetCore\UniToLua-NetCore.csproj", "{EEEE206C-D0BF-41C3-957D-0F14A6EA51E4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReBuildTool.LuaWrapper", "ReBuildTool.LuaWrapper\ReBuildTool.LuaWrapper.csproj", "{B3551114-3480-41CC-B997-D4BC280CA11B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{EEEE206C-D0BF-41C3-957D-0F14A6EA51E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEEE206C-D0BF-41C3-957D-0F14A6EA51E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEEE206C-D0BF-41C3-957D-0F14A6EA51E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3551114-3480-41CC-B997-D4BC280CA11B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3551114-3480-41CC-B997-D4BC280CA11B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3551114-3480-41CC-B997-D4BC280CA11B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3551114-3480-41CC-B997-D4BC280CA11B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
