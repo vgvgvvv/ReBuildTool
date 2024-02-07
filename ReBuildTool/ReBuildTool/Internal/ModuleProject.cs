@@ -10,7 +10,7 @@ public class BuildActionMeta
     public ActionDefineAttribute? Attribute { get; set; }
 }
 
-public class ModuleParser
+public class ModuleProject
 {
 
     public static void Parse(string path)
@@ -21,44 +21,26 @@ public class ModuleParser
     private static void ParseInternal(string path)
     {
         {
-            var moduleFiles = Directory.GetFiles(path, $"*{IniModule.ModuleFileExtension}", SearchOption.TopDirectoryOnly);
+            var moduleFiles = Directory.GetFiles(path, $"*{IniModuleBase.ModuleFileExtension}", SearchOption.TopDirectoryOnly);
             var modules = moduleFiles.Select(file => new IniModule(file));
             foreach (var module in modules)
             {
-                ModulesToHandle.Add(module);
+                ModulesToHandle.Add(module.Name, module);
             }
         }
 
         {
-            var targetFiles = Directory.GetFiles(path, $"*{IniModule.TargetFileExtension}", SearchOption.TopDirectoryOnly);
-            var targets = targetFiles.Select(file => new IniModule(file));
+            var targetFiles = Directory.GetFiles(path, $"*{IniModuleBase.TargetFileExtension}", SearchOption.TopDirectoryOnly);
+            var targets = targetFiles.Select(file => new IniTarget(file));
             foreach (var target in targets)
             {
-                TargetsToHandle.Add(target);
+                TargetsToHandle.Add(target.Name, target);
             }
         }
         
         foreach (var directory in Directory.GetDirectories(path))
         {
             ParseInternal(directory);
-        }
-    }
-
-    public static void InitModules()
-    {
-        TryInit();
-        foreach (var module in ModulesToHandle)
-        {
-            
-        }
-    }
-
-    public static void BuildModules()
-    {
-        TryInit();
-        foreach (var module in ModulesToHandle)
-        {
-          
         }
     }
 
@@ -92,7 +74,6 @@ public class ModuleParser
     }
     
     private static Dictionary<string, BuildActionMeta> BuildActionMetas { get; } = new();
-    private static List<IniModule> ModulesToHandle { get; } = new();
-    
-    private static List<IniModule> TargetsToHandle { get; } = new();
+    private static Dictionary<string, IniModule> ModulesToHandle { get; } = new();
+    private static Dictionary<string, IniTarget> TargetsToHandle { get; } = new();
 }

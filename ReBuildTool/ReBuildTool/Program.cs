@@ -1,9 +1,20 @@
 ﻿using ReBuildTool.Internal;
 using ResetCore.Common;
 
-Log.Info("Main", "Begin Generate..");
+Log.Info("Begin Generate..");
 
 CmdParser.Parse();
-ModuleParser.Parse(CommonCommandGroup.Get().ProjectRoot);
+ModuleProject.Parse(CommonCommandGroup.Get().ProjectRoot);
 
-Log.Info("Main", "Finished..");
+var mode = CommonCommandGroup.Get().Mode;
+switch (mode)
+{
+    case RunMode.Init:
+        break;
+    case RunMode.Build:
+        break;
+    default:
+        break;
+}
+
+Log.Info("Finished..");
