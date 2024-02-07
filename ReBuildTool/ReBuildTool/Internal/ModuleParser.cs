@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using ReBuildTool.Common;
+using ResetCore.Common.Parser.Ini;
 
 namespace ReBuildTool.Internal;
 
@@ -19,12 +20,22 @@ public class ModuleParser
     }
     private static void ParseInternal(string path)
     {
-        var files = Directory.GetFiles(path, $"*{IniModule.ModuleFileExtension}", SearchOption.TopDirectoryOnly);
-
-        var modules = files.Select(file => new IniModule(file));
-        foreach (var module in modules)
         {
-            ModulesToHandle.Add(module);
+            var moduleFiles = Directory.GetFiles(path, $"*{IniModule.ModuleFileExtension}", SearchOption.TopDirectoryOnly);
+            var modules = moduleFiles.Select(file => new IniModule(file));
+            foreach (var module in modules)
+            {
+                ModulesToHandle.Add(module);
+            }
+        }
+
+        {
+            var targetFiles = Directory.GetFiles(path, $"*{IniModule.TargetFileExtension}", SearchOption.TopDirectoryOnly);
+            var targets = targetFiles.Select(file => new IniModule(file));
+            foreach (var target in targets)
+            {
+                TargetsToHandle.Add(target);
+            }
         }
         
         foreach (var directory in Directory.GetDirectories(path))
@@ -38,10 +49,7 @@ public class ModuleParser
         TryInit();
         foreach (var module in ModulesToHandle)
         {
-            foreach (var (key, value) in module.Sections)
-            {
-                // TODO: init modules   
-            }
+            
         }
     }
 
@@ -50,10 +58,7 @@ public class ModuleParser
         TryInit();
         foreach (var module in ModulesToHandle)
         {
-            foreach (var (key, value) in module.Sections)
-            {
-                // TODO: build modules
-            }
+          
         }
     }
 
@@ -64,11 +69,11 @@ public class ModuleParser
             return false;
         }
         
-        var types = Assembly.GetExecutingAssembly().GetTypes();
+        var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes());
         foreach (var type in types)
         {
             var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static)
-                .Where(method => method.GetParameters().Length == 1 && method.GetParameters()[0].ParameterType == typeof(IniModule.Section));
+                .Where(method => method.GetParameters().Length == 1 && method.GetParameters()[0].ParameterType == typeof(IniFile.Section));
             foreach (var method in methods)
             {
                 var attr = method.GetCustomAttribute<ActionDefineAttribute>();
@@ -88,4 +93,6 @@ public class ModuleParser
     
     private static Dictionary<string, BuildActionMeta> BuildActionMetas { get; } = new();
     private static List<IniModule> ModulesToHandle { get; } = new();
+    
+    private static List<IniModule> TargetsToHandle { get; } = new();
 }

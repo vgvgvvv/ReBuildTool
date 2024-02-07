@@ -11,9 +11,9 @@ public enum RunMode
 public class CommonCommandGroup : CommandLineArgGroup<CommonCommandGroup>
 {
     [CmdLine("root of project", true)]
-    public string ProjectRoot { get; }
+    public string ProjectRoot { get; private set; }
     
     [CmdLine("run mode: Init | Build", true)]
-    public RunMode Mode { get; }
+    public RunMode Mode { get; private set; }
     
 }

@@ -128,16 +128,16 @@ public class CmdParser
                 field.MarkHasSet();
 
                 var type = field.DeclaringType ?? throw new Exception($"cannot find declaring type for {field.Name}");
-                Debug.Assert(type.IsAssignableFrom(typeof(CommandLineArgGroup)));
+                Debug.Assert(type.IsSubclassOf(typeof(CommandLineArgGroup)));
                 if (!CmdLineArgs.TryGetValue(type, out var group))
                 {
                     group = Activator.CreateInstance(type) as CommandLineArgGroup;
                     Debug.Assert(group != null);
                     CmdLineArgs.Add(type, group);
                 }
-                if (!args[++i].StartsWith("--"))
+                if (!args[i+1].StartsWith("--"))
                 {
-                    var value = args[++i];
+                    var value = args[i+1];
                     
                     field.SetValue(group, value.GetValue(field.SelfType));
                 }
@@ -165,8 +165,8 @@ public class CmdParser
     {
         if(CmdLineArgMeta.Count > 0)
             return false;
-        
-        var types = Assembly.GetExecutingAssembly().GetTypes();
+
+        var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes());
         foreach (var type in types)
         {
             var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);

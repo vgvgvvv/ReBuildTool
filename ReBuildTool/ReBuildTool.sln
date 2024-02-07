@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniToLua-NetCore", "..\Vend
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReBuildTool.LuaWrapper", "ReBuildTool.LuaWrapper\ReBuildTool.LuaWrapper.csproj", "{B3551114-3480-41CC-B997-D4BC280CA11B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReCSharpCommon", "..\Vendor\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon.csproj", "{06AA595F-C393-4F20-BC67-051A20FE5D05}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{B3551114-3480-41CC-B997-D4BC280CA11B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3551114-3480-41CC-B997-D4BC280CA11B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3551114-3480-41CC-B997-D4BC280CA11B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06AA595F-C393-4F20-BC67-051A20FE5D05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06AA595F-C393-4F20-BC67-051A20FE5D05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06AA595F-C393-4F20-BC67-051A20FE5D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06AA595F-C393-4F20-BC67-051A20FE5D05}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

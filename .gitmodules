@@ -1,3 +1,6 @@
 [submodule "Vendor/UniToLua"]
 	path = Vendor/UniToLua
 	url = git@github.com:vgvgvvv/UniToLua.git
+[submodule "Vendor/ReCSharpCommon"]
+	path = Vendor/ReCSharpCommon
+	url = git@github.com:vgvgvvv/ReCSharpCommon.git
