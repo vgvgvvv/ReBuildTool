@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
+using Bullseye;
 using Bullseye.Internal;
 using IniParser.Parser;
+using ResetCore.Common;
 using ResetCore.Common.Parser;
 using ResetCore.Common.Parser.Ini;
 
@@ -13,7 +15,7 @@ public partial class IniModuleBase
     
     public static readonly string TargetFileExtension = ".target.ini"; 
     
-    public IniModuleBase(string path)
+    public IniModuleBase(string path, ModuleProject owner)
     {
         if (!File.Exists(path))
         {
@@ -21,38 +23,85 @@ public partial class IniModuleBase
         }
         
         Path = path;
+        Owner = owner;
         Name = Path.Substring(0, Path.Length - ModuleFileExtension.Length);
         IniFile = IniFile.Parser(Path);
+        
     }
     
     public IniFile IniFile { get; }
     public string Name { get; }
     public string Path { get; }
+    
+    public ModuleProject Owner { get; }
 }
 
-public class IniModule : IniModuleBase
+public class InitSection : ActionSection
 {
-    public IniModule(string path) : base(path)
+    public InitSection(IBuildItem owner, IniFile.Section section) : base(owner, section)
     {
-        var targetSection = IniFile.Sections.GetValueOrDefault("Module")
-                            ?? throw new Exception($"Module section not found : {Path}");
-        var dependencies = targetSection.Properties.GetValueOrDefault("Dependencies")?.List
-                        ?? throw new Exception("Entry section not found");
-        Dependencies = dependencies.Select(item => item.Str).ToList();
+    }
+
+}
+
+public class BuildSection : ActionSection
+{
+    public BuildSection(IBuildItem owner, IniFile.Section section) : base(owner, section)
+    {
     }
     
-    public List<string> Dependencies { get; }
 }
 
-public class IniTarget : IniModuleBase
+public class ActionSection : BaseSection, ITargetItem
 {
-    public IniTarget(string path) : base(path)
+    public ActionSection(IBuildItem owner, IniFile.Section section) : base(section)
     {
-        var targetSection = IniFile.Sections.GetValueOrDefault("Target")
-                            ?? throw new Exception($"Target section not found : {Path}");
-        var entryList = targetSection.Properties.GetValueOrDefault("Entries")?.List
-                        ?? throw new Exception("Entry section not found");
-        Entries = entryList.Select(item => item.Str).ToList();
+        Owner = owner;
+        Actions = section["Actions"]?.List ?? new List<IniFile.SectionItem>();
+        Dependencies = section["DependOn"]?.List ?? new List<IniFile.SectionItem>();
     }
-    public List<string> Entries { get; }
+    
+    public string GetTargetName()
+    {
+        return $"{Owner.GetTargetName()}.{Sect.Name}";
+    }
+
+    protected virtual void Run()
+    {
+        
+    }
+    
+    public List<string> GetDependencies()
+    {
+        return Dependencies?.Select(item => item.Str)
+            .Concat(TargetScope.GetCurrentItemDependOn())
+            .ToList() ?? new List<string>();
+    }
+    
+    public void SetupTargets(Targets targets, out List<string> newTargets)
+    {
+        var targetaName = GetTargetName();
+        targets.Add(targetaName, GetDependencies(), Run);
+        newTargets = new List<string>()
+        {
+            targetaName
+        };
+    }
+    
+    public IBuildItem Owner { get; }
+    public List<IniFile.SectionItem>? Dependencies { get; }
+    public List<IniFile.SectionItem>? Actions { get; }
+   
 }
+
+public class BaseSection
+{
+    public BaseSection(IniFile.Section section)
+    {
+        Sect = section;
+    }
+    
+    public IniFile.Section Sect { get; }
+}
+
+

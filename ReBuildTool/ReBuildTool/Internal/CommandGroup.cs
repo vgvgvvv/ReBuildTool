@@ -17,4 +17,10 @@ public class CommonCommandGroup : CommandLineArgGroup<CommonCommandGroup>
     [CmdLine("run mode: Init | Build", true)]
     public RunMode Mode { get; private set; }
     
+    [CmdLine("build target", true)]
+    public string Target { get; private set; }
+
+    [CmdLine("run dry mode, just for test")] 
+    public bool RunDry { get; private set; } = false;
+
 }
