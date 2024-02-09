@@ -23,6 +23,15 @@ public class IniTarget : IniModuleBase, IBuildItem
 		{
 			BuildSect = new BuildSection(this, buildSection);
 		}
+		
+		foreach (var (key, value) in IniFile)
+		{
+			if (key.StartsWith("Action:"))
+			{
+				var actionSect = new ActionSection(this, value);
+				ActionSects.Add(actionSect.FullName, actionSect);
+			}
+		}
 	}
 
 	public class TargetSection 
@@ -85,12 +94,8 @@ public class IniTarget : IniModuleBase, IBuildItem
 		}
 	}
 
-	public string GetTargetName()
-	{
-		return TargetScope.GetCurrentItemName();
-	}
-
 	public InitSection? InitSect { get; }
 	public BuildSection? BuildSect { get; }
 	public TargetSection TargetSect { get; }
+
 }

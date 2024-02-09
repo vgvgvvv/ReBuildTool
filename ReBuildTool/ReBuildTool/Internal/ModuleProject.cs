@@ -19,23 +19,8 @@ public interface IBuildItem : ITargetItem
 
 public interface ITargetItem
 {
-	public string GetTargetName();
+	public string Name { get; }
 }
-
-public static class BuildItemExtension
-{
-	public static string GetInitTaskName(this IBuildItem item)
-	{
-		return $"{item.GetTargetName()}.Setup";
-	}
-
-	public static string GetBuildTaskName(this IBuildItem item)
-	{
-		return $"{item.GetTargetName()}.Build";
-	}
-}
-
-
 
 internal class TargetScope : IDisposable
 {
@@ -55,11 +40,14 @@ internal class TargetScope : IDisposable
 		return this;
 	}
 	
-	public TargetScope AddDependencies(List<string>? dependency)
+	public TargetScope AddDependencies(List<string>? dependencies)
 	{
-		if (dependency != null)
+		if (dependencies != null)
 		{
-			CurrentItem.DependOn.AddRange(dependency);
+			foreach (var dependency in dependencies)
+			{
+				AddDependency(dependency);
+			}
 		}
 
 		return this;
@@ -78,7 +66,9 @@ internal class TargetScope : IDisposable
 
 	public static string GetCurrentItemName()
 	{
-		return string.Join(".", ScopeStack.Select(item => item.Item.GetTargetName()));
+		var items = ScopeStack.ToList();
+		items.Reverse();
+		return string.Join(".", items.Select(item => item.Item.Name));
 	}
 	
 	public static List<string> GetCurrentItemDependOn()
@@ -149,9 +139,10 @@ public class ModuleProject : IBuildItem
 		return this;
 	}
 
+	public string Name => "ProjectRoot";
 	public string GetTargetName()
 	{
-		return "ProjectRoot";
+		return Name;
 	}
 
 	public void SetupInitTargets(Targets targets, ref List<string> newTargets)
@@ -162,12 +153,9 @@ public class ModuleProject : IBuildItem
 			return;
 		}
 
-		using (new TargetScope(this))
-		{
-			var targetTargets = new List<string>();
-			targetToHandle.SetupInitTargets(targets, ref targetTargets);
-			newTargets.AddRange(targetTargets);
-		}
+		var targetTargets = new List<string>();
+		targetToHandle.SetupInitTargets(targets, ref targetTargets);
+		newTargets.AddRange(targetTargets);
 	}
 
 	public void SetupBuildTargets(Targets targets, ref List<string> newTargets)

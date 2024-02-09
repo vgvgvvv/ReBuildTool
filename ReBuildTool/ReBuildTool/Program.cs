@@ -25,8 +25,7 @@ switch (command.Mode)
     default:
         break;
 }
-
-await root.RunAndExitAsync(new[] { $"{command.Target} : {command.Mode}" }, 
+await root.RunAndExitAsync(targets, 
     ex => ex is SimpleExec.ExitCodeException);
 
 Log.Info("Finished..");

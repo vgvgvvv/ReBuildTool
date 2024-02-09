@@ -10,7 +10,7 @@ public class IniModule : IniModuleBase, IBuildItem
 	{
 		var targetSection = IniFile["Module"]
 			.AssertIfNull($"{IniFile.FilePath} : Module section not found");
-		ModuleSect = new ModuleSection(targetSection);
+		ModuleSect = new ModuleSection(this, targetSection);
 
 		var initSection = IniFile["Init"];
 		if (initSection != null)
@@ -28,15 +28,15 @@ public class IniModule : IniModuleBase, IBuildItem
 		{
 			if (key.StartsWith("Action:"))
 			{
-				ActionSects.Add(key, new ActionSection(this, value));
+				var actionSect = new ActionSection(this, value);
+				ActionSects.Add(actionSect.FullName, actionSect);
 			}
 		}
 	}
     
-    
 	public class ModuleSection : BaseSection
 	{
-		public ModuleSection(IniFile.Section section) : base(section)
+		public ModuleSection(IniModuleBase owner, IniFile.Section section) : base(owner, section)
 		{
 			var dependencies = section["Dependencies"]?.List;
 			Dependencies = dependencies?
@@ -101,14 +101,8 @@ public class IniModule : IniModuleBase, IBuildItem
 		}
 	}
 	
-	public string GetTargetName()
-	{
-		return TargetScope.GetCurrentItemName();
-	}
-    
 	public InitSection? InitSect { get; }
 	public BuildSection? BuildSect { get; }
 	public ModuleSection ModuleSect { get; }
-	public Dictionary<string, ActionSection> ActionSects { get; } = new();
 
 }
