@@ -23,4 +23,7 @@ public class CommonCommandGroup : CommandLineArgGroup<CommonCommandGroup>
     [CmdLine("run dry mode, just for test")] 
     public bool RunDry { get; private set; } = false;
 
+    [CmdLine("debug task graph, just for test")]
+    public bool DebugTaskGraph { get; private set; } = false;
+
 }

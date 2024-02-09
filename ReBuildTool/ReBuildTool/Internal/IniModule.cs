@@ -49,6 +49,7 @@ public class IniModule : IniModuleBase, IBuildItem
     
 	public void SetupInitTargets(Targets targets, ref List<string> newTargets)
 	{
+		
 		var dependOnTargets = new List<string>();
 		foreach (var dependency in ModuleSect.Dependencies)
 		{

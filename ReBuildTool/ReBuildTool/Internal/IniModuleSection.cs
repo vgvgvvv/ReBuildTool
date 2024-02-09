@@ -50,66 +50,68 @@ public class ActionSection : BaseSection, ITargetItem
     
     protected virtual void Run()
     {
-        if (Actions != null)
+        if (Actions == null)
         {
-            foreach (var actionSectItem in Actions)
+            Log.Info("no actions to run");
+            return;
+        }
+        foreach (var actionSectItem in Actions)
+        {
+            var actionName = actionSectItem["Name"]?.Str
+                .AssertIfNull("must set name");
+            var argsItem = actionSectItem["Args"]?.Map ?? new();
+            if (BuildActionMetas.TryGetValue(actionName!, out var actionMeta))
             {
-                var actionName = actionSectItem["Name"]?.Str
-                    .AssertIfNull("must set name");
-                var argsItem = actionSectItem["Args"]?.Map ?? new();
-                if (BuildActionMetas.TryGetValue(actionName!, out var actionMeta))
+                if (actionMeta.Method == null)
                 {
-                    if (actionMeta.Method == null)
+                    throw new Exception($"invalid action {actionName}");
+                }
+
+                var parameters = actionMeta.Method.GetParameters();
+                object?[] args = new object?[parameters.Length];
+                int index = 0;
+                foreach (var parameter in parameters)
+                {
+                    if (argsItem.TryGetValue(parameter.Name!, out var argItem))
                     {
-                        throw new Exception($"invalid action {actionName}");
-                    }
-
-                    var parameters = actionMeta.Method.GetParameters();
-                    object?[] args = new object?[parameters.Length];
-                    int index = 0;
-                    foreach (var parameter in parameters)
-                    {
-                        if (argsItem.TryGetValue(parameter.Name!, out var argItem))
-                        {
-                            var arg = argItem.Str.GetValue(parameter.ParameterType);
-                            args[index] = arg;
-                        }
-                        else
-                        {
-                            do
-                            {
-                                if (parameter.DefaultValue != null)
-                                {
-                                    args[index] = parameter.DefaultValue;
-                                    break;
-                                }
-
-                                var attr = parameter.GetCustomAttribute<ActionParameterAttribute>();
-                                if (attr != null)
-                                {
-                                    if (TargetScope.GetArg(attr.VariableName, out args[index]))
-                                    {
-                                        break;
-                                    }
-                                }
-                                
-                                parameter.ParameterType.GetDefaultValue();
-
-                            } while (false);
-                           
-                        }
-                        index++;
-                    }
-
-                    if (CommonCommandGroup.Get().RunDry)
-                    {
-                        var argStrings = args.Select(arg => arg?.ToString() ?? "null").Join(", ");
-                        Log.Info($"{actionMeta.Method.Name}", argStrings);
+                        var arg = argItem.Str.GetValue(parameter.ParameterType);
+                        args[index] = arg;
                     }
                     else
                     {
-                        actionMeta.Method?.Invoke(null, args);
+                        do
+                        {
+                            if (parameter.DefaultValue != null)
+                            {
+                                args[index] = parameter.DefaultValue;
+                                break;
+                            }
+
+                            var attr = parameter.GetCustomAttribute<ActionParameterAttribute>();
+                            if (attr != null)
+                            {
+                                if (TargetScope.GetArg(attr.VariableName, out args[index]))
+                                {
+                                    break;
+                                }
+                            }
+                                
+                            parameter.ParameterType.GetDefaultValue();
+
+                        } while (false);
+                           
                     }
+                    index++;
+                }
+
+                if (CommonCommandGroup.Get().RunDry)
+                {
+                    var argStrings = args.Select(arg => arg?.ToString() ?? "null").Join(", ");
+                    Log.Info($"{actionMeta.Method.Name}", argStrings);
+                }
+                else
+                {
+                    actionMeta.Method?.Invoke(null, args);
                 }
             }
         }
