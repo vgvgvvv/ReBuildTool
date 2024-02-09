@@ -9,7 +9,7 @@ public class IniTarget : IniModuleBase, IBuildItem
 	public IniTarget(string modulePath, ModuleProject owner) : base(modulePath, owner)
 	{
 		var targetSection = IniFile["Target"]
-			.AssertIfNull("Target section not found");
+			.AssertIfNull($"{IniFile.FilePath} : Target section not found");
 		TargetSect = new TargetSection(targetSection);
 		
 		var initSection = IniFile["Init"];

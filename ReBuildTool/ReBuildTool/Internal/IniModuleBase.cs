@@ -26,7 +26,8 @@ public partial class IniModuleBase
         
         ModulePath = modulePath;
         Owner = owner;
-        Name = ModulePath.Substring(0, ModulePath.Length - ModuleFileExtension.Length);
+        var fileName = Path.GetFileName(ModulePath);
+        Name = fileName.Substring(0, fileName.Length - ModuleFileExtension.Length);
         IniFile = IniFile.Parser(ModulePath);
         
     }

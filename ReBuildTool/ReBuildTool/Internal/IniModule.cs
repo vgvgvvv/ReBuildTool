@@ -8,8 +8,8 @@ public class IniModule : IniModuleBase, IBuildItem
 {
 	public IniModule(string modulePath, ModuleProject owner) : base(modulePath, owner)
 	{
-		var targetSection = IniFile["Modules"]
-			.AssertIfNull("Modules section not found");
+		var targetSection = IniFile["Module"]
+			.AssertIfNull($"{IniFile.FilePath} : Module section not found");
 		ModuleSect = new ModuleSection(targetSection);
 
 		var initSection = IniFile["Init"];
