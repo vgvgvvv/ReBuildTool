@@ -6,11 +6,23 @@ namespace ReBuildTool.Internal;
 
 public class IniTarget : IniModuleBase, IBuildItem
 {
-	public IniTarget(string path, ModuleProject owner) : base(path, owner)
+	public IniTarget(string modulePath, ModuleProject owner) : base(modulePath, owner)
 	{
 		var targetSection = IniFile["Target"]
 			.AssertIfNull("Target section not found");
 		TargetSect = new TargetSection(targetSection);
+		
+		var initSection = IniFile["Init"];
+		if (initSection != null)
+		{
+			InitSect = new InitSection(this, initSection);
+		}
+		
+		var buildSection = IniFile["Build"];
+		if(buildSection != null)
+		{
+			BuildSect = new BuildSection(this, buildSection);
+		}
 	}
 
 	public class TargetSection 
@@ -23,15 +35,17 @@ public class IniTarget : IniModuleBase, IBuildItem
 		public List<string> Entries { get; }
 	}
     
-	public void SetupInitTargets(Targets targets)
+	public void SetupInitTargets(Targets targets, ref List<string> newTargets)
 	{
 		using (var scope = new TargetScope(this))
 		{
 			// init target first
 			if (InitSect != null)
 			{
-				InitSect.SetupTargets(targets, out var newTargets);
-				scope.AddDependencies(newTargets);
+				var initSectTargets = new List<string>();
+				InitSect.SetupTargets(targets, ref initSectTargets);
+				scope.AddDependencies(initSectTargets);
+				newTargets.AddRange(initSectTargets);
 			}
 			// then setup all sub modules
 			foreach (var targetEntry in TargetSect.Entries)
@@ -39,27 +53,33 @@ public class IniTarget : IniModuleBase, IBuildItem
 				var module = Owner.GetModule(targetEntry);
 				if (module != null)
 				{
-					module.SetupInitTargets(targets);
+					var entriesTargets = new List<string>();
+					module.SetupInitTargets(targets, ref entriesTargets);
+					newTargets.AddRange(entriesTargets);
 				}
 			}
 		}
 	}
 
-	public void SetupBuildTargets(Targets targets)
+	public void SetupBuildTargets(Targets targets, ref List<string> newTargets)
 	{
 		using (var scope = new TargetScope(this))
 		{
 			if (BuildSect != null)
 			{
-				BuildSect.SetupTargets(targets, out var newTargets);
-				scope.AddDependencies(newTargets);
+				var buildSectTargets = new List<string>();
+				BuildSect.SetupTargets(targets, ref buildSectTargets);
+				scope.AddDependencies(buildSectTargets);
+				newTargets.AddRange(buildSectTargets);
 			}
 			foreach (var targetEntry in TargetSect.Entries)
 			{
 				var module = Owner.GetModule(targetEntry);
 				if (module != null)
 				{
-					module.SetupBuildTargets(targets);
+					var entriesTargets = new List<string>();
+					module.SetupBuildTargets(targets, ref entriesTargets);
+					newTargets.AddRange(entriesTargets);
 				}
 			}
 		}

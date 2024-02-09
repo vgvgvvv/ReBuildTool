@@ -2,7 +2,6 @@
 using Bullseye;
 using ReBuildTool.Common;
 using ResetCore.Common;
-using ResetCore.Common.Parser.Ini;
 
 namespace ReBuildTool.Internal;
 
@@ -14,8 +13,8 @@ public class BuildActionMeta
 
 public interface IBuildItem : ITargetItem
 {
-	public void SetupInitTargets(Targets targets);
-	public void SetupBuildTargets(Targets targets);
+	public void SetupInitTargets(Targets targets, ref List<string> newTargets);
+	public void SetupBuildTargets(Targets targets, ref List<string> newTargets);
 }
 
 public interface ITargetItem
@@ -36,45 +35,11 @@ public static class BuildItemExtension
 	}
 }
 
-internal class ModuleProjectMeta
-{
-	internal static bool TryInit()
-	{
-		if (BuildActionMetas.Count > 0)
-		{
-			return false;
-		}
 
-		var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes());
-		foreach (var type in types)
-		{
-			var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static)
-				.Where(method =>
-					method.GetParameters().Length == 1 &&
-					method.GetParameters()[0].ParameterType == typeof(IniFile.Section));
-			foreach (var method in methods)
-			{
-				var attr = method.GetCustomAttribute<ActionDefineAttribute>();
-				if (attr != null)
-				{
-					BuildActionMetas.Add(attr.Name, new BuildActionMeta()
-					{
-						Method = method,
-						Attribute = attr
-					});
-				}
-			}
-		}
-
-		return true;
-	}
-
-	internal static Dictionary<string, BuildActionMeta> BuildActionMetas { get; } = new();
-}
 
 internal class TargetScope : IDisposable
 {
-	public TargetScope(IBuildItem item)
+	public TargetScope(ITargetItem item)
 	{
 		CurrentItem = new TargetScopeItem(item);
 		ScopeStack.Push(CurrentItem);
@@ -99,6 +64,12 @@ internal class TargetScope : IDisposable
 
 		return this;
 	}
+	
+	public TargetScope SetArg(string key, object value)
+	{
+		CurrentItem.Args[key] = value;
+		return this;
+	}
 
 	public void Dispose()
 	{
@@ -115,15 +86,41 @@ internal class TargetScope : IDisposable
 		return ScopeStack.SelectMany(item => item.DependOn).ToList();
 	}
 
+	public static bool GetArg<T>(string argName, out T? arg)
+	{
+		var scopeList = ScopeStack.ToList();
+		scopeList.Reverse();
+		foreach (var item in scopeList)
+		{
+			if (!item.Args.TryGetValue(argName, out object? outArg))
+			{
+				continue;
+			}
+
+			arg = (T?)outArg;
+			if (arg == null)
+			{
+				continue;
+			}
+
+			return true;
+		}
+
+		arg = CmdParser.GetArg<T>(argName);
+		return arg != null;
+	}
+
 	public class TargetScopeItem
 	{
-		public IBuildItem Item;
+		public ITargetItem Item;
 		public List<string> DependOn;
+		public Dictionary<string, object> Args;
 
-		public TargetScopeItem(IBuildItem item, List<string>? dependOn = null)
+		public TargetScopeItem(ITargetItem item, List<string>? dependOn = null)
 		{
 			Item = item;
 			DependOn = dependOn ?? new List<string>();
+			Args = new();
 		}
 	}
 
@@ -143,13 +140,11 @@ public class ModuleProject : IBuildItem
 
 	public static ModuleProject Create(string target)
 	{
-		ModuleProjectMeta.TryInit();
 		return new ModuleProject(target);
 	}
 
 	public ModuleProject Parse(string path)
 	{
-		ModuleProjectMeta.TryInit();
 		ParseInternal(path);
 		return this;
 	}
@@ -159,7 +154,7 @@ public class ModuleProject : IBuildItem
 		return "ProjectRoot";
 	}
 
-	public void SetupInitTargets(Targets targets)
+	public void SetupInitTargets(Targets targets, ref List<string> newTargets)
 	{
 		if (!TargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
 		{
@@ -169,11 +164,13 @@ public class ModuleProject : IBuildItem
 
 		using (new TargetScope(this))
 		{
-			targetToHandle.SetupInitTargets(targets);
+			var targetTargets = new List<string>();
+			targetToHandle.SetupInitTargets(targets, ref targetTargets);
+			newTargets.AddRange(targetTargets);
 		}
 	}
 
-	public void SetupBuildTargets(Targets targets)
+	public void SetupBuildTargets(Targets targets, ref List<string> newTargets)
 	{
 		if (!TargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
 		{
@@ -183,7 +180,9 @@ public class ModuleProject : IBuildItem
 
 		using (new TargetScope(this))
 		{
-			targetToHandle.SetupBuildTargets(targets);
+			var targetTargets = new List<string>();
+			targetToHandle.SetupBuildTargets(targets, ref targetTargets);
+			newTargets.AddRange(targetTargets);
 		}
 	}
 

@@ -12,14 +12,15 @@ var project = ModuleProject.Create(command.Target)
     .Parse(command.ProjectRoot);
 
 Targets root = new Targets();
+var targets = new List<string>();
 
 switch (command.Mode)
 {
     case RunMode.Init:
-        project.SetupInitTargets(root);
+        project.SetupInitTargets(root, ref targets);
         break;
     case RunMode.Build:
-        project.SetupBuildTargets(root);
+        project.SetupBuildTargets(root, ref targets);
         break;
     default:
         break;

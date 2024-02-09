@@ -6,8 +6,8 @@ namespace ReBuildTool.Actions;
 
 public class ReMake
 {
-    [ActionDefine("ReMake.InitReMakeRoot")]
-    public static void InitReMakeRoot(IniFile.Section section)
+    [ActionDefine("ReMake.Init")]
+    public static void InitReMakeRoot(string targetPath)
     {
         
     }

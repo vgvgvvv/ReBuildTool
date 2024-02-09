@@ -7,7 +7,7 @@ namespace ReBuildTool.Actions;
 public class ResetHeaderTool
 {
     [ActionDefine("ResetHeaderTool.Run")]
-    public static void RunHeaderTool(IniFile.Section section)
+    public static void RunHeaderTool(string targetPath)
     {
         
     }
