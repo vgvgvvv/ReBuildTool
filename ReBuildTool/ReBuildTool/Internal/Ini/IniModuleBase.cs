@@ -1,4 +1,5 @@
 ﻿using Bullseye;
+using ResetCore.Common;
 using ResetCore.Common.Parser.Ini;
 
 namespace ReBuildTool.Internal.Ini;
@@ -18,8 +19,16 @@ public abstract class IniModuleBase : ModuleBase
         {
             throw new FileNotFoundException($"cannot find module file {modulePath}");
         }
-        
-        IniFile = IniFile.Parser(ModulePath);
+
+        try
+        {
+            IniFile = IniFile.Parser(ModulePath);
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e);
+            Environment.Exit(1);
+        }
     }
 
     public void SetupActionSects(Targets targets, List<string> actionSects, out List<string> newTargets)
