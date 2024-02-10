@@ -1,28 +1,25 @@
 ﻿using Bullseye;
 using ResetCore.Common.Parser.Ini;
 
-namespace ReBuildTool.Internal;
+namespace ReBuildTool.Internal.Ini;
 
 
-public abstract class IniModuleBase
+public abstract class IniModuleBase : ModuleBase
 {
-    public static readonly string ModuleFileExtension = ".module.ini"; 
+    public static readonly string StaticModuleFileExtension = ".module.ini";
+    public static readonly string StaticTargetFileExtension = ".target.ini";
+    public override string ModuleFileExtension => StaticModuleFileExtension; 
+    public override string TargetFileExtension => StaticTargetFileExtension; 
     
-    public static readonly string TargetFileExtension = ".target.ini"; 
     
-    public IniModuleBase(string modulePath, ModuleProject owner)
+    public IniModuleBase(string modulePath, ModuleProject owner) : base(modulePath, owner)
     {
         if (!File.Exists(modulePath))
         {
             throw new FileNotFoundException($"cannot find module file {modulePath}");
         }
         
-        ModulePath = modulePath;
-        Owner = owner;
-        var fileName = Path.GetFileName(ModulePath);
-        Name = fileName.Substring(0, fileName.Length - ModuleFileExtension.Length);
         IniFile = IniFile.Parser(ModulePath);
-        
     }
 
     public void SetupActionSects(Targets targets, List<string> actionSects, out List<string> newTargets)
@@ -40,11 +37,6 @@ public abstract class IniModuleBase
     }
     
     public IniFile IniFile { get; }
-    public string Name { get; }
-    public string ModulePath { get; }
-    
-    public ModuleProject Owner { get; }
-    
     public Dictionary<string, ActionSection> ActionSects { get; } = new();
 
 

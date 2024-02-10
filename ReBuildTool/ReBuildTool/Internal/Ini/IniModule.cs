@@ -2,7 +2,7 @@ using Bullseye;
 using ResetCore.Common;
 using ResetCore.Common.Parser.Ini;
 
-namespace ReBuildTool.Internal;
+namespace ReBuildTool.Internal.Ini;
 
 public class IniModule : IniModuleBase, IBuildItem
 {
@@ -33,7 +33,7 @@ public class IniModule : IniModuleBase, IBuildItem
 			}
 		}
 	}
-    
+
 	public class ModuleSection : BaseSection
 	{
 		public ModuleSection(IniModuleBase owner, IniFile.Section section) : base(owner, section)

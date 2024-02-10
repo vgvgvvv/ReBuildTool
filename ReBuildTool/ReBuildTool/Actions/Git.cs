@@ -12,6 +12,22 @@ public class Git
         [ActionParameter("WorkDirectory")] string targetPath, 
         string tag)
     {
-        //SimpleExec.Command.Run();
+        if (!Directory.Exists(targetPath))
+        {
+            var args = new List<string>();
+            args.Add("clone");
+            args.Add(url);
+            if (!string.IsNullOrEmpty(targetPath))
+            {
+                args.Add(targetPath);
+            }
+            if (!string.IsNullOrEmpty(tag))
+            {
+                args.Add("--branch");
+                args.Add(tag);
+            }
+            Log.Info("Run Git: ", "git", args.Join(" "));
+            SimpleExec.Command.Run("git" , args.Join(" "));
+        }
     }
 }

@@ -4,7 +4,7 @@ using ReBuildTool.Common;
 using ResetCore.Common;
 using ResetCore.Common.Parser.Ini;
 
-namespace ReBuildTool.Internal;
+namespace ReBuildTool.Internal.Ini;
 
 public class InitSection : ActionSection
 {
@@ -48,73 +48,88 @@ public class ActionSection : BaseSection, ITargetItem
 
     public string Name => Sect.Name;
     
-    protected virtual void Run()
+    protected virtual Action GetTask()
     {
         if (Actions == null)
         {
             Log.Info("no actions to run");
-            return;
+            return () => {};
         }
+
+        var subActions = new List<Action>();
         foreach (var actionSectItem in Actions)
         {
             var actionName = actionSectItem["Name"]?.Str
                 .AssertIfNull("must set name");
             var argsItem = actionSectItem["Args"]?.Map ?? new();
-            if (BuildActionMetas.TryGetValue(actionName!, out var actionMeta))
+            if (!BuildActionMetas.TryGetValue(actionName!, out var actionMeta)) 
+                continue;
+            if (actionMeta.Method == null)
             {
-                if (actionMeta.Method == null)
+                throw new Exception($"invalid action {actionName}");
+            }
+
+            var parameters = actionMeta.Method.GetParameters();
+            object?[] args = new object?[parameters.Length];
+            int index = 0;
+            foreach (var parameter in parameters)
+            {
+                if (argsItem.TryGetValue(parameter.Name!, out var argItem))
                 {
-                    throw new Exception($"invalid action {actionName}");
-                }
-
-                var parameters = actionMeta.Method.GetParameters();
-                object?[] args = new object?[parameters.Length];
-                int index = 0;
-                foreach (var parameter in parameters)
-                {
-                    if (argsItem.TryGetValue(parameter.Name!, out var argItem))
-                    {
-                        var arg = argItem.Str.GetValue(parameter.ParameterType);
-                        args[index] = arg;
-                    }
-                    else
-                    {
-                        do
-                        {
-                            if (parameter.DefaultValue != null)
-                            {
-                                args[index] = parameter.DefaultValue;
-                                break;
-                            }
-
-                            var attr = parameter.GetCustomAttribute<ActionParameterAttribute>();
-                            if (attr != null)
-                            {
-                                if (TargetScope.GetArg(attr.VariableName, out args[index]))
-                                {
-                                    break;
-                                }
-                            }
-                                
-                            parameter.ParameterType.GetDefaultValue();
-
-                        } while (false);
-                           
-                    }
-                    index++;
-                }
-
-                if (CommonCommandGroup.Get().RunDry)
-                {
-                    var argStrings = args.Select(arg => arg?.ToString() ?? "null").Join(", ");
-                    Log.Info($"{actionMeta.Method.Name}", argStrings);
+                    var arg = argItem.Str.GetValue(parameter.ParameterType);
+                    args[index] = arg;
                 }
                 else
                 {
-                    actionMeta.Method?.Invoke(null, args);
+                    do
+                    {
+                        if (parameter.HasDefaultValue)
+                        {
+                            args[index] = parameter.DefaultValue;
+                            break;
+                        }
+
+                        var attr = parameter.GetCustomAttribute<ActionParameterAttribute>();
+                        if (attr != null)
+                        {
+                            if (TargetScope.GetArg(attr.VariableName, out args[index]))
+                            {
+                                break;
+                            }
+                        }
+                                
+                        parameter.ParameterType.GetDefaultValue();
+
+                    } while (false);
+                           
                 }
+                index++;
+            }
+
+            if (CommonCommandGroup.Get().RunDry)
+            {
+                subActions.Add(() =>
+                {
+                    var argStrings = args.Select(arg => arg?.ToString() ?? "null").Join(", ");
+                    Log.Info($"{actionMeta.Method.Name}", argStrings);
+                });
+            }
+            else
+            {
+                subActions.Add(() =>
+                {
+                    actionMeta.Method?.Invoke(null, args);
+                });
             }
         }
+
+        return () =>
+        {
+            foreach (var action in subActions)
+            {
+                action();
+            }
+        };
     }
     
     public List<string> GetDependencies()
@@ -137,8 +152,9 @@ public class ActionSection : BaseSection, ITargetItem
         {
             var targetName = FullName;
             scope.AddDependencies(dependOnTargets);
+            var task = GetTask();
             targets.Add(targetName, $"Depended By {GetDependencies().Join(", ")}", 
-                GetDependencies(), Run);
+                GetDependencies(), task);
             newTargets.Add(targetName);
         }
         

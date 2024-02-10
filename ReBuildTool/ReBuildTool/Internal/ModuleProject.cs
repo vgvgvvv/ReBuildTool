@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using Bullseye;
 using ReBuildTool.Common;
+using ReBuildTool.Internal.Ini;
+using ReBuildTool.Internal.Lua;
 using ResetCore.Common;
 
 namespace ReBuildTool.Internal;
@@ -20,6 +22,26 @@ public interface IBuildItem : ITargetItem
 public interface ITargetItem
 {
 	public string Name { get; }
+}
+
+public abstract class ModuleBase : ITargetItem
+{
+	
+	public abstract string ModuleFileExtension { get; }
+	public abstract string TargetFileExtension { get; }
+	
+	public ModuleBase(string modulePath, ModuleProject owner)
+	{
+		ModulePath = modulePath;
+		Owner = owner;
+		var fileName = Path.GetFileName(ModulePath);
+		Name = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(fileName));
+	}
+
+	public string ModulePath { get; }
+	public string Name { get; }
+	public ModuleProject Owner { get; }
+
 }
 
 internal class TargetScope : IDisposable
@@ -147,7 +169,7 @@ public class ModuleProject : IBuildItem
 
 	public void SetupInitTargets(Targets targets, ref List<string> newTargets)
 	{
-		if (!TargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
+		if (!IniTargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
 		{
 			Log.Exception($"cannot find target {TargetName}");
 			return;
@@ -160,7 +182,7 @@ public class ModuleProject : IBuildItem
 
 	public void SetupBuildTargets(Targets targets, ref List<string> newTargets)
 	{
-		if (!TargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
+		if (!IniTargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
 		{
 			Log.Exception($"cannot find target {TargetName}");
 			return;
@@ -178,22 +200,32 @@ public class ModuleProject : IBuildItem
 	private void ParseInternal(string path)
 	{
 		{
-			var moduleFiles = Directory.GetFiles(path, $"*{IniModuleBase.ModuleFileExtension}",
+			var moduleFiles = Directory.GetFiles(path, $"*{IniModuleBase.StaticModuleFileExtension}",
 				SearchOption.TopDirectoryOnly);
 			var modules = moduleFiles.Select(file => new IniModule(file, this));
 			foreach (var module in modules)
 			{
-				ModulesToHandle.Add(module.Name, module);
+				IniModulesToHandle.Add(module.Name, module);
 			}
 		}
 
 		{
-			var targetFiles = Directory.GetFiles(path, $"*{IniModuleBase.TargetFileExtension}",
+			var targetFiles = Directory.GetFiles(path, $"*{IniModuleBase.StaticTargetFileExtension}",
 				SearchOption.TopDirectoryOnly);
 			var targets = targetFiles.Select(file => new IniTarget(file, this));
 			foreach (var target in targets)
 			{
-				TargetsToHandle.Add(target.Name, target);
+				IniTargetsToHandle.Add(target.Name, target);
+			}
+		}
+		
+		{
+			var moduleFiles = Directory.GetFiles(path, $"*{LuaModuleBase.StaticModuleFileExtension}",
+				SearchOption.TopDirectoryOnly);
+			var modules = moduleFiles.Select(file => new LuaModule(file, this));
+			foreach (var module in modules)
+			{
+				LuaModulesToHandle.Add(module.Name, module);
 			}
 		}
 
@@ -205,7 +237,7 @@ public class ModuleProject : IBuildItem
 
 	public IniModule? GetModule(string name)
 	{
-		if (!ModulesToHandle.TryGetValue(name, out var module))
+		if (!IniModulesToHandle.TryGetValue(name, out var module))
 		{
 			Log.Exception($"cannot find module {name}");
 			return null;
@@ -216,6 +248,7 @@ public class ModuleProject : IBuildItem
 
 	public string TargetName { get; }
 
-	private Dictionary<string, IniModule> ModulesToHandle { get; } = new();
-	private Dictionary<string, IniTarget> TargetsToHandle { get; } = new();
+	private Dictionary<string, IniModule> IniModulesToHandle { get; } = new();
+	private Dictionary<string, IniTarget> IniTargetsToHandle { get; } = new();
+	private Dictionary<string, LuaModule> LuaModulesToHandle { get; } = new();
 }
