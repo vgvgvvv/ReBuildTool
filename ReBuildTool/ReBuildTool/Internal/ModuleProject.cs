@@ -152,6 +152,21 @@ public class ModuleProject : IBuildItem
 
 	public static ModuleProject Create(string target)
 	{
+		var targetFile = GlobalPaths.ProjectRoot.Combine($"{target}{IniModuleBase.StaticTargetFileExtension}");
+		if (!targetFile.Exists())
+		{
+			var defaultContent = @"
+[Target]
+
+[Init]
++Actions=(Name=""ReMake.Init"", Args=(projectName=""${targetName}""))
+";
+
+			ContextArgs.Context context = new ContextArgs.Context();
+			context.AddArg("targetName", target);
+			ContextArgs args = new ContextArgs(defaultContent);
+			targetFile.WriteAllText(args.GetText(context));
+		}
 		return new ModuleProject(target);
 	}
 
