@@ -21,11 +21,19 @@ public class BoosterSupport
 		
 		var targetPath = GlobalPaths.ScriptRoot.Combine($"RBTBooster{ex}");
 		Log.Info($"copy {targetPath} to {boosterPath} ..");
-		GlobalPaths.ScriptRoot.Combine($"RBTBooster{ex}").Copy(boosterPath.ToNPath());
-
-		if (OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
+		var sourcePath = GlobalPaths.ScriptRoot.Combine($"RBTBooster{ex}");
+		if (sourcePath.Exists())
 		{
-			SimpleExec.Command.Run("/bin/bash", $"-c \"chmod +x {boosterPath}\"");
+			sourcePath.Copy(boosterPath.ToNPath());
+			if (OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
+			{
+				SimpleExec.Command.Run("/bin/bash", $"-c \"chmod +x {boosterPath}\"");
+			}
 		}
+		else
+		{
+			Log.Error($"cannot found source booster file in {sourcePath} ..");
+		}
+		
 	}
 }

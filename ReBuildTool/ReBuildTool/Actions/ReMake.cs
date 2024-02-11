@@ -79,6 +79,7 @@ ReMake_AddSubDirsRec(""Src"")
         var privatePath = rootPath.Combine("Private").EnsureDirectoryExists();
         ContextArgs.Context context = new ContextArgs.Context();
         context.AddArg("targetName", targetName);
+        context.AddArg("targetFolderName", rootPath.FileName);
         context.AddArg("mode", mode.ToString().ToUpper());
         
         var moduleCMakeListPath = targetPath.ToNPath().Combine("CMakeLists.txt");
@@ -89,7 +90,7 @@ set(TargetName ${targetName})
 ReMake_AddTarget(
     TARGET_NAME $\{TargetName\}
     MODE SHARED
-    INC ""${targetName}/Public""
+    INC ""${targetFolderName}/Public""
 )
 ").GetText(context)
             );
