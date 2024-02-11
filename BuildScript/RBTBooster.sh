@@ -4,7 +4,7 @@
 # Dot modify manually !!
 
 CURRENT_MODE=$1
-CURRENT_SCRIPT_FULL_PATH=$0
+CURRENT_SCRIPT_FULL_PATH=$(realpath $0)
 CURRENT_DIR=$(cd $(dirname $0); pwd)
 echo "current dir is $CURRENT_DIR"
 
@@ -51,22 +51,24 @@ initReBuildTool()
 
         echo "============= Build ReBuildTool ================"
         ./BuildAll.sh
+    else
+      cd ReBuildTool/BuildScript
     fi
 
     echo "============= Run ReBuildTool ================"
     echo "input project name?"
     read TARGET_NAME
 
-    if [ -n $TARGET_NAME ]; then
+    if [ ! -z $TARGET_NAME ]; then
         echo "init $TARGET_NAME"
         cd ../Binary/MacArm64/ReBuildTool
         chmod +x ReBuildTool
         ./ReBuildTool --ProjectRoot $CURRENT_DIR --Mode Init --Target $TARGET_NAME --BoosterSource $CURRENT_SCRIPT_FULL_PATH
     else
         echo "no target name skip init"
-    fi 
-    
-    
+    fi
+
+
 }
 
 main() {
