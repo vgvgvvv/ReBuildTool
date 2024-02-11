@@ -33,6 +33,10 @@ ReMake_AddSubDirsRec(""Src"")
         var recmakeName = "re-cmake";
         Git.GetFromGit("https://github.com/vgvgvvv/re-cmake", recmakeName, ReMakeDir);
         Git.IgnoreWithPattern("Intermedia");
+        Git.IgnoreWithPattern("binary");
+        Git.IgnoreWithPattern("temp");
+        Git.IgnoreWithPattern("*_API.h");
+        Git.IgnoreWithPattern("*.Target.json");
         
         var srcDir = GlobalPaths.ProjectRoot.Combine("Src").EnsureDirectoryExists();
         GlobalPaths.ProjectRoot.Combine("Test").EnsureDirectoryExists();
