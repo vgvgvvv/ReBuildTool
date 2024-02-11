@@ -43,6 +43,7 @@ initReBuildTool()
         else
             echo "pull ReBuildTool"
             cd ReBuildTool
+            git reset --hard
             git pull
             git submodule update
             cd BuildScript
