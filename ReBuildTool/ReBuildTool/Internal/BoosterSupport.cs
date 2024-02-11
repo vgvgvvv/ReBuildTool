@@ -1,4 +1,5 @@
 using NiceIO;
+using ReBuildTool.Actions;
 using ResetCore.Common;
 
 namespace ReBuildTool.Internal;
@@ -25,10 +26,7 @@ public class BoosterSupport
 		if (sourcePath.Exists())
 		{
 			sourcePath.Copy(boosterPath.ToNPath());
-			if (OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
-			{
-				SimpleExec.Command.Run("/bin/bash", $"-c \"chmod +x {boosterPath}\"");
-			}
+			Cmd.MakeExecutable(boosterPath);
 		}
 		else
 		{
@@ -53,7 +51,7 @@ cd $(dirname $0)
 				{
 					// TODO
 				}
-				
+				Cmd.MakeExecutable(initBat);
 			}
 		}
 
@@ -75,7 +73,7 @@ cd $(dirname $0)
 				{
 					// TODO
 				}
-				
+				Cmd.MakeExecutable(buildBat);
 			}
 		}
 	}
