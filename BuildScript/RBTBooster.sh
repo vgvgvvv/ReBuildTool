@@ -1,16 +1,28 @@
 #!/bin/bash
 
+CURRENT_MODE=$1
+CURRENT_DIR=$(cd $(dirname $0); pwd)
+echo "current dir is $CURRENT_DIR"
+
+CURRENT_HOME=$HOME
+
+if [ -z "$RBT_HOME" ]; then
+    echo "RBT_HOME is not set"
+    RBT_HOME=$CURRENT_HOME/.rbt
+fi
+
+echo "RBT_HOME is $RBT_HOME"
 
 initReBuildTool()
 {
-    CURRENT_DIR=$(cd $(dirname $0); pwd)
-    echo "current dir is $CURRENT_DIR"
-
-    mkdir -p Intermedia/RBT/
-    cd Intermedia/RBT/
-
-    echo "need rebuild ReBuildTool?[Y/N]"
-    read REBUILD_REBUILDTOOL
+    if [ ! -d $RBT_HOME ]; then
+        REBUILD_REBUILDTOOL="Y"
+        mkdir -p $RBT_HOME
+    else
+        echo "need rebuild ReBuildTool?[Y/N]"
+        read REBUILD_REBUILDTOOL
+    fi
+    cd $RBT_HOME
 
     if [ $REBUILD_REBUILDTOOL == "Y" ]; then
 
@@ -46,8 +58,19 @@ initReBuildTool()
     ./ReBuildTool --ProjectRoot $CURRENT_DIR --Mode Init --Target $TARGET_NAME
 }
 
-if [ "$1" = "--init" ]; then
-    initReBuildTool
-else
-    exit 1
-fi
+main() {
+   
+
+    if [ "$CURRENT_MODE" = "--init" ]; then
+        initReBuildTool
+        exit 0
+    else
+        echo "invalid arg $CURRENT_MODE"
+        echo "selection:"
+        echo " --init : initialize RBT & setup current directory"
+        exit 0
+    fi
+}
+
+main
+
