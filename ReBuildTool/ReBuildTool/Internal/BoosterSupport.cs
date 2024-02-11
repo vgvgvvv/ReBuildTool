@@ -9,6 +9,7 @@ public class BoosterSupport
 	{
 		if (string.IsNullOrEmpty(boosterPath) || !File.Exists(boosterPath))
 		{
+			Log.Info("No booster file found..");
 			return;
 		}
 
@@ -18,9 +19,8 @@ public class BoosterSupport
 			Log.Exception($"not supported booster file type {ex} ..");
 		}
 		
-		var backup = boosterPath.ToNPath().Parent.Combine($"Booster-Backup{ex}");
-		boosterPath.ToNPath().Copy(backup);
-		Log.Info("copy ");
+		var targetPath = GlobalPaths.ScriptRoot.Combine($"RBTBooster{ex}");
+		Log.Info($"copy {targetPath} to {boosterPath} ..");
 		GlobalPaths.ScriptRoot.Combine($"RBTBooster{ex}").Copy(boosterPath.ToNPath());
 	}
 }
