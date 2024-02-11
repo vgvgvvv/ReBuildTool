@@ -39,7 +39,7 @@ ReMake_AddSubDirsRec(""Src"")
         Git.IgnoreWithPattern("*.Target.json");
         
         var srcDir = GlobalPaths.ProjectRoot.Combine("Src").EnsureDirectoryExists();
-        GlobalPaths.ProjectRoot.Combine("Test").EnsureDirectoryExists();
+        var testDir = GlobalPaths.ProjectRoot.Combine("Test").EnsureDirectoryExists();
         
         var rootMakeListsPath = GlobalPaths.ProjectRoot.Combine("CMakeLists.txt");
         if (!rootMakeListsPath.Exists())
@@ -53,6 +53,8 @@ ReMake_AddSubDirsRec(""Src"")
         
         var mainDir = srcDir.Combine(projectName);
         MakeReMakeModule(projectName, mainDir, mode);
+        
+        MakeReMakeModule($"{projectName}_Test", testDir, ModuleMode.Exe);
         
     }
 
