@@ -36,7 +36,7 @@ public class BoosterSupport
 		}
 
 		{
-			var initBat = GlobalPaths.ScriptRoot.Combine($"InitProject{ex}");
+			var initBat = GlobalPaths.ProjectRoot.Combine($"InitProject{ex}");
 			if (!initBat.Exists())
 			{
 				ContextArgs.Context context = new ContextArgs.Context();
@@ -58,7 +58,7 @@ cd $(dirname $0)
 		}
 
 		{
-			var buildBat = GlobalPaths.ScriptRoot.Combine($"BuildProject{ex}");
+			var buildBat = GlobalPaths.ProjectRoot.Combine($"BuildProject{ex}");
 			if (!buildBat.Exists())
 			{
 				ContextArgs.Context context = new ContextArgs.Context();
