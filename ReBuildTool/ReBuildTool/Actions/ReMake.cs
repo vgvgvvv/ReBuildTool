@@ -20,7 +20,7 @@ if(NOT REMAKE_ROOT_PATH)
     include(${remakeInitPath})
     ReMake_InitProject()
 
-    ReMake_AddSubDirsRec(""${ReMakeDir}"")
+    ReMake_AddSubDirsRec(""Intermedia/ReMake"")
     ReMake_AddSubDirsRec(""Test"")
 endif()
 
