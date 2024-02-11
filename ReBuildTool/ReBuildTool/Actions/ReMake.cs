@@ -89,7 +89,7 @@ ReMake_AddSubDirsRec(""Src"")
 set(TargetName ${targetName})
 ReMake_AddTarget(
     TARGET_NAME $\{TargetName\}
-    MODE SHARED
+    MODE ${mode}
     INC ""Public""
 )
 ").GetText(context)
