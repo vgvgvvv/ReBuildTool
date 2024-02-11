@@ -90,7 +90,7 @@ set(TargetName ${targetName})
 ReMake_AddTarget(
     TARGET_NAME $\{TargetName\}
     MODE SHARED
-    INC ""${targetFolderName}/Public""
+    INC ""Public""
 )
 ").GetText(context)
             );
