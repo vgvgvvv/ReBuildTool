@@ -56,10 +56,17 @@ initReBuildTool()
     echo "============= Run ReBuildTool ================"
     echo "input project name?"
     read TARGET_NAME
+
+    if [ -n $TARGET_NAME ]; then
+        echo "init $TARGET_NAME"
+        cd ../Binary/MacArm64/ReBuildTool
+        chmod +x ReBuildTool
+        ./ReBuildTool --ProjectRoot $CURRENT_DIR --Mode Init --Target $TARGET_NAME --BoosterSource $CURRENT_SCRIPT_FULL_PATH
+    else
+        echo "no target name skip init"
+    fi 
     
-    cd ../Binary/MacArm64/ReBuildTool
-    chmod +x ReBuildTool
-    ./ReBuildTool --ProjectRoot $CURRENT_DIR --Mode Init --Target $TARGET_NAME --BoosterSource $CURRENT_SCRIPT_FULL_PATH
+    
 }
 
 main() {
