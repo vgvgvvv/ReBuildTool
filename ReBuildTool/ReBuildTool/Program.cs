@@ -3,6 +3,7 @@ using ReBuildTool.Internal;
 using ResetCore.Common;
 
 Log.Info("Begin Generate..");
+Log.Info(Environment.CommandLine);
 
 CmdParser.Parse();
 var command = CommonCommandGroup.Get();

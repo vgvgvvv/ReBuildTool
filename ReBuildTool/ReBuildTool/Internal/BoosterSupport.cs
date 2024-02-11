@@ -20,6 +20,7 @@ public class BoosterSupport
 		
 		var backup = boosterPath.ToNPath().Parent.Combine($"Booster-Backup{ex}");
 		boosterPath.ToNPath().Copy(backup);
+		Log.Info("copy ");
 		GlobalPaths.ScriptRoot.Combine($"RBTBooster{ex}").Copy(boosterPath.ToNPath());
 	}
 }
