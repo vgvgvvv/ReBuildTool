@@ -1,4 +1,5 @@
 using Bullseye;
+using ReBuildTool.Actions;
 using ResetCore.Common;
 using ResetCore.Common.Parser.Ini;
 
@@ -40,13 +41,39 @@ public class IniModule : IniModuleBase, IBuildItem
 		{
 			var dependencies = section["Dependencies"]?.List;
 			Dependencies = dependencies?
-				.Select(item => item.Str)
+				.Select(item =>
+				{
+					if (item.ItemType == IniFile.SectionItem.SectionItemType.Map)
+					{
+						var moduleName = item["Name"]
+							.AssertIfNull($"must provide module name in {TargetScope.GetCurrentItemName()}");
+						var remakeUrl = item["ReMakeUrl"];
+						if (remakeUrl != null)
+						{
+							Log.Info($"install {moduleName.Str} from {remakeUrl.Str}");
+							ReMake.InstallReMakeLibrary(remakeUrl.Str, moduleName.Str);
+						}
+
+						return moduleName.Str;
+					}
+					else if(item.ItemType == IniFile.SectionItem.SectionItemType.String)
+					{
+						return item.Str;
+					}
+					else
+					{
+						Log.Exception("invalid module dependency");
+						return string.Empty;
+					}
+				})
+				.Where(moduleName => !string.IsNullOrEmpty(moduleName))
 				.ToList() ?? new List<string>();
 		}
 		public List<string> Dependencies { get; }
 
 	}
     
+	// init all dependencies then init self
 	public void SetupInitTargets(Targets targets, ref List<string> newTargets)
 	{
 		
@@ -76,6 +103,7 @@ public class IniModule : IniModuleBase, IBuildItem
 		
 	}
 
+	// build all dependencies first and then build self
 	public void SetupBuildTargets(Targets targets, ref List<string> newTargets)
 	{
 		var dependOnTargets = new List<string>();
