@@ -34,6 +34,49 @@ public class BoosterSupport
 		{
 			Log.Error($"cannot found source booster file in {sourcePath} ..");
 		}
-		
+
+		{
+			var initBat = GlobalPaths.ScriptRoot.Combine($"InitProject{ex}");
+			if (!initBat.Exists())
+			{
+				ContextArgs.Context context = new ContextArgs.Context();
+				context.AddArg("targetName", CommonCommandGroup.Get().Target);
+				if (ex == ".sh")
+				{
+					initBat.WriteAllText(new ContextArgs(@"
+cd $(dirname $0)
+./RBTBooster.sh --init ${targetName}
+").GetText(context)
+					);
+				}
+				else if (ex == ".bat")
+				{
+					// TODO
+				}
+				
+			}
+		}
+
+		{
+			var buildBat = GlobalPaths.ScriptRoot.Combine($"BuildProject{ex}");
+			if (!buildBat.Exists())
+			{
+				ContextArgs.Context context = new ContextArgs.Context();
+				context.AddArg("targetName", CommonCommandGroup.Get().Target);
+				if (ex == ".sh")
+				{
+					buildBat.WriteAllText(new ContextArgs(@"
+cd $(dirname $0)
+./RBTBooster.sh --build ${targetName}
+").GetText(context)
+					);
+				}
+				else if (ex == ".bat")
+				{
+					// TODO
+				}
+				
+			}
+		}
 	}
 }

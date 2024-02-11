@@ -4,6 +4,7 @@
 # Dot modify manually !!
 
 CURRENT_MODE=$1
+TARGET_NAME=$2
 CURRENT_SCRIPT_FULL_PATH=$(realpath $0)
 CURRENT_DIR=$(cd $(dirname $0); pwd)
 echo "current dir is $CURRENT_DIR"
@@ -56,8 +57,10 @@ initReBuildTool()
     fi
 
     echo "============= Run ReBuildTool ================"
-    echo "input project name?"
-    read TARGET_NAME
+    if [ -z $TARGET_NAME ]; then
+        echo "input project name?"
+        read TARGET_NAME
+    fi
 
     if [ ! -z $TARGET_NAME ]; then
         echo "init $TARGET_NAME"
@@ -71,15 +74,32 @@ initReBuildTool()
 
 }
 
+buildProject()
+{
+    echo "not implemented.."
+    # TODO: implement
+
+    echo "============= Run ReBuildTool ================"
+    if [ -z $TARGET_NAME ]; then
+        echo "input project name?"
+        read TARGET_NAME
+    fi
+
+    ./ReBuildTool --ProjectRoot $CURRENT_DIR --Mode Build --Target $TARGET_NAME --BoosterSource $CURRENT_SCRIPT_FULL_PATH
+}
+
 main() {
    
 
     if [ "$CURRENT_MODE" = "--init" ]; then
         initReBuildTool
         exit 0
+    if [ "$CURRENT_MODE" = "--build" ]; then
+        buildProject
+        exit 0
     else
         echo "invalid arg $CURRENT_MODE"
-        echo "selection:"
+        echo "usage [mode] [targetName]"
         echo " --init : initialize RBT & setup current directory"
         exit 0
     fi
