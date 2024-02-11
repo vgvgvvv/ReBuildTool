@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Support by ReBuildTool ! auto update by ReBuildTool.
+# Dot modify manually !!
+
 CURRENT_MODE=$1
 CURRENT_SCRIPT_FULL_PATH=$0
 CURRENT_DIR=$(cd $(dirname $0); pwd)
