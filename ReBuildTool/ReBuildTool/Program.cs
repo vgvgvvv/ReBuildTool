@@ -5,8 +5,8 @@ using ResetCore.Common;
 Log.Info("Begin Generate..");
 
 CmdParser.Parse();
-
 var command = CommonCommandGroup.Get();
+BoosterSupport.SetupBooster(command.BoosterSource);
 
 var project = ModuleProject.Create(command.Target)
     .Parse(command.ProjectRoot);

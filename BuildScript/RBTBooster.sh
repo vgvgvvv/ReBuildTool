@@ -1,6 +1,7 @@
 #!/bin/bash
 
 CURRENT_MODE=$1
+CURRENT_SCRIPT_FULL_PATH=$0
 CURRENT_DIR=$(cd $(dirname $0); pwd)
 echo "current dir is $CURRENT_DIR"
 
@@ -55,7 +56,7 @@ initReBuildTool()
     
     cd ../Binary/MacArm64/ReBuildTool
     chmod +x ReBuildTool
-    ./ReBuildTool --ProjectRoot $CURRENT_DIR --Mode Init --Target $TARGET_NAME
+    ./ReBuildTool --ProjectRoot $CURRENT_DIR --Mode Init --Target $TARGET_NAME --BoosterSource $CURRENT_SCRIPT_FULL_PATH
 }
 
 main() {
