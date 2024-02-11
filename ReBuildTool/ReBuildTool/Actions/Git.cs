@@ -37,6 +37,7 @@ public class Git
             args.Add("pull");
             
             Log.Info("Run Git: ", "git", args.Join(" "));
+            SimpleExec.Command.Run("git", "reset --hard", gitRepoTargetPath);
             SimpleExec.Command.Run("git", args.Join(" "), gitRepoTargetPath);
         }
     }
