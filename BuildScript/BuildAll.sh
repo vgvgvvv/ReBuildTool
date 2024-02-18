@@ -1,4 +1,4 @@
-cd  %~dp0
+cd $(dirname $0)
 
 ProjectName=ReBuildTool
 dotnet publish ../$ProjectName/$ProjectName/$ProjectName.csproj -r win-x64 -o ../Binary/Win64/$ProjectName
