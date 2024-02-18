@@ -21,7 +21,7 @@ if not defined RBT_HOME (
 echo "RBT_HOME is %RBT_HOME%"
 
 call :main
-exit 0
+goto :eof
 
 :main
     if "%CURRENT_MODE%" == "init" (
@@ -39,7 +39,7 @@ exit 0
         echo " --build : build target project"
         exit /b 1
     )
-exit 0
+exit /b 0
 
 :initReBuildTool 
     if not exist "%RBT_HOME%\" (
@@ -109,4 +109,4 @@ exit /b 0
     call ReBuildTool.exe --ProjectRoot %CURRENT_DIR% --Mode Build --Target %TARGET_NAME% --BoosterSource %CURRENT_SCRIPT_FULL_PATH%
 exit /b 0
 
-
+:eof
