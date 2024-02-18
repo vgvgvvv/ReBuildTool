@@ -20,8 +20,8 @@ if not defined RBT_HOME (
 
 echo "RBT_HOME is %RBT_HOME%"
 
-echo "main"
 call :main
+exit 0
 
 :main
     if "%CURRENT_MODE%" == "init" (
