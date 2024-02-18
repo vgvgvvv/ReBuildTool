@@ -37,6 +37,7 @@ public class BoosterSupport
 			var initBat = GlobalPaths.ProjectRoot.Combine($"InitProject{ex}");
 			if (!initBat.Exists())
 			{
+				initBat.CreateFile();
 				ContextArgs.Context context = new ContextArgs.Context();
 				context.AddArg("targetName", CommonCommandGroup.Get().Target);
 				if (ex == ".sh")
@@ -49,7 +50,11 @@ cd $(dirname $0)
 				}
 				else if (ex == ".bat")
 				{
-					// TODO
+					initBat.WriteAllText(new ContextArgs(@"
+cd %~dp0
+./RBTBooster.bat --init ${targetName}
+").GetText(context)
+					);
 				}
 				Cmd.MakeExecutable(initBat);
 			}
@@ -59,6 +64,7 @@ cd $(dirname $0)
 			var buildBat = GlobalPaths.ProjectRoot.Combine($"BuildProject{ex}");
 			if (!buildBat.Exists())
 			{
+				buildBat.CreateFile();
 				ContextArgs.Context context = new ContextArgs.Context();
 				context.AddArg("targetName", CommonCommandGroup.Get().Target);
 				if (ex == ".sh")
@@ -71,7 +77,11 @@ cd $(dirname $0)
 				}
 				else if (ex == ".bat")
 				{
-					// TODO
+					buildBat.WriteAllText(new ContextArgs(@"
+cd %~dp0
+./RBTBooster.bat --build ${targetName}
+").GetText(context)
+					);
 				}
 				Cmd.MakeExecutable(buildBat);
 			}
