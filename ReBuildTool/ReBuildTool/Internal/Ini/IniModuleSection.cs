@@ -139,7 +139,7 @@ public class ActionSection : BaseSection, ITargetItem
             .ToList() ?? new List<string>();
     }
     
-    public void SetupTargets(Targets targets, ref List<string> newTargets)
+    public void SetupTargets(Targets targets, ref List<string> newTargets, string prefix = "")
     {
         var dependOnTargets = new List<string>();
         if (Dependencies != null)
@@ -153,6 +153,10 @@ public class ActionSection : BaseSection, ITargetItem
             var targetName = FullName;
             scope.AddDependencies(dependOnTargets);
             var task = GetTask();
+            if (!string.IsNullOrEmpty(prefix))
+            {
+                targetName = $"{prefix}-{targetName}";
+            }
             targets.Add(targetName, $"Depended By {GetDependencies().Join(", ")}", 
                 GetDependencies(), task);
             newTargets.Add(targetName);

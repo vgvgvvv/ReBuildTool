@@ -52,7 +52,7 @@ public class IniTarget : IniModuleBase, IBuildItem
 			if (InitSect != null)
 			{
 				var initSectTargets = new List<string>();
-				InitSect.SetupTargets(targets, ref initSectTargets);
+				InitSect.SetupTargets(targets, ref initSectTargets, "Target");
 				scope.AddDependencies(initSectTargets);
 				newTargets.AddRange(initSectTargets);
 			}
