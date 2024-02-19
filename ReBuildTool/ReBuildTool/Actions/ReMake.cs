@@ -21,6 +21,7 @@ if(NOT REMAKE_ROOT_PATH)
     ReMake_InitProject()
 
     ReMake_AddSubDirsRec(""Intermedia/ReMake"")
+    ReMake_AddSubDirsRec(""Intermedia/Git"")
     ReMake_AddSubDirsRec(""Test"")
 endif()
 

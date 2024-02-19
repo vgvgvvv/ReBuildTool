@@ -1,4 +1,5 @@
-﻿using ReBuildTool.Common;
+﻿using NiceIO;
+using ReBuildTool.Common;
 using ReBuildTool.Internal;
 using ResetCore.Common;
 using ResetCore.Common.Parser.Ini;
@@ -7,12 +8,18 @@ namespace ReBuildTool.Actions;
 
 public class Git
 {
+    public static NPath GitDir => GlobalPaths.IntermediaPath.Combine("Git").EnsureDirectoryExists();
+    
     [ActionDefine("Git.Get")]
     public static void GetFromGit(string url, 
         string name,
-        [ActionParameter("WorkDirectory")] string targetPath,
+        string targetPath,
         string? tag = null)
     {
+        if (string.IsNullOrEmpty(targetPath))
+        {
+            targetPath = GitDir;
+        }
         var gitRepoTargetPath = Path.Combine(targetPath, name);
         if (!Directory.Exists(gitRepoTargetPath))
         {

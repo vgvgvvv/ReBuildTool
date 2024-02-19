@@ -24,11 +24,11 @@ call :main
 goto :eof
 
 :main
-    if "%CURRENT_MODE%" == "init" (
+    if "%CURRENT_MODE%" == "--init" (
         echo "init ReBuildTool.."
         call :initReBuildTool
         exit /b 0
-    ) else if "%CURRENT_MODE%" == "build" (
+    ) else if "%CURRENT_MODE%" == "--build" (
         echo "build project.."
         call :buildProject
         exit /b 0
