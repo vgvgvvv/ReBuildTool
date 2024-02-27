@@ -32,7 +32,7 @@ ReMake_AddSubDirsRec(""Src"")
     public static void InitReMakeRoot(string projectName, ModuleMode mode = ModuleMode.Shared)
     {
         var recmakeName = "re-cmake";
-        Git.GetFromGit("https://github.com/vgvgvvv/re-cmake", recmakeName, ReMakeDir);
+        Git.GetFromGit("git@github.com:vgvgvvv/re-cmake.git", recmakeName, ReMakeDir);
         Git.IgnoreWithPattern("Intermedia");
         Git.IgnoreWithPattern("binary");
         Git.IgnoreWithPattern("temp");
