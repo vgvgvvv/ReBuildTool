@@ -33,6 +33,7 @@ ReMake_AddSubDirsRec(""Src"")
     {
         var recmakeName = "re-cmake";
         Git.GetFromGit("git@github.com:vgvgvvv/re-cmake.git", recmakeName, ReMakeDir);
+        // TODO: get external libraries to ReBuildTool folder
         Git.IgnoreWithPattern("Intermedia");
         Git.IgnoreWithPattern("binary");
         Git.IgnoreWithPattern("temp");

@@ -9,7 +9,7 @@ namespace ReBuildTool.Actions;
 public class ResetHeaderTool
 {
     
-    public static NPath RHTDir => GlobalPaths.ReBuildToolHome.Combine("ResetHeaderTool").EnsureDirectoryExists();
+    public static NPath RHTDir => GlobalPaths.IntermediaPath.Combine("ResetHeaderTool").EnsureDirectoryExists();
     public static NPath RHTBinaryDir => RHTDir.Combine("Binary").EnsureDirectoryExists();
     
     
