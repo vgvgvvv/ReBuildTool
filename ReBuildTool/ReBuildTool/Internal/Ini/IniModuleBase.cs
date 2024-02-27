@@ -22,7 +22,7 @@ public abstract class IniModuleBase : ModuleBase
 
         try
         {
-            IniFile = IniFile.Parser(ModulePath);
+            IniFile = IniFile.Parse(ModulePath);
         }
         catch (Exception e)
         {
