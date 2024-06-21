@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReBuildTool.LuaWrapper", "R
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReCSharpCommon", "..\Vendor\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon.csproj", "{06AA595F-C393-4F20-BC67-051A20FE5D05}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReBuildTool.ToolChain", "ReBuildTool.ToolChain\ReBuildTool.ToolChain.csproj", "{685817B3-D237-4D79-9BA0-19CB554BDE5D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{06AA595F-C393-4F20-BC67-051A20FE5D05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{06AA595F-C393-4F20-BC67-051A20FE5D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{06AA595F-C393-4F20-BC67-051A20FE5D05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{685817B3-D237-4D79-9BA0-19CB554BDE5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{685817B3-D237-4D79-9BA0-19CB554BDE5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{685817B3-D237-4D79-9BA0-19CB554BDE5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{685817B3-D237-4D79-9BA0-19CB554BDE5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
