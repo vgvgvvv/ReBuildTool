@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\Vendor\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon.csproj" />
+    </ItemGroup>
+
 </Project>
