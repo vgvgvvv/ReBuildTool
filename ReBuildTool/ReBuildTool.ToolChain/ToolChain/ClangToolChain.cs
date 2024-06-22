@@ -1,4 +1,4 @@
-﻿namespace ReBuildTool.ToolChain.ToolChain;
+﻿namespace ReBuildTool.ToolChain;
 
 public class ClangToolChain
 {

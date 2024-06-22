@@ -1,6 +1,6 @@
 ﻿using NiceIO;
 
-namespace ReBuildTool.ToolChain.ToolChain;
+namespace ReBuildTool.ToolChain;
 
 
 public abstract class IToolChain
@@ -14,8 +14,29 @@ public abstract class IToolChain
 		Arch = arch;
 	}
 
+	public abstract IEnumerable<string> OutputArguments(NPath objectFile, NPath sourceFile);
+	
 	public abstract IEnumerable<NPath> ToolChainDefines();
+
+	public abstract IEnumerable<NPath> EnvVars();
+
+	public abstract IEnumerable<NPath> ToolChainIncludePaths();
+
+	public abstract IEnumerable<NPath> ToolChainLibraryPaths();
+
+	public abstract IEnumerable<NPath> ToolChainStaticLibrarys();
+
+	public abstract string ObjectExtension { get; }
 	
+	public abstract string ExecutableExtension { get; }
 	
+	public abstract string StaticLibraryExtension { get; }
+	
+	public abstract string DynamicLibraryExtension { get; }
+
+	public abstract NPath CompilerExecutableFor(NPath sourceFile);
+
+	public abstract IEnumerable<string> CompilerFlagsFor(CppCompilationUnit cppCompilationInstruction);
+
 
 }

@@ -1,4 +1,4 @@
-﻿namespace ReBuildTool.ToolChain.ToolChain;
+﻿namespace ReBuildTool.ToolChain;
 
 public abstract class Architecture
 {
@@ -7,6 +7,32 @@ public abstract class Architecture
 	public abstract string Name { get; }
 	
 	public abstract int MaximumAlignment { get; }
+	
+	public static bool operator==(Architecture left, Architecture right)
+	{
+		if (ReferenceEquals(left, null) || ReferenceEquals(right, null))
+			return ReferenceEquals(left, right);
+
+		return left.GetType() == right.GetType();
+	}
+
+	public static bool operator!=(Architecture left, Architecture right)
+	{
+		return !(left == right);
+	}
+
+	public override bool Equals(object obj)
+	{
+		if (obj == null)
+			return false;
+
+		return GetType() == obj.GetType();
+	}
+
+	public override int GetHashCode()
+	{
+		return GetType().GetHashCode();
+	}
 }
 
 public class x86Architecture : Architecture

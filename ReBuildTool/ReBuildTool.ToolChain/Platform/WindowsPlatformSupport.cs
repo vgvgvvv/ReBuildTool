@@ -1,0 +1,16 @@
+﻿using ReBuildTool.Common;
+
+namespace ReBuildTool.ToolChain;
+
+public class WindowsPlatformSupport : IPlatformSupport
+{
+	public override bool Supports(RuntimePlatform platform)
+	{
+		return platform is WindowsDesktopRuntimePlatform;
+	}
+
+	public override IToolChain MakeCppToolChain(Architecture architecture, BuildConfiguration buildConfiguration)
+	{
+		throw new NotImplementedException();
+	}
+}
