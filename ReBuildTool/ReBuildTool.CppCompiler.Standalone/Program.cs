@@ -6,7 +6,7 @@ using ResetCore.Common;
 
 
 
-CmdParser.Parse();
+CmdParser.Parse<Program>();
 
 var project = CppBuildProject.Create(CppCompilerArgs.Get().CppBuildRoot).Parse();
 

@@ -1,12 +1,11 @@
 ﻿using Bullseye;
 using ReBuildTool.Internal;
-using ReBuildTool.ToolChain;
 using ResetCore.Common;
 
 Log.Info("Begin Generate..");
 Log.Info(Environment.CommandLine);
 
-CmdParser.Parse();
+CmdParser.Parse<Program>();
 var command = CommonCommandGroup.Get();
 BoosterSupport.SetupBooster(command.BoosterSource);
 
