@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using NiceIO;
 using ReBuildTool.ToolChain;
 using ResetCore.Common;
-using UnityCompiler.Internal;
 
 namespace ReBuildTool.Test;
 

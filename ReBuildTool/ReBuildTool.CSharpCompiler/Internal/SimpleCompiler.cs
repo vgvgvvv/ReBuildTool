@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using NiceIO;
 using ResetCore.Common;
-using UnityCompiler.Internal;
 
 namespace ReBuildTool.CSharpCompiler;
 
