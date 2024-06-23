@@ -3,15 +3,16 @@ using ReBuildTool.Common;
 
 namespace ReBuildTool.CSharpCompiler;
 
-internal interface ISlnSubProject
+public interface ISlnSubProject
 {
 	string name { get; }
 	Guid guid { get; }
+	NPath fullPath { get; }
 	
 	void FlushToFile();
 }
 
-internal class SlnGenerator
+public class SlnGenerator
 {
 	private SlnGenerator(string name)
 	{
@@ -58,7 +59,7 @@ internal class SlnGenerator
 		foreach (var (key, proj) in NetFrameworkCSProjsByName)
 		{
 			codeBuilder.AppendLine(
-				$"Project(\"{{{proj.guid}}}\") = \"{proj.name}\", \"{proj.name}.csproj\", \"{{{proj.guid}}}\"");
+				$"Project(\"{{{proj.guid}}}\") = \"{proj.name}\", \"{proj.fullPath}\", \"{{{proj.guid}}}\"");
 			codeBuilder.AppendLine("EndProject");
 		}
 

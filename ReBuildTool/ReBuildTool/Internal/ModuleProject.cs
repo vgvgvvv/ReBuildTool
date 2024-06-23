@@ -145,13 +145,12 @@ public class ModuleProject : IBuildItem
 {
 	public static ModuleProject Current { get; private set; }
 	
-	public CppBuildProject CppProject { get; }
+	public CppBuildProject CppProject { get; private set; }
 
 	private ModuleProject(string target)
 	{
 		TargetName = target;
 		Current = this;
-		CppProject = CppBuildProject.Create();
 	}
 
 	public static ModuleProject Create(string target)
@@ -176,7 +175,7 @@ public class ModuleProject : IBuildItem
 
 	public ModuleProject Parse(string path)
 	{
-		CppProject.Parse(path);
+		CppProject = CppBuildProject.Create(path).Parse();
 		ParseInternal(path);
 		return this;
 	}

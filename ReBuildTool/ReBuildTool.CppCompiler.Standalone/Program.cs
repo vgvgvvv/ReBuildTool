@@ -8,8 +8,7 @@ using ResetCore.Common;
 
 CmdParser.Parse();
 
-var project = CppBuildProject.Create()
-	.Parse(CppCompilerArgs.Get().ProjectRoot);
+var project = CppBuildProject.Create(CppCompilerArgs.Get().CppBuildRoot).Parse();
 
 project.Setup();
 

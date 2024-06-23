@@ -3,7 +3,7 @@ using ReBuildTool.Common;
 
 namespace ReBuildTool.CSharpCompiler;
 
-internal class NetFrameworkCSProj : ISlnSubProject
+public class NetFrameworkCSProj : ISlnSubProject
 {
 	private static class Tags
 	{
@@ -98,9 +98,13 @@ internal class NetFrameworkCSProj : ISlnSubProject
 			codeBuilder.WriteNode("OutputType", targetUnityAssembly.CompileType.ToString());
 			codeBuilder.WriteNode("AppDesignerFolder", "Properties");
 			codeBuilder.WriteNode("AssemblyName", targetUnityAssembly.FileName);
+			if (string.IsNullOrEmpty(targetUnityAssembly.TargetFrameworkVersion))
+			{
+				targetUnityAssembly.TargetFrameworkVersion = "4.7.1";
+			}
 			codeBuilder.WriteNode("TargetFrameworkVersion", targetUnityAssembly.TargetFrameworkVersion);
 			codeBuilder.WriteNode("FileAlignment", "512");
-			codeBuilder.WriteNode("BaseDirectory", CSharpCompileArgs.Get().ProjectRoot);
+			codeBuilder.WriteNode("BaseDirectory", CSharpCompileArgs.Get().CSharpBuildRoot);
 		}
 
 		var allowUnsafe = compileEnvironment.AllowUnsafe || targetUnityAssembly.Unsafe;
@@ -184,7 +188,7 @@ internal class NetFrameworkCSProj : ISlnSubProject
 			}
 			var csProj = GenerateOrGetCSProj(ownerSln, refUnit, compileEnvironment, outputFolder);
 			using (codeBuilder.CreateXmlScope(Tags.ProjectReference,
-				       new Tuple<string, string>("Include", csProj.name + ".csproj")))
+				       new Tuple<string, string>("Include", Path.Combine(csProj.outputFolder, csProj.name + ".csproj"))))
 			{
 				codeBuilder.WriteNode(Tags.Project, $"{{{csProj.guid}}}");
 				codeBuilder.WriteNode("Name", csProj.name);
@@ -200,6 +204,7 @@ internal class NetFrameworkCSProj : ISlnSubProject
 
 	public string name { get; private set; }
 	public Guid guid { get; private set; }
+	public NPath fullPath => outputFolder.Combine(name + ".csproj");
 	public SlnGenerator ownerSln { get; private set; }
 	private IAssemblyCompileUnit targetUnityAssembly;
 	private CompileEnvironment compileEnvironment;

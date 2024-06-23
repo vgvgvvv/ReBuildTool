@@ -62,7 +62,7 @@ internal class SingleSimpleCompileUnitContext
 				? OutputKind.DynamicallyLinkedLibrary
 				: OutputKind.ConsoleApplication;
 		var optLevel =
-			CSharpCompileArgs.Get().Configuration == CompileConfiguration.Debug
+			CSharpCompileArgs.Get().CSCompileConfig == CompileConfiguration.Debug
 				? OptimizationLevel.Debug
 				: OptimizationLevel.Release;
 		CSharpCompileOptions
