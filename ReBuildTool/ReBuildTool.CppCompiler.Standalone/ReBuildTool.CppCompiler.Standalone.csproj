@@ -8,15 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Bullseye" Version="5.0.0" />
-      <PackageReference Include="ini-parser-netstandard" Version="2.5.2" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-      <PackageReference Include="SimpleExec" Version="12.0.0" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\..\Vendor\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon.csproj" />
-      <ProjectReference Include="..\..\Vendor\UniToLua\UniToLua-NetCore\UniToLua-NetCore.csproj" />
       <ProjectReference Include="..\ReBuildTool.Common\ReBuildTool.Common.csproj" />
       <ProjectReference Include="..\ReBuildTool.CppCompiler\ReBuildTool.CppCompiler.csproj" />
     </ItemGroup>

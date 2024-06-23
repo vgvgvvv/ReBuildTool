@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace ReBuildTool.Common;
 
-public class PlatformUtils
+public class PlatformHelper
 {
-    private static string _OSUName;
+    private static string? _OSUName;
     
     public static bool IsWindows()
     {

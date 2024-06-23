@@ -8,11 +8,11 @@ public abstract class RuntimePlatform
     {
         get
         {
-            if (PlatformUtils.IsWindows())
+            if (PlatformHelper.IsWindows())
                 return new WindowsDesktopRuntimePlatform();
-            if (PlatformUtils.IsLinux())
+            if (PlatformHelper.IsLinux())
                 return new LinuxRuntimePlatform();
-            if (PlatformUtils.IsOSX())
+            if (PlatformHelper.IsOSX())
                 return new MacOSXRuntimePlatform();
             throw new Exception("Running on unexpected OS");
         }

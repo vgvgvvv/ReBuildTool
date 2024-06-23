@@ -3,6 +3,7 @@ using Bullseye;
 using ReBuildTool.Common;
 using ReBuildTool.Internal.Ini;
 using ReBuildTool.Internal.Lua;
+using ReBuildTool.ToolChain;
 using ResetCore.Common;
 
 namespace ReBuildTool.Internal;
@@ -143,11 +144,14 @@ internal class TargetScope : IDisposable
 public class ModuleProject : IBuildItem
 {
 	public static ModuleProject Current { get; private set; }
+	
+	public CppBuildProject CppProject { get; }
 
 	private ModuleProject(string target)
 	{
 		TargetName = target;
 		Current = this;
+		CppProject = CppBuildProject.Create();
 	}
 
 	public static ModuleProject Create(string target)
@@ -172,6 +176,7 @@ public class ModuleProject : IBuildItem
 
 	public ModuleProject Parse(string path)
 	{
+		CppProject.Parse(path);
 		ParseInternal(path);
 		return this;
 	}
@@ -184,30 +189,34 @@ public class ModuleProject : IBuildItem
 
 	public void SetupInitTargets(Targets targets, ref List<string> newTargets)
 	{
-		if (!IniTargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
+		targets.Add("CppProjectInit", ()=>CppProject.Setup());
+		if (IniTargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
+		{
+			var targetTargets = new List<string>();
+			targetToHandle.SetupInitTargets(targets, ref targetTargets);
+			newTargets.AddRange(targetTargets);
+		}
+		else
 		{
 			Log.Exception($"cannot find target {TargetName}");
-			return;
 		}
-
-		var targetTargets = new List<string>();
-		targetToHandle.SetupInitTargets(targets, ref targetTargets);
-		newTargets.AddRange(targetTargets);
 	}
 
 	public void SetupBuildTargets(Targets targets, ref List<string> newTargets)
 	{
-		if (!IniTargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
+		targets.Add("CppProjectBuild", ()=>CppProject.Build());
+		if (IniTargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
+		{
+			using (new TargetScope(this))
+			{
+				var targetTargets = new List<string>();
+				targetToHandle.SetupBuildTargets(targets, ref targetTargets);
+				newTargets.AddRange(targetTargets);
+			}
+		}
+		else
 		{
 			Log.Exception($"cannot find target {TargetName}");
-			return;
-		}
-
-		using (new TargetScope(this))
-		{
-			var targetTargets = new List<string>();
-			targetToHandle.SetupBuildTargets(targets, ref targetTargets);
-			newTargets.AddRange(targetTargets);
 		}
 	}
 

@@ -8,7 +8,7 @@ public class MSVCToolChain : IToolChain
 	{
 	}
 
-	public override IEnumerable<string> OutputArguments(NPath objectFile, NPath sourceFile)
+	public override IEnumerable<string> ObjectOutputArguments(NPath objectFile, NPath sourceFile)
 	{
 		throw new NotImplementedException();
 	}
@@ -33,7 +33,7 @@ public class MSVCToolChain : IToolChain
 		throw new NotImplementedException();
 	}
 
-	public override IEnumerable<NPath> ToolChainStaticLibrarys()
+	public override IEnumerable<NPath> ToolChainStaticLibraries()
 	{
 		throw new NotImplementedException();
 	}

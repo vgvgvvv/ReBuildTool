@@ -14,7 +14,7 @@ public abstract class IToolChain
 		Arch = arch;
 	}
 
-	public abstract IEnumerable<string> OutputArguments(NPath objectFile, NPath sourceFile);
+	public abstract IEnumerable<string> ObjectOutputArguments(NPath objectFile, NPath sourceFile);
 	
 	public abstract IEnumerable<NPath> ToolChainDefines();
 
@@ -24,7 +24,7 @@ public abstract class IToolChain
 
 	public abstract IEnumerable<NPath> ToolChainLibraryPaths();
 
-	public abstract IEnumerable<NPath> ToolChainStaticLibrarys();
+	public abstract IEnumerable<NPath> ToolChainStaticLibraries();
 
 	public abstract string ObjectExtension { get; }
 	
