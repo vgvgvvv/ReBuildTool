@@ -1,9 +1,11 @@
-﻿using System.Text;
+﻿using System.Runtime.InteropServices;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using NiceIO;
 using ResetCore.Common;
+using UnityCompiler.Internal;
 
 namespace ReBuildTool.CSharpCompiler;
 
@@ -29,7 +31,7 @@ internal class SingleSimpleCompileUnitContext
 
 	public List<string> DefaultNamespaces { get; } = new List<string>();
 
-	public DllCache CompiledDllCache { get; private set; }
+	public DllCache CompiledDllCache { get; private set; } = new();
 
 	public bool Parse()
 	{
@@ -74,6 +76,16 @@ internal class SingleSimpleCompileUnitContext
 		foreach (var referenceDll in TargetUnit.ReferenceDlls)
 		{
 			ReferencesDlls.Add(MetadataReference.CreateFromFile(referenceDll));
+		}
+		
+		var frameworkPath = RuntimeEnvironment.GetRuntimeDirectory().ToNPath();
+		foreach (var systemDll in frameworkPath.Files("*.dll", true))
+		{
+			if (!MonoUtil.IsDotNetAssembly(systemDll))
+			{
+				continue;
+			}
+			ReferencesDlls.Add(MetadataReference.CreateFromFile(systemDll));
 		}
 		
 		foreach (var referenceCompile in ReferenceCompileContext)

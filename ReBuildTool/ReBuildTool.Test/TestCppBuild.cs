@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.InteropServices;
 using NiceIO;
 using ReBuildTool.ToolChain;
 using ResetCore.Common;
@@ -32,6 +33,13 @@ public class Tests
             var assembly = Assembly.LoadFrom(assemblyPath);
             Log.Info(assembly.FullName);
         }
+    }
+
+    [Test]
+    public void GetRuntimePath()
+    {
+        string frameworkPath = RuntimeEnvironment.GetRuntimeDirectory();
+        Log.Info(frameworkPath);
     }
 
     [Test]
