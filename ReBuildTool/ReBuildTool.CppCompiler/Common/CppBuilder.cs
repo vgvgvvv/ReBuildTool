@@ -8,10 +8,29 @@ public interface IBuildConfigProvider
 	
 }
 
+internal class BuildConfigArgsProvider : IBuildConfigProvider
+{
+	public IPlatformSupport GetBuildPlatform()
+	{
+		// TODO: use current platform instead
+		return new WindowsPlatformSupport();
+	}
+
+	public BuildOptions GetBuildOptions()
+	{
+		return new BuildOptions();
+	}
+}
+
 public class CppBuilder
 {
-	public CppBuilder(IBuildConfigProvider provider)
+
+	public static IBuildConfigProvider DefaultBuildConfigProvider { get; } = new BuildConfigArgsProvider();
+	
+	public CppBuilder(IBuildConfigProvider? provider = null)
 	{
+		provider ??= DefaultBuildConfigProvider;
+		
 		CurrentPlatformSupport = provider.GetBuildPlatform();
 		CurrentBuildOption = provider.GetBuildOptions();
 		var configuration = CurrentBuildOption.Configuration;

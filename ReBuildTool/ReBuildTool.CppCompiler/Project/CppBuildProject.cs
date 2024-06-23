@@ -53,11 +53,40 @@ public class CppBuildProject : ICppSourceProvider
 		});
 	}
 
-	public void Build()
+	public void Build(string? targetName = null, IBuildConfigProvider? configProvider = null)
 	{	
+		CppBuilder builder = new CppBuilder(configProvider);
+
 		// do build & build hooks	
+		if (targetName == null)
+		{
+			BuildAll(builder);
+			return;
+		}
+
+		if (!TargetRules.TryGetValue(targetName, out var targetRule))
+		{
+			BuildAll(builder);
+			return;
+		}
+		
+		Build(builder, targetRule);
+		
+	}
+
+	private void Build(CppBuilder builder, TargetRule targetRule)
+	{
+		builder.BuildTarget(targetRule);
 	}
 	
+	private void BuildAll(CppBuilder builder)
+	{
+		foreach (var (key, targetRule) in TargetRules)
+		{
+			Build(builder, targetRule);
+		}
+	}
+
 	public NPath ProjectRoot { get; }
 
 	public NPath IntermediaFolder => ProjectRoot.Combine("Intermedia");
