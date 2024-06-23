@@ -1,6 +1,6 @@
 ﻿using NiceIO;
 
-namespace UnityCompiler.Internal.Compile;
+namespace ReBuildTool.CSharpCompiler;
 
 
 public enum CompileOutputType

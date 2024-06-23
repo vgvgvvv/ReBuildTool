@@ -1,13 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text;
+﻿using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using NiceIO;
-using ReBuildTool.CSharpCompiler;
 using ResetCore.Common;
 
-namespace UnityCompiler.Internal.Compile;
+namespace ReBuildTool.CSharpCompiler;
 
 internal class SingleSimpleCompileUnitContext
 {
