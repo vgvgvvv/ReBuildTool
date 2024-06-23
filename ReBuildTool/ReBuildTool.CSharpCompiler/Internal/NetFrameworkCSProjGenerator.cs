@@ -3,9 +3,9 @@ using ReBuildTool.Common;
 
 namespace ReBuildTool.CSharpCompiler;
 
-internal class NetFrameworkCSProj
+internal class NetFrameworkCSProj : ISlnSubProject
 {
-	public static class Tags
+	private static class Tags
 	{
 		public static string Project = nameof(Project);
 		public static string PropertyGroup = nameof(PropertyGroup);
@@ -16,9 +16,14 @@ internal class NetFrameworkCSProj
 	
 	public static NetFrameworkCSProj GenerateOrGetCSProj(SlnGenerator owner, IAssemblyCompileUnit unit, CompileEnvironment env, NPath output)
 	{
-		if (owner.GetCsProj(unit.FileName, out var csProj))
+		if (owner.GetSubProj(unit.FileName, out var csProj))
 		{
-			return csProj;
+			if (csProj is NetFrameworkCSProj netProj)
+			{
+				return netProj;
+			}
+
+			throw new Exception("Project with same name already exists but is not a NetFrameworkCSProj");
 		}
 
 		var result = new NetFrameworkCSProj();

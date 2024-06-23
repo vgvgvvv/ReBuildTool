@@ -3,6 +3,14 @@ using ReBuildTool.Common;
 
 namespace ReBuildTool.CSharpCompiler;
 
+internal interface ISlnSubProject
+{
+	string name { get; }
+	Guid guid { get; }
+	
+	void FlushToFile();
+}
+
 internal class SlnGenerator
 {
 	private SlnGenerator(string name)
@@ -18,7 +26,7 @@ internal class SlnGenerator
 		return result;
 	}
 	
-	public void RegisterCsProj(NetFrameworkCSProj proj)
+	public void RegisterCsProj(ISlnSubProject proj)
 	{
 		if (!NetFrameworkCSProjs.TryGetValue(proj.guid, out var outProj))
 		{
@@ -27,7 +35,7 @@ internal class SlnGenerator
 		}
 	}
 
-	public bool GetCsProj(string name, out NetFrameworkCSProj? outProj)
+	public bool GetSubProj(string name, out ISlnSubProject? outProj)
 	{
 		return NetFrameworkCSProjsByName.TryGetValue(name, out outProj);
 	}
@@ -105,9 +113,9 @@ internal class SlnGenerator
 	
 	public string OutputPath => outputFolder.Combine(Name + ".sln");
 	
-	public Dictionary<string, NetFrameworkCSProj> NetFrameworkCSProjsByName { get; } =
-		new Dictionary<string, NetFrameworkCSProj>();
-	public Dictionary<Guid, NetFrameworkCSProj> NetFrameworkCSProjs { get; } = new Dictionary<Guid, NetFrameworkCSProj>();
+	public Dictionary<string, ISlnSubProject> NetFrameworkCSProjsByName { get; } =
+		new Dictionary<string, ISlnSubProject>();
+	public Dictionary<Guid, ISlnSubProject> NetFrameworkCSProjs { get; } = new Dictionary<Guid, ISlnSubProject>();
 
 	private NPath outputFolder;
 	private SourceCodeBuilder codeBuilder = new SourceCodeBuilder();
