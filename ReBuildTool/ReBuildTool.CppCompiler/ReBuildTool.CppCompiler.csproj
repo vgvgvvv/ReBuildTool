@@ -10,6 +10,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Vendor\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon.csproj" />
       <ProjectReference Include="..\ReBuildTool.Common\ReBuildTool.Common.csproj" />
+      <ProjectReference Include="..\ReBuildTool.CSharpCompiler\ReBuildTool.CSharpCompiler.csproj" />
     </ItemGroup>
 
 </Project>

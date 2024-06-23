@@ -1,6 +1,10 @@
-﻿using ReBuildTool.CppCompiler.Standalone;
+﻿using System.Reflection;
+using ReBuildTool.CppCompiler.Standalone;
 using ReBuildTool.ToolChain;
 using ResetCore.Common;
+
+
+
 
 CmdParser.Parse();
 
