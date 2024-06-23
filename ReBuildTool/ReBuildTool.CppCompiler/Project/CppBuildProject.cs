@@ -1,3 +1,5 @@
+using NiceIO;
+
 namespace ReBuildTool.ToolChain;
 
 public interface ICppSourceProvider
@@ -20,9 +22,14 @@ public class CppBuildProject : ICppSourceProvider
 
 	public CppBuildProject Parse(string workDirectory)
 	{
+		var targetFiles = Directory.GetFiles(workDirectory, "*.Target.cs");
+		var moduleFiles = Directory.GetFiles(workDirectory, "*.Module.cs");
+		var extraFiles = Directory.GetFiles(workDirectory, "*.Extension.cs");
 		
 		return this;
 	}
+	
+	
 	
 
 	public void Setup()
