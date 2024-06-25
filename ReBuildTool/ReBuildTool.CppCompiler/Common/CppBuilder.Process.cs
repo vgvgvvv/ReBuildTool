@@ -1,4 +1,5 @@
 ﻿using NiceIO;
+using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
 
@@ -50,12 +51,25 @@ public partial class CppBuilder
 
 		private void CollectCompileInvocations()
 		{
-			
+			foreach (var compileUnit in CompileUnits)
+			{
+				var invocation = new CppCompileInvocation();
+				invocation.ProgramName = ToolChain.CompilerExecutableFor(compileUnit.SourceFile);
+				invocation.Arguments.AddRange(ToolChain.CompilerFlagsFor(compileUnit));
+				invocation.Arguments.AddRange(Module.CompileFlagsFor(compileUnit));
+				CompileInvocation.Add(invocation);
+			}
 		}
 
 		private void RunCompileInvocations()
 		{
-			
+			foreach (var invocation in CompileInvocation)
+			{
+				if (invocation.Run())
+				{
+					Log.Error($"Compile failed: {invocation.ProgramName} {string.Join(' ', invocation.Arguments)}");
+				}
+			}
 		}
 		
 		private IEnumerable<string> GetDefinesForUnit(CppCompilationUnit unit)
@@ -277,6 +291,20 @@ public partial class CppBuilder
 
 	internal class CppCompileInvocation
 	{
+
+		public bool Run()
+		{
+			bool isSucc = false;
+			SimpleExec.Command.Run(ProgramName, Arguments.ToArray(), handleExitCode: (code) =>
+			{
+				isSucc = code != 0;
+				return isSucc;
+			});
+			return isSucc;
+		}
 		
+		public string ProgramName { get; set; }
+		public  List<string> Arguments { get; } = new();
+		public  Dictionary<string, string> EnvVars { get; } = new();
 	}
 }

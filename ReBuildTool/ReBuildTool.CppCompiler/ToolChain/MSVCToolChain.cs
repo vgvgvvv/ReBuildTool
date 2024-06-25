@@ -18,7 +18,7 @@ public class MSVCToolChain : IToolChain
 		throw new NotImplementedException();
 	}
 
-	public override IEnumerable<NPath> EnvVars()
+	public override Dictionary<string, string> EnvVars()
 	{
 		throw new NotImplementedException();
 	}

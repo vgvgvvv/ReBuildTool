@@ -101,7 +101,7 @@ public partial class CppBuilder
 	
 	private void BuildModule(ModuleRule module)
 	{
-		CompileProcess process = CompileProcess.Create(module, CurrentToolChain, CurrentBuildOption);
+		CompileProcess process = CompileProcess.Create(module, this);
 		process.Compile();
 		process.Link();
 	}

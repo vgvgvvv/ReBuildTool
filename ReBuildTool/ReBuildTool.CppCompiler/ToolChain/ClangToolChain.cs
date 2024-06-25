@@ -21,9 +21,9 @@ public class ClangToolChain : IToolChain
 		yield break;
 	}
 
-	public override IEnumerable<NPath> EnvVars()
+	public override Dictionary<string, string> EnvVars()
 	{
-		yield break;
+		return null;
 	}
 
 	public override IEnumerable<NPath> ToolChainIncludePaths()

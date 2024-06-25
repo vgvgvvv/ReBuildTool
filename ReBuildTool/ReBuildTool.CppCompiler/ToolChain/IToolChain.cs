@@ -18,7 +18,7 @@ public abstract class IToolChain
 	
 	public abstract IEnumerable<string> ToolChainDefines();
 
-	public abstract IEnumerable<NPath> EnvVars();
+	public abstract Dictionary<string, string> EnvVars();
 
 	public abstract IEnumerable<NPath> ToolChainIncludePaths();
 

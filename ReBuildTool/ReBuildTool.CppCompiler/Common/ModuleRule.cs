@@ -34,4 +34,9 @@ public abstract class ModuleRule
     
     public string ModuleDirectory { get; internal set; }
 
+    public virtual IEnumerable<string> CompileFlagsFor(CppCompilationUnit compilationUnit)
+    {
+        return Enumerable.Empty<string>();
+    }
+
 }
