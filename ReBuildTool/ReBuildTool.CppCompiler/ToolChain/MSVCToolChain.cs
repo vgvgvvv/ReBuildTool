@@ -13,7 +13,7 @@ public class MSVCToolChain : IToolChain
 		throw new NotImplementedException();
 	}
 
-	public override IEnumerable<NPath> ToolChainDefines()
+	public override IEnumerable<string> ToolChainDefines()
 	{
 		throw new NotImplementedException();
 	}
@@ -36,6 +36,12 @@ public class MSVCToolChain : IToolChain
 	public override IEnumerable<NPath> ToolChainStaticLibraries()
 	{
 		throw new NotImplementedException();
+	}
+
+	public override bool CanBeCompiled(NPath sourceFile)
+	{
+		var ex = sourceFile.ExtensionWithDot;
+		return ex == ".cpp" || ex == ".cc" || ex == ".c";
 	}
 
 	public override string ObjectExtension { get; }

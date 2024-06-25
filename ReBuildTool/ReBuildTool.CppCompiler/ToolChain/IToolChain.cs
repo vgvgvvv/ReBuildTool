@@ -16,7 +16,7 @@ public abstract class IToolChain
 
 	public abstract IEnumerable<string> ObjectOutputArguments(NPath objectFile, NPath sourceFile);
 	
-	public abstract IEnumerable<NPath> ToolChainDefines();
+	public abstract IEnumerable<string> ToolChainDefines();
 
 	public abstract IEnumerable<NPath> EnvVars();
 
@@ -25,6 +25,8 @@ public abstract class IToolChain
 	public abstract IEnumerable<NPath> ToolChainLibraryPaths();
 
 	public abstract IEnumerable<NPath> ToolChainStaticLibraries();
+
+	public abstract bool CanBeCompiled(NPath sourceFile);
 
 	public abstract string ObjectExtension { get; }
 	

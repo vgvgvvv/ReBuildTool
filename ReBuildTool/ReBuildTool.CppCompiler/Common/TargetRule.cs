@@ -1,6 +1,8 @@
 ﻿namespace ReBuildTool.ToolChain;
 
-public class TargetRule
+public abstract class TargetRule
 {
     public List<string> UsedModules { get; } = new();
+    
+    public string TargetDirectory { get; internal set; }
 }

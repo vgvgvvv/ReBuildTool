@@ -16,7 +16,7 @@ public class ClangToolChain : IToolChain
 		yield return objectFile;
 	}
 
-	public override IEnumerable<NPath> ToolChainDefines()
+	public override IEnumerable<string> ToolChainDefines()
 	{
 		yield break;
 	}
@@ -37,8 +37,13 @@ public class ClangToolChain : IToolChain
 	}
 
 	public override IEnumerable<NPath> ToolChainStaticLibraries()
-	{yield break;
-		
+	{
+		yield break;
+	}
+
+	public override bool CanBeCompiled(NPath sourceFile)
+	{
+		throw new NotImplementedException();
 	}
 
 	public override string ObjectExtension => ".o";

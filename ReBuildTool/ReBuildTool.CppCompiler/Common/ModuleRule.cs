@@ -1,6 +1,6 @@
 ﻿namespace ReBuildTool.ToolChain;
 
-public class ModuleRule
+public abstract class ModuleRule
 {
     public string TargetName => GetType().Name;
     
@@ -8,8 +8,30 @@ public class ModuleRule
 
     public List<string> PrivateIncludePaths { get; } = new();
 
-    public List<string> SourceDirectory { get; } = new();
+    public List<string> PublicDefines { get; } = new();
 
-    public List<string> Dependency { get; } = new();
+    public List<string> PrivateDefines { get; } = new();
+
+    public List<string> PublicCompilerFlags { get; } = new();
+
+    public List<string> PrivateCompileFlags { get; } = new();
+
+    public List<string> PublicLinkFlags { get; } = new();
+
+    public List<string> PrivateLinkFlags { get; } = new();
+
+    public List<string> PublicLibraries { get; } = new();
+    
+    public List<string> PrivateLibraries { get; } = new();
+    
+    public List<string> PublicLibraryDirectories { get; } = new();
+    
+    public List<string> PrivateLibraryDirectories { get; } = new();
+    
+    public List<string> SourceDirectories { get; } = new();
+
+    public List<string> Dependencies { get; } = new();
+    
+    public string ModuleDirectory { get; internal set; }
 
 }
