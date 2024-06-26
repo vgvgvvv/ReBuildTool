@@ -204,7 +204,7 @@ internal abstract class MsvcSDK
 		var result = new Dictionary<Version, VCPaths>();
 		foreach (var directory in GetVcToolRootPath().Directories())
 		{
-			var version = Version.Parse(directory);
+			var version = Version.Parse(directory.FileName);
 			result.Add(version, new VCPaths(directory));
 		}
 		return result;

@@ -7,12 +7,17 @@ namespace ReBuildTool.ToolChain;
 
 public interface ICppSourceProvider
 {
+	NPath ProjectRoot { get; }
 	Dictionary<string, TargetRule> TargetRules { get; }
 	Dictionary<string, ModuleRule> ModuleRules { get; }
 }
 
 public class CppBuildProject : ICppSourceProvider
 {
+	public const string TargetDefineExtension = ".Target.cs";
+	public const string ModuleDefineExtension = ".Module.cs";
+	public const string ExtensionDefineExtension = ".Extension.cs";
+	
 	public static CppBuildProject Create(string workDirectory)
 	{
 		return new CppBuildProject(workDirectory);
@@ -25,9 +30,9 @@ public class CppBuildProject : ICppSourceProvider
 
 	private void ParseRules()
 	{
-		var targetFiles = ProjectRoot.Files("*.Target.cs", true).ToList();
-		var moduleFiles = ProjectRoot.Files("*.Module.cs", true).ToList();
-		var extraFiles = ProjectRoot.Files("*.Extension.cs", true).ToList();
+		var targetFiles = ProjectRoot.Files($"*{TargetDefineExtension}", true).ToList();
+		var moduleFiles = ProjectRoot.Files($"*{ModuleDefineExtension}", true).ToList();
+		var extraFiles = ProjectRoot.Files($"*{ExtensionDefineExtension}", true).ToList();
 		
 		foreach (var targetFile in targetFiles)
 		{
@@ -36,7 +41,8 @@ public class CppBuildProject : ICppSourceProvider
 		
 		foreach (var moduleFile in moduleFiles)
 		{
-			ModuleRulePaths.Add(moduleFile.FileNameWithoutExtension, moduleFile);
+			var fileName = moduleFile.FileName;
+			ModuleRulePaths.Add(fileName.Substring(0, fileName.Length - ModuleDefineExtension.Length), moduleFile);
 		}
 		
 		BuildRuleCompileUnit = new SimpleAssemblyCompileUnit();
@@ -150,14 +156,18 @@ public class CppBuildProject : ICppSourceProvider
 				rule.PublicIncludePaths.Add(moduleRulePath.Parent.Combine("Public"));
 				rule.PrivateIncludePaths.Add(moduleRulePath.Parent.Combine("Private"));
 			}
+			else
+			{
+				throw new Exception($"cannot find module {ruleName}");
+			}
 			ModuleRules.Add(ruleName, rule);
 		}
 	}
 
 	private void Build(CppBuilder builder, TargetRule targetRule)
 	{
-		builder.SetSource(this);
-		builder.BuildTarget(targetRule);
+		builder.SetSource(this)
+			.BuildTarget(targetRule);
 	}
 	
 	private void BuildAll(CppBuilder builder)

@@ -40,9 +40,10 @@ public partial class CppBuilder
 		CurrentToolChain = CurrentPlatformSupport.MakeCppToolChain(arch, configuration);
 	}
 
-	public void SetSource(ICppSourceProvider sourceProvider)
+	public CppBuilder SetSource(ICppSourceProvider sourceProvider)
 	{
 		CurrentSource = sourceProvider;
+		return this;
 	}
 	
 	public void BuildTarget(TargetRule targetRule)
@@ -95,7 +96,9 @@ public partial class CppBuilder
 		while(PendingModulesQueue.Count > 0)
 		{
 			var module = PendingModulesQueue.Dequeue();
+			Log.Info($"Build {module.TargetName} Begin...");
 			BuildModule(module);
+			Log.Info($"Build {module.TargetName} Done...");
 		}
 	}
 	
@@ -104,6 +107,7 @@ public partial class CppBuilder
 		CompileProcess process = CompileProcess.Create(module, this);
 		if (!process.Compile())
 		{
+			Log.Error($"compile {module} failed !!");
 			return false;
 		}
 
@@ -111,6 +115,7 @@ public partial class CppBuilder
 		{
 			if (!process.Link())
 			{
+				Log.Error($"link {module} failed !!");
 				return false;
 			}
 		}
@@ -118,6 +123,7 @@ public partial class CppBuilder
 		{
 			if (!process.Archive())
 			{
+				Log.Error($"archive {module} failed !!");
 				return false;
 			}
 		}

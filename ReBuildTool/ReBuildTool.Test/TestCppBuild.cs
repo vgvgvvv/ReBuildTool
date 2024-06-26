@@ -47,7 +47,7 @@ public class Tests
     {
         CmdParser.Parse<Tests>();
 
-        CppCompilerArgs.Get().DryRun = true;
+        //CppCompilerArgs.Get().DryRun = true;
         
         var project = CppBuildProject
             .Create(BuildCppFolder)

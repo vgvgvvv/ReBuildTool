@@ -1,4 +1,6 @@
-﻿using NiceIO;
+﻿using System.Diagnostics;
+using NiceIO;
+using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
 
@@ -50,12 +52,34 @@ internal class InvocationBase
 	public bool Run()
 	{
 		bool isSucc = false;
-		SimpleExec.Command.Run(ProgramName, Arguments.ToArray(), handleExitCode: (code) =>
+		
+		ProcessStartInfo startInfo = new ProcessStartInfo();
+		startInfo.FileName = ProgramName; 
+		startInfo.UseShellExecute = false; 
+		startInfo.RedirectStandardOutput = true; 
+		startInfo.CreateNoWindow = true;
+		startInfo.Arguments = string.Join(' ', Arguments);
+		
+		using (Process process = new Process())
 		{
-			isSucc = code != 0;
-			return isSucc;
-		});
-		return isSucc;
+			process.StartInfo = startInfo;
+			process.OutputDataReceived += (sender, args) =>
+			{
+				Log.Info(args);
+			};
+			
+			process.ErrorDataReceived += (sender, args) =>
+			{
+				Log.Error(args);
+			};
+			
+			process.Start();
+			process.WaitForExit();
+			
+			return process.ExitCode == 0;
+
+		}
+
 	}
 		
 	public string ProgramName { get; set; }

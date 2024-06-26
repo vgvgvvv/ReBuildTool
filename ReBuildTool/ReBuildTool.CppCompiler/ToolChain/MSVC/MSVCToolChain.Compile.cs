@@ -16,14 +16,13 @@ public partial class MSVCToolChain
 	
 	public override IEnumerable<string> CompileArgsFor(CppCompilationUnit compileUnit)
 	{
-		if (compileUnit.SourceFile.ExtensionWithDot == ".asm")
+		bool isAsm = compileUnit.SourceFile.ExtensionWithDot == ".asm";
+		if (isAsm)
 		{
 			yield return "/c";
-			yield return compileUnit.SourceFile.InQuotes();
 		}
 		else
 		{
-			yield return compileUnit.SourceFile.InQuotes();
 			foreach (var compileFlag in compileUnit.CompileFlags.Concat(DefaultCompileFlags(compileUnit)))
 			{
 				yield return compileFlag;
@@ -38,7 +37,18 @@ public partial class MSVCToolChain
 			{
 				yield return $"/I\"{includePath}\"";
 			}
+			
+			yield return "/Fd" + compileUnit.OutputFile.ChangeExtension(".pdb").InQuotes();
+			if (compileUnit.OutputAssembly)
+			{
+				yield return "/Fa" + compileUnit.SourceFile.ChangeExtension(".s").InQuotes();
+			}
 		}
+
+		yield return "/Fo" + compileUnit.OutputFile.InQuotes();
+		
+		yield return compileUnit.SourceFile.InQuotes();
+
 	}
 	
 	protected IEnumerable<string> DefaultCompileFlags(CppCompilationUnit unit)

@@ -8,6 +8,7 @@ public partial class CppBuilder
 {
 	internal partial class CompileProcess
 	{
+		
 		public bool Compile()
 		{
 			if (!CollectCompileUnit())
@@ -27,6 +28,17 @@ public partial class CppBuilder
 
 			return true;
 		}
+
+		private NPath ObjectCachePath(NPath sourceFile)
+		{
+			var relatePath = sourceFile.RelativeTo(Source.ProjectRoot);
+			var result = Source.ProjectRoot
+				.Combine("Intermedia", "ObjectCache", relatePath)
+				.ChangeExtension(ToolChain.ObjectExtension);
+			result.EnsureParentDirectoryExists();
+			return result;
+		}
+
 		
 		private bool CollectCompileUnit()
 		{
@@ -43,6 +55,8 @@ public partial class CppBuilder
 					compileUnit.CompileFlags = GetCompileFlagsForUnit(compileUnit);
 					compileUnit.Defines = GetDefinesForUnit(compileUnit);
 					compileUnit.IncludePaths = GetIncludePathsForUnit(compileUnit);
+					compileUnit.OutputFile = ObjectCachePath(sourceFile);
+					CompileUnits.Add(compileUnit);
 				}
 			}
 
@@ -74,6 +88,7 @@ public partial class CppBuilder
 				}
 				else
 				{
+					Log.Info($"[{index}/{maxCount}]{invocation}");
 					if (!invocation.Run())
 					{
 						Log.Error($"Compile failed: {invocation.ProgramName} {string.Join(' ', invocation.Arguments)}");

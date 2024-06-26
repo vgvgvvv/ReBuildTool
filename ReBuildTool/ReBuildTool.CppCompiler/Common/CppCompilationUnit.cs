@@ -16,6 +16,7 @@ public class CppCompilationUnit
     public IEnumerable<string> Defines { get; set; }
     public IEnumerable<NPath> IncludePaths { get; set; }
     public IEnumerable<string> CompileFlags { get; set; }
+    public bool OutputAssembly { get; set; } = false;
 }
 
 public class CppLinkUnit
