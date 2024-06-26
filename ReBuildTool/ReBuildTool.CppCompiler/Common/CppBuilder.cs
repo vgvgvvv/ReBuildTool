@@ -99,11 +99,30 @@ public partial class CppBuilder
 		}
 	}
 	
-	private void BuildModule(ModuleRule module)
+	private bool BuildModule(ModuleRule module)
 	{
 		CompileProcess process = CompileProcess.Create(module, this);
-		process.Compile();
-		process.Link();
+		if (!process.Compile())
+		{
+			return false;
+		}
+
+		if (module.BuildType != BuildType.StaticLibrary)
+		{
+			if (!process.Link())
+			{
+				return false;
+			}
+		}
+		else
+		{
+			if (!process.Archive())
+			{
+				return false;
+			}
+		}
+		
+		return true;
 	}
 	
 	private Queue<ModuleRule> PendingModulesQueue { get; } = new();

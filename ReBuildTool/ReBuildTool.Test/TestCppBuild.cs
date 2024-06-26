@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using NiceIO;
+using ReBuildTool.CppCompiler.Standalone;
 using ReBuildTool.ToolChain;
 using ResetCore.Common;
 
@@ -45,6 +46,8 @@ public class Tests
     public void TestBaseProject()
     {
         CmdParser.Parse<Tests>();
+
+        CppCompilerArgs.Get().DryRun = true;
         
         var project = CppBuildProject
             .Create(BuildCppFolder)

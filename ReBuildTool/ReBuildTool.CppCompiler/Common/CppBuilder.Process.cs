@@ -5,7 +5,7 @@ namespace ReBuildTool.ToolChain;
 
 public partial class CppBuilder
 {
-	internal class CompileProcess
+	internal partial class CompileProcess
 	{
 		public static CompileProcess Create(ModuleRule module, CppBuilder owner)
 		{
@@ -18,98 +18,8 @@ public partial class CppBuilder
 			Owner = owner;
 		}
 		
-		public void Compile()
-		{
-			CollectCompileUnit();
-			CollectCompileInvocations();
-			RunCompileInvocations();
-		}
 
-		public void Link()
-		{
-			
-		}
-		
-		private void CollectCompileUnit()
-		{
-			CompileUnits.Clear();
-			foreach (var sourceDirectory in Module.SourceDirectories)
-			{
-				var files = sourceDirectory.ToNPath().Files(true)
-					.Where(f => ToolChain.CanBeCompiled(f))
-					.ToList();
-				foreach (var sourceFile in files)
-				{
-					var compileUnit = new CppCompilationUnit();
-					compileUnit.SourceFile = sourceFile;
-					compileUnit.CompileFlags = GetCompileFlagsForUnit(compileUnit);
-					compileUnit.Defines = GetDefinesForUnit(compileUnit);
-					compileUnit.IncludePaths = GetIncludePathsForUnit(compileUnit);
-				}
-			}
-		}
-
-		private void CollectCompileInvocations()
-		{
-			foreach (var compileUnit in CompileUnits)
-			{
-				var invocation = new CppCompileInvocation();
-				invocation.ProgramName = ToolChain.CompilerExecutableFor(compileUnit.SourceFile);
-				invocation.Arguments.AddRange(ToolChain.CompilerFlagsFor(compileUnit));
-				invocation.Arguments.AddRange(Module.CompileFlagsFor(compileUnit));
-				CompileInvocation.Add(invocation);
-			}
-		}
-
-		private void RunCompileInvocations()
-		{
-			foreach (var invocation in CompileInvocation)
-			{
-				if (invocation.Run())
-				{
-					Log.Error($"Compile failed: {invocation.ProgramName} {string.Join(' ', invocation.Arguments)}");
-				}
-			}
-		}
-		
-		private IEnumerable<string> GetDefinesForUnit(CppCompilationUnit unit)
-		{
-			foreach (var toolChainDefine in ToolChain.ToolChainDefines())
-			{
-				yield return toolChainDefine;
-			}
-
-			foreach (var define in GetDefinesForModule(Module))
-			{
-				yield return define;
-			}
-		}
-		
-		private IEnumerable<string> GetCompileFlagsForUnit(CppCompilationUnit unit)
-		{
-			foreach (var compileFlag in ToolChain.CompilerFlagsFor(unit))
-			{
-				yield return compileFlag;
-			}
-			
-			foreach (var compileFlag in GetCompileFlagsForModule(Module))
-			{
-				yield return compileFlag;
-			}
-		}
-		
-		private IEnumerable<NPath> GetIncludePathsForUnit(CppCompilationUnit unit)
-		{
-			foreach (var toolChainDefine in ToolChain.ToolChainIncludePaths())
-			{
-				yield return toolChainDefine;
-			}
-			
-			foreach (var includePath in GetIncludePathsForModule(Module))
-			{
-				yield return includePath.ToNPath();
-			}
-		}
+		#region ModuleInfos
 
 		private IEnumerable<string> GetDefinesForModule(ModuleRule module)
 		{
@@ -268,6 +178,8 @@ public partial class CppBuilder
 				}
 			}
 		}
+
+		#endregion
 		
 		private ModuleRule? GetModuleRuleByName(string name)
 		{
@@ -289,22 +201,5 @@ public partial class CppBuilder
 		private ICppSourceProvider Source => Owner.CurrentSource;
 	}
 
-	internal class CppCompileInvocation
-	{
-
-		public bool Run()
-		{
-			bool isSucc = false;
-			SimpleExec.Command.Run(ProgramName, Arguments.ToArray(), handleExitCode: (code) =>
-			{
-				isSucc = code != 0;
-				return isSucc;
-			});
-			return isSucc;
-		}
-		
-		public string ProgramName { get; set; }
-		public  List<string> Arguments { get; } = new();
-		public  Dictionary<string, string> EnvVars { get; } = new();
-	}
+	
 }

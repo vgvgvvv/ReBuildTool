@@ -1,7 +1,16 @@
 ﻿namespace ReBuildTool.ToolChain;
 
+public enum BuildType
+{
+    StaticLibrary,
+    DynamicLibrary,
+    Executable
+}
+
 public abstract class ModuleRule
 {
+    public BuildType BuildType { get; set; } = BuildType.DynamicLibrary;
+    
     public string TargetName => GetType().Name;
     
     public List<string> PublicIncludePaths { get; } = new();
@@ -35,6 +44,16 @@ public abstract class ModuleRule
     public string ModuleDirectory { get; internal set; }
 
     public virtual IEnumerable<string> CompileFlagsFor(CppCompilationUnit compilationUnit)
+    {
+        return Enumerable.Empty<string>();
+    }
+    
+    public virtual IEnumerable<string> DefinesFor(CppCompilationUnit compilationUnit)
+    {
+        return Enumerable.Empty<string>();
+    }
+    
+    public virtual IEnumerable<string> IncludePathsFor(CppCompilationUnit compilationUnit)
     {
         return Enumerable.Empty<string>();
     }
