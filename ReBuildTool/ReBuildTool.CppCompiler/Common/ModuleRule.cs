@@ -28,6 +28,10 @@ public abstract class ModuleRule
     public List<string> PublicLinkFlags { get; } = new();
 
     public List<string> PrivateLinkFlags { get; } = new();
+    
+    public List<string> PublicArchiveFlags { get; } = new();
+
+    public List<string> PrivateArchiveFlags { get; } = new();
 
     public List<string> PublicStaticLibraries { get; } = new();
     

@@ -131,6 +131,7 @@ public class Shell : IDisposable
         
         Process.Exited += (sender, args) =>
         {
+	        Log.Info(args);
 	        CurrentStatus = Status.Finished;
         };
         

@@ -64,5 +64,8 @@ internal class MSVCLinkArgsBuilder : ILinkArgsBuilder
 
 internal class MSVCArchiveArgsBuilder : IArchiveArgsBuilder
 {
-	
+	public override void SetLto(bool enable)
+	{
+		Append("/LTCG");
+	}
 }

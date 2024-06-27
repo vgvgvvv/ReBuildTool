@@ -129,5 +129,5 @@ public abstract class ILinkArgsBuilder : IArgsBuilder
 
 public abstract class IArchiveArgsBuilder : IArgsBuilder
 {
-	
+	public abstract void SetLto(bool enable);
 }

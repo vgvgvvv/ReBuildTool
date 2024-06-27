@@ -52,6 +52,7 @@ public class CppArchiveUnit
     }
     
     public NPath OutputPath { get; set; }
+    public NPath ResponseFile { get; set; }
     public IEnumerable<NPath> LibraryPaths { get; set; }
     public IEnumerable<string> StaticLibraries { get; set; }
     public IEnumerable<string> ArchiveFlags { get; set; }

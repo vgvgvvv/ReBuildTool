@@ -87,6 +87,28 @@ public partial class CppBuilder
 			}
 		}
 		
+		private IEnumerable<string> GetArchiveFlagsForModule(ModuleRule module)
+		{
+			var depModules = ModuleDependencies(module);
+			foreach (var depModule in depModules)
+			{
+				foreach (var define in depModule.PublicArchiveFlags)
+				{
+					yield return define;
+				}
+			}
+
+			foreach (var publicDef in module.PublicArchiveFlags)
+			{
+				yield return publicDef;
+			}
+
+			foreach (var publicDef in module.PrivateArchiveFlags)
+			{
+				yield return publicDef;
+			}
+		}
+		
 		private IEnumerable<string> GetIncludePathsForModule(ModuleRule module)
 		{
 			var depModules = ModuleDependencies(module);

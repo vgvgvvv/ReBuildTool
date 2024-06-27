@@ -85,12 +85,12 @@ public partial class CppBuilder
 			{
 				if (CppCompilerArgs.Get().DryRun)
 				{
-					Log.Info($"[{index}/{maxCount}]{invocation}");
+					Log.Info($"Compile [{index}/{maxCount}]{invocation}");
 					index++;
 				}
 				else
 				{
-					Log.Info($"[{index}/{maxCount}]{invocation}");
+					Log.Info($"Compile:[{index}/{maxCount}]");
 					if (!invocation.Run())
 					{
 						Log.Error($"Compile failed: {invocation.ProgramName} {string.Join(' ', invocation.Arguments)}");
