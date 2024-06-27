@@ -109,23 +109,45 @@ public partial class CppBuilder
 			}
 		}
 
-		private IEnumerable<string> GetLibrariesForModule(ModuleRule module)
+		private IEnumerable<string> GetStaticLibrariesForModule(ModuleRule module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
 			{
-				foreach (var define in depModule.PublicIncludePaths)
+				foreach (var define in depModule.PublicStaticLibraries)
 				{
 					yield return define;
 				}
 			}
 
-			foreach (var publicDef in module.PublicIncludePaths)
+			foreach (var publicDef in module.PublicStaticLibraries)
 			{
 				yield return publicDef;
 			}
 
-			foreach (var publicDef in module.PrivateLibraries)
+			foreach (var publicDef in module.PrivateStaticLibraries)
+			{
+				yield return publicDef;
+			}
+		}
+		
+		private IEnumerable<string> GetDynamicLibrariesForModule(ModuleRule module)
+		{
+			var depModules = ModuleDependencies(module);
+			foreach (var depModule in depModules)
+			{
+				foreach (var define in depModule.PublicDynamicLibraries)
+				{
+					yield return define;
+				}
+			}
+
+			foreach (var publicDef in module.PublicDynamicLibraries)
+			{
+				yield return publicDef;
+			}
+
+			foreach (var publicDef in module.PrivateDynamicLibraries)
 			{
 				yield return publicDef;
 			}
@@ -187,9 +209,7 @@ public partial class CppBuilder
 			return moduleRule;
 		}
 
-		private List<CppCompilationUnit> CompileUnits { get; } = new();
-
-		private List<CppCompileInvocation> CompileInvocation { get; } = new();
+	
 		
 		public ModuleRule Module { get; }
 		public CppBuilder Owner { get; }

@@ -17,6 +17,8 @@ public class CppCompilationUnit
     public IEnumerable<NPath> IncludePaths { get; set; }
     public IEnumerable<string> CompileFlags { get; set; }
     public bool OutputAssembly { get; set; } = false;
+    
+    public ICompileArgsBuilder CompileArgsBuilder { get; set; }
 }
 
 public class CppLinkUnit
@@ -31,11 +33,13 @@ public class CppLinkUnit
     }
     
     public NPath OutputPath { get; set; }
+    public NPath ResponseFile { get; set; }
     public IEnumerable<NPath> ObjectFiles { get; set; }
     public IEnumerable<string> LinkFlags { get; set; }
     public IEnumerable<NPath> LibraryPaths { get; set; }
     public IEnumerable<string> StaticLibraries { get; set; }
     public IEnumerable<string> DynamicLibraries { get; set; }
+    public ILinkArgsBuilder LinkArgsBuilder { get; set; }
 }
 
 public class CppArchiveUnit
@@ -52,4 +56,5 @@ public class CppArchiveUnit
     public IEnumerable<string> StaticLibraries { get; set; }
     public IEnumerable<string> ArchiveFlags { get; set; }
     public IEnumerable<NPath> ObjectFiles { get; set; }
+    public IArchiveArgsBuilder ArchiveArgsBuilder { get; set; }
 }

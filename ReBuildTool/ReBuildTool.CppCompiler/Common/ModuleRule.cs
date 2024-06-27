@@ -29,9 +29,13 @@ public abstract class ModuleRule
 
     public List<string> PrivateLinkFlags { get; } = new();
 
-    public List<string> PublicLibraries { get; } = new();
+    public List<string> PublicStaticLibraries { get; } = new();
     
-    public List<string> PrivateLibraries { get; } = new();
+    public List<string> PrivateStaticLibraries { get; } = new();
+    
+    public List<string> PublicDynamicLibraries { get; } = new();
+    
+    public List<string> PrivateDynamicLibraries { get; } = new();
     
     public List<string> PublicLibraryDirectories { get; } = new();
     
@@ -56,6 +60,21 @@ public abstract class ModuleRule
     public virtual IEnumerable<string> IncludePathsFor(CppCompilationUnit compilationUnit)
     {
         return Enumerable.Empty<string>();
+    }
+
+    public virtual void AdditionCompileArgs(ICompileArgsBuilder builder)
+    {
+        
+    }
+    
+    public virtual void AdditionLinkArgs(ILinkArgsBuilder builder)
+    {
+        
+    }
+    
+    public virtual void AdditionArchiveArgs(IArchiveArgsBuilder builder)
+    {
+        
     }
 
 }

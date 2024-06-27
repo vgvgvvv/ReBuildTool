@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using NiceIO;
+using ReBuildTool.Common;
 using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
@@ -25,6 +26,8 @@ public abstract class IToolChain
 	public abstract IEnumerable<NPath> ToolChainLibraryPaths();
 
 	public abstract IEnumerable<NPath> ToolChainStaticLibraries();
+	
+	public abstract IEnumerable<NPath> ToolChainDynamicLibraries();
 
 	public abstract bool CanBeCompiled(NPath sourceFile);
 
@@ -45,41 +48,30 @@ public abstract class IToolChain
 	internal abstract CppLinkInvocation MakeLinkInvocation(CppLinkUnit cppLinkUnit);
 	
 	internal abstract CppArchiveInvocation MakeArchiveInvocation(CppArchiveUnit cppArchiveUnit);
+	
+	public abstract ICompileArgsBuilder MakeCompileArgsBuilder();
+	
+	public abstract ILinkArgsBuilder MakeLinkArgsBuilder();
+	
+	public abstract IArchiveArgsBuilder MakeArchiveArgsBuilder();
+	
 }
 
 internal class InvocationBase
 {
 	public bool Run()
 	{
-		bool isSucc = false;
-		
-		ProcessStartInfo startInfo = new ProcessStartInfo();
-		startInfo.FileName = ProgramName; 
-		startInfo.UseShellExecute = false; 
-		startInfo.RedirectStandardOutput = true; 
-		startInfo.CreateNoWindow = true;
-		startInfo.Arguments = string.Join(' ', Arguments);
-		
-		using (Process process = new Process())
+		using (var shell = Shell.Create())
 		{
-			process.StartInfo = startInfo;
-			process.OutputDataReceived += (sender, args) =>
-			{
-				Log.Info(args);
-			};
-			
-			process.ErrorDataReceived += (sender, args) =>
-			{
-				Log.Error(args);
-			};
-			
-			process.Start();
-			process.WaitForExit();
-			
-			return process.ExitCode == 0;
+			shell.WithProgram(ProgramName)
+				.WithArguments(Arguments)
+				.WithEnvVars(EnvVars)
+				.Execute()
+				.WaitForEnd();
 
+			return shell.IsSuccess();
 		}
-
+		
 	}
 		
 	public string ProgramName { get; set; }
@@ -97,3 +89,45 @@ internal class CppCompileInvocation : InvocationBase { }
 internal class CppLinkInvocation : InvocationBase { }
 
 internal class CppArchiveInvocation : InvocationBase { }
+
+public class IArgsBuilder
+{
+	public void Append(string arg)
+	{
+		Arguments.Add(arg);
+	}
+	
+	public virtual IEnumerable<string> GetAllArguments()
+	{
+		return Arguments;
+	}
+	
+	private List<string> Arguments { get; } = new();
+}
+
+public abstract class ICompileArgsBuilder : IArgsBuilder
+{
+	public abstract void DisableException(bool enable);
+
+	public abstract void DisableWarnings(string warnCode);
+	
+	public abstract void SetWarnAsError(bool enable);
+	
+	public abstract void SetLto(bool enable);
+}
+
+public abstract class ILinkArgsBuilder : IArgsBuilder
+{
+	public abstract void DisableWarnings(string warnCode);
+	
+	public abstract void SetLto(bool enable);
+	
+	public abstract void SetFastLink(bool enable);
+
+	public abstract void SetWarnAsError(bool enable);
+}
+
+public abstract class IArchiveArgsBuilder : IArgsBuilder
+{
+	
+}

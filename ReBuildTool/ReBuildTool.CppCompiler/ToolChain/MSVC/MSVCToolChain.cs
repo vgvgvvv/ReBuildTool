@@ -39,10 +39,30 @@ public partial class MSVCToolChain : IToolChain
 	{
 		yield break; 
 	}
+	
+	public override IEnumerable<NPath> ToolChainDynamicLibraries()
+	{
+		yield break; 
+	}
 
 	public override string ObjectExtension => ".obj";
 	public override string ExecutableExtension => ".exe";
 	public override string StaticLibraryExtension => ".lib";
 	public override string DynamicLibraryExtension => ".dll";
+
+	public override ICompileArgsBuilder MakeCompileArgsBuilder()
+	{
+		return new MSVCCompileArgsBuilder();
+	}
+
+	public override ILinkArgsBuilder MakeLinkArgsBuilder()
+	{
+		return new MSVCLinkArgsBuilder();
+	}
+
+	public override IArchiveArgsBuilder MakeArchiveArgsBuilder()
+	{
+		return new MSVCArchiveArgsBuilder();
+	}
 	
 }

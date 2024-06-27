@@ -52,10 +52,12 @@ public partial class CppBuilder
 				{
 					var compileUnit = new CppCompilationUnit();
 					compileUnit.SourceFile = sourceFile;
-					compileUnit.CompileFlags = GetCompileFlagsForUnit(compileUnit);
-					compileUnit.Defines = GetDefinesForUnit(compileUnit);
-					compileUnit.IncludePaths = GetIncludePathsForUnit(compileUnit);
+					compileUnit.CompileFlags = GetCompileFlagsForCompileUnit(compileUnit);
+					compileUnit.Defines = GetDefinesForCompileUnit(compileUnit);
+					compileUnit.IncludePaths = GetIncludePathsForCompileUnit(compileUnit);
 					compileUnit.OutputFile = ObjectCachePath(sourceFile);
+					compileUnit.CompileArgsBuilder = ToolChain.MakeCompileArgsBuilder();
+					Module.AdditionCompileArgs(compileUnit.CompileArgsBuilder);
 					CompileUnits.Add(compileUnit);
 				}
 			}
@@ -96,14 +98,14 @@ public partial class CppBuilder
 					}
 					index++;
 				}
-				
 			}
+			
 			return succ;
 		}
 		
 		#region CompileUnitInfo
 
-		private IEnumerable<string> GetDefinesForUnit(CppCompilationUnit unit)
+		private IEnumerable<string> GetDefinesForCompileUnit(CppCompilationUnit unit)
 		{
 			foreach (var define in GetDefinesForModule(Module))
 			{
@@ -121,7 +123,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<string> GetCompileFlagsForUnit(CppCompilationUnit unit)
+		private IEnumerable<string> GetCompileFlagsForCompileUnit(CppCompilationUnit unit)
 		{
 			foreach (var compileFlag in GetCompileFlagsForModule(Module))
 			{
@@ -139,7 +141,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<NPath> GetIncludePathsForUnit(CppCompilationUnit unit)
+		private IEnumerable<NPath> GetIncludePathsForCompileUnit(CppCompilationUnit unit)
 		{
 			foreach (var includePath in GetIncludePathsForModule(Module))
 			{
@@ -158,5 +160,9 @@ public partial class CppBuilder
 		}
 
 		#endregion
+		
+		private List<CppCompilationUnit> CompileUnits { get; } = new();
+
+		private List<CppCompileInvocation> CompileInvocation { get; } = new();
 	}
 }
