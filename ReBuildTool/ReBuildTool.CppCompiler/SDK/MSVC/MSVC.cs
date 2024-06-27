@@ -84,12 +84,12 @@ internal class VCPaths
 	
 	public NPath GetIncludePath(Architecture arch)
 	{
-		return VCRoot.Combine("include").Combine("Hostx64").Combine(MSVC.GetArchFolderName(arch));
+		return VCRoot.Combine("include");
 	}
 	
 	public NPath GetLibPath(Architecture arch)
 	{
-		return VCRoot.Combine("lib").Combine("Hostx64").Combine(MSVC.GetArchFolderName(arch));
+		return VCRoot.Combine("lib").Combine(MSVC.GetArchFolderName(arch));
 	}
 	
 	public NPath VCRoot { get; }

@@ -42,6 +42,7 @@ public partial class CppBuilder
 			LinkUnit.OutputPath = LinkResultPath();
 			LinkUnit.ResponseFile = LinkUnit.OutputPath.ChangeExtension(".rsp");
 			var rspContent = string.Join(Environment.NewLine, LinkUnit.ObjectFiles.InQuotes());
+			LinkUnit.ResponseFile.EnsureParentDirectoryExists();
 			File.WriteAllText(LinkUnit.ResponseFile, rspContent, Encoding.UTF8);
 			LinkUnit.LinkArgsBuilder = ToolChain.MakeLinkArgsBuilder();
 			Module.AdditionLinkArgs(LinkUnit.LinkArgsBuilder);
@@ -58,6 +59,7 @@ public partial class CppBuilder
 		{
 			if (!LinkInvocation.Run())
 			{
+				Log.Error($"{LinkInvocation.ProgramName} {LinkInvocation.Arguments.Join(" ")}");
 				Log.Error($"Link {Module.TargetName} failed !");
 				return false;
 			}

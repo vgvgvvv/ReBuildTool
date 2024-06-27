@@ -148,6 +148,7 @@ public class Shell : IDisposable
 		if (Process != null)
 		{
 			Process.WaitForExit();
+			CurrentStatus = Status.Finished;
 		}
 		return this;
 	}
