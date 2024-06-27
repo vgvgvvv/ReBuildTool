@@ -121,17 +121,22 @@ public class Shell : IDisposable
         Process.StartInfo = startInfo;
         Process.OutputDataReceived += (sender, args) =>
         {
-	        Log.Info(args);
+	        if (args.Data != null)
+	        {
+		        Log.Info(args.Data);
+	        }
         };
         
         Process.ErrorDataReceived += (sender, args) =>
         {
-	        Log.Error(args);
+	        if (args.Data != null)
+	        {
+		        Log.Error(args.Data);
+	        }
         };
         
         Process.Exited += (sender, args) =>
         {
-	        Log.Info(args);
 	        CurrentStatus = Status.Finished;
         };
         
