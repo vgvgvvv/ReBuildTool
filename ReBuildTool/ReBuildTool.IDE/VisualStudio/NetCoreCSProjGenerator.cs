@@ -49,7 +49,7 @@ public class NetCoreCSProj : ISlnSubProject
 
 	public void FlushToFile()
 	{
-		File.WriteAllText(outputFolder.Combine(targetUnityAssembly.FileName + ".csproj"), codeBuilder.ToString());
+		File.WriteAllText(fullPath, codeBuilder.ToString());
 	}
 
 	private void GenerateProject()

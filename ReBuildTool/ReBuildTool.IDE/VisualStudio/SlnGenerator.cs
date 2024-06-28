@@ -31,7 +31,7 @@ public class SlnGenerator : ISlnGenerator
 	
 	public ISlnSubProject GenerateOrGetVCProj(ICppSourceProviderInterface source, NPath output)
 	{
-		return VCProjectGenerator.GenerateOrGetVCProj(this, source, output);
+		return VCProject.GenerateOrGetVCProj(this, source, output);
 	}
 
 	public void RegisterProj(ISlnSubProject proj)
