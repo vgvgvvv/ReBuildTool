@@ -1,6 +1,10 @@
-﻿namespace ReBuildTool.Service.CompileService;
+﻿using ReBuildTool.Service.Context;
 
-public class CppCompile
+namespace ReBuildTool.Service.CompileService;
+
+public interface ICppProject : IProvideByService
 {
-	
+	void Parse();
+	void Setup();
+	void Build(string? targetName = null);
 }

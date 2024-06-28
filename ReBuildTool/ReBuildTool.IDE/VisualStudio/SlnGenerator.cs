@@ -1,6 +1,7 @@
 ﻿using NiceIO;
 using ReBuildTool.Common;
 using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.Context;
 using ReBuildTool.Service.IDEService.VisualStudio;
 
 namespace ReBuildTool.IDE.VisualStudio;
@@ -8,7 +9,8 @@ namespace ReBuildTool.IDE.VisualStudio;
 
 public class SlnGenerator : ISlnGenerator
 {
-	private SlnGenerator(string name, NPath outputPath)
+	
+	public SlnGenerator(string name, NPath outputPath)
 	{
 		Name = name;
 		outputFolder = outputPath;
@@ -120,4 +122,5 @@ public class SlnGenerator : ISlnGenerator
 
 	private NPath outputFolder;
 	private SourceCodeBuilder codeBuilder = new SourceCodeBuilder();
+	
 }

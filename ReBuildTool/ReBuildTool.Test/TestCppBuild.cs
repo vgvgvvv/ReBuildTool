@@ -2,7 +2,10 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using NiceIO;
 using ReBuildTool.CppCompiler.Standalone;
+using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.Context;
 using ReBuildTool.ToolChain;
+using ReBuildTool.ToolChain.Project;
 using ResetCore.Common;
 
 namespace ReBuildTool.Test;
@@ -46,13 +49,12 @@ public class Tests
     public void TestBaseProject()
     {
         CmdParser.Parse<Tests>();
-
+        ServiceContext.Instance.Init();
         //CppCompilerArgs.Get().DryRun = true;
         
-        var project = CppBuildProject
-            .Create(BuildCppFolder)
-            .Parse();
-        
+        var path = BuildCppFolder;
+        var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
+        project.Parse();
         project.Setup();
         project.Build();
         

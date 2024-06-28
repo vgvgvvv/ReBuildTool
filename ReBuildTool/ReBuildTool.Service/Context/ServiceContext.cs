@@ -27,14 +27,35 @@ public partial class ServiceContext : Singleton<ServiceContext>
 		InitByDefault();
 	}
 
+	protected override bool autoInit => false;
+
 	public Result<T> Create<T>(params object[] args) where T: class, IProvideByService
 	{
 		if (!TypeMap.TryGetValue(typeof(T), out var type))
 		{
 			return Result<T>.Fail($"cannot find type{typeof(T).Name} in map");
 		}
+
+		var paramTypes = args.Select(obj => obj.GetType()).ToArray();
+		ConstructorInfo constructor = null;
+		foreach (var con in type.GetConstructors(BindingFlags.Public | BindingFlags.Instance)
+			         .Concat(type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)))
+		{
+			var paramList = con.GetParameters();
+			if (paramList.Length != paramTypes.Length)
+			{
+				continue;
+			}
+			var match = paramList
+				.Zip(paramTypes, paramList)
+				.All(tuple => tuple.First.ParameterType == tuple.Second);
+			if (match)
+			{
+				constructor = con;
+				break;
+			}
+		}
 		
-		var constructor = typeof(T).GetConstructor(args.Select(obj => obj.GetType()).ToArray());
 		if (constructor == null)
 		{
 			return Result.Fail<T>("cannot find constructor");

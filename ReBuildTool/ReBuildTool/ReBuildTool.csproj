@@ -20,6 +20,7 @@
       <ProjectReference Include="..\..\Vendor\UniToLua\UniToLua-NetCore\UniToLua-NetCore.csproj" />
       <ProjectReference Include="..\ReBuildTool.Common\ReBuildTool.Common.csproj" />
       <ProjectReference Include="..\ReBuildTool.CppCompiler\ReBuildTool.CppCompiler.csproj" />
+      <ProjectReference Include="..\ReBuildTool.IDE\ReBuildTool.IDE.csproj" />
     </ItemGroup>
 
 </Project>

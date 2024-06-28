@@ -33,7 +33,7 @@ internal class SingleSimpleCompileUnitContext
 
 	public DllCache CompiledDllCache { get; private set; } = new();
 
-	public bool Parse()
+	public bool Parse(ICSharpCompileEnvironment env)
 	{
 		Log.Info($"Parse source files of {Name} begin");
 		foreach (var sourceFile in TargetUnit.SourceFiles)
@@ -42,6 +42,8 @@ internal class SingleSimpleCompileUnitContext
 			{
 				var text = sourceFile.ReadAllText();
 				var stringText = SourceText.From(text, Encoding.UTF8);
+				CSharpParseOptions
+					.WithPreprocessorSymbols(env.Definitions);
 				var tree = SyntaxFactory.ParseSyntaxTree(stringText, CSharpParseOptions, sourceFile.FileName);
 				SyntaxTrees.Add(tree);
 			}
@@ -56,7 +58,7 @@ internal class SingleSimpleCompileUnitContext
 		return true;
 	}
 
-	public bool TargetCompile()
+	public bool TargetCompile(ICSharpCompileEnvironment env)
 	{
 		Log.Info($"Compile target {Name} begin");
 		var compileType = 
@@ -64,7 +66,7 @@ internal class SingleSimpleCompileUnitContext
 				? OutputKind.DynamicallyLinkedLibrary
 				: OutputKind.ConsoleApplication;
 		var optLevel =
-			CSharpCompileArgs.Get().CSCompileConfig == CompileConfiguration.Debug
+			env.Configuration == CSharpCompileConfiguration.Debug
 				? OptimizationLevel.Debug
 				: OptimizationLevel.Release;
 		CSharpCompileOptions
@@ -170,34 +172,34 @@ internal class SimpleCompileContext
 	public List<SingleSimpleCompileUnitContext> CompileQueue = new();
 }
 
-public class SimpleCompiler : CSharpCompilerBase
+public class SimpleCompiler : ICSharpCompilerBase
 {
 	internal override void Compile(CompileContext compileContext)
 	{
-		CompileContext = new SimpleCompileContext(compileContext);
+		Context = new SimpleCompileContext(compileContext);
 
 		foreach (var unit in compileContext.CompileUnits)
 		{
-			CompileContext.CreateCompileUnit(unit);
+			Context.CreateCompileUnit(unit);
 		}
 
-		if (!ParseAllSyntaxTree())
+		if (!ParseAllSyntaxTree(compileContext.Env))
 		{
 			return;
 		}
 
-		if (!CompileAllUnit())
+		if (!CompileAllUnit(compileContext.Env))
 		{
 			return;
 		}
 	}
 
-	private bool ParseAllSyntaxTree()
+	private bool ParseAllSyntaxTree(ICSharpCompileEnvironment env)
 	{
-		foreach (var (key, singleUnit) in CompileContext.SingleCompileContexts)
+		foreach (var (key, singleUnit) in Context.SingleCompileContexts)
 		{
 			singleUnit.CSharpParseOptions.WithLanguageVersion(LanguageVersion.Latest);
-			if (!singleUnit.Parse())
+			if (!singleUnit.Parse(env))
 			{
 				return false;
 			}
@@ -206,18 +208,16 @@ public class SimpleCompiler : CSharpCompilerBase
 		return true;
 	}
 
-	private bool CompileAllUnit()
+	private bool CompileAllUnit(ICSharpCompileEnvironment env)
 	{
-		foreach (var (key, singleUnit) in CompileContext.SingleCompileContexts)
+		foreach (var (key, singleUnit) in Context.SingleCompileContexts)
 		{
 			EnqueueCompileUnit(singleUnit);
 		}
 
-		foreach (var targetToCompile in CompileContext.CompileQueue)
+		foreach (var targetToCompile in Context.CompileQueue)
 		{
-			
-
-			if (!targetToCompile.TargetCompile())
+			if (!targetToCompile.TargetCompile(env))
 			{
 				Log.Error("compile failed !!");
 				return false;
@@ -229,7 +229,7 @@ public class SimpleCompiler : CSharpCompilerBase
 
 	private void EnqueueCompileUnit(SingleSimpleCompileUnitContext compileUnit)
 	{
-		if (CompileContext.CompileQueue.Contains(compileUnit))
+		if (Context.CompileQueue.Contains(compileUnit))
 		{
 			return;
 		}
@@ -237,8 +237,8 @@ public class SimpleCompiler : CSharpCompilerBase
 		{
 			EnqueueCompileUnit(refedContext);
 		}
-		CompileContext.CompileQueue.Add(compileUnit);
+		Context.CompileQueue.Add(compileUnit);
 	}
 
-	private SimpleCompileContext CompileContext { get; set; }
+	private SimpleCompileContext Context { get; set; }
 }

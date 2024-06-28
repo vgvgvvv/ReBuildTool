@@ -4,7 +4,7 @@ using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;
 using ReBuildTool.Service.IDEService.VisualStudio;
 
-namespace ReBuildTool.ToolChain;
+namespace ReBuildTool.ToolChain.Project;
 
 public interface ICppSourceProvider
 {
@@ -13,20 +13,15 @@ public interface ICppSourceProvider
 	Dictionary<string, ModuleRule> ModuleRules { get; }
 }
 
-public class CppBuildProject : ICppSourceProvider
+public class CppBuildProject : ICppSourceProvider, ICppProject
 {
 	public const string TargetDefineExtension = ".Target.cs";
 	public const string ModuleDefineExtension = ".Module.cs";
 	public const string ExtensionDefineExtension = ".Extension.cs";
 	
-	public static CppBuildProject Create(string workDirectory)
+	private CppBuildProject(NPath workDirectory)
 	{
-		return new CppBuildProject(workDirectory);
-	}
-
-	private CppBuildProject(string workDirectory)
-	{
-		ProjectRoot = workDirectory.ToNPath();
+		ProjectRoot = workDirectory;
 	}
 
 	private void ParseRules()
@@ -46,7 +41,7 @@ public class CppBuildProject : ICppSourceProvider
 			ModuleRulePaths.Add(fileName.Substring(0, fileName.Length - ModuleDefineExtension.Length), moduleFile);
 		}
 		
-		var compiler = ServiceContext.Instance.FindService<ICSharpCompiler>().Value;
+		var compiler = ServiceContext.Instance.FindService<ICSharpCompilerService>().Value;
 		
 		BuildRuleCompileUnit = compiler.CreateAssemblyUnit();
 		BuildRuleCompileUnit.SourceFiles.AddRange(targetFiles);
@@ -56,11 +51,11 @@ public class CppBuildProject : ICppSourceProvider
 		BuildRuleCompileUnit.FileName = "CompileRules";
 	}
 
-	public CppBuildProject Parse()
+	public void Parse()
 	{
 		ParseRules();
 
-		var compiler = ServiceContext.Instance.FindService<ICSharpCompiler>().Value;
+		var compiler = ServiceContext.Instance.FindService<ICSharpCompilerService>().Value;
 		var slnResult = ServiceContext.Instance.Create<ISlnGenerator>("CompileRules", ProjectRoot);
 
 		if (!slnResult)
@@ -74,8 +69,6 @@ public class CppBuildProject : ICppSourceProvider
 			CppBuildRuleProjectOutput);
 
 		slnGenerator.FlushProjectsAndSln();
-		
-		return this;
 	}
 
 	public void Setup()
@@ -84,7 +77,12 @@ public class CppBuildProject : ICppSourceProvider
 		BuildRuleAssembly();
 	}
 
-	public void Build(string? targetName = null, IBuildConfigProvider? configProvider = null)
+	public void Build(string? targetName = null)
+	{
+		Build(targetName, null);
+	}
+	
+	public void Build(string? targetName, IBuildConfigProvider? configProvider = null)
 	{
 		if (NeedReBuildRuleAssembly())
 		{
@@ -119,7 +117,7 @@ public class CppBuildProject : ICppSourceProvider
 
 	private void BuildRuleAssembly()
 	{
-		var compiler = ServiceContext.Instance.FindService<ICSharpCompiler>();
+		var compiler = ServiceContext.Instance.FindService<ICSharpCompilerService>();
 		if (!compiler)
 		{
 			throw new Exception("cannot find compiler !!");
@@ -127,7 +125,7 @@ public class CppBuildProject : ICppSourceProvider
 		compiler.Value.Compile(CppBuildRuleBinaryOutput, new List<IAssemblyCompileUnit>()
 		{
 			BuildRuleCompileUnit
-		});
+		}, compiler.Value.DefaultEnvironment);
 	}
 
 	private void InitAllRule()

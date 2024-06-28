@@ -15,21 +15,23 @@ internal class CompileContext
 	public string OutputPath;
 	public List<IAssemblyCompileUnit> CompileUnits = new ();
 	public Dictionary<string, DllCache> DllCache = new();
+	public ICSharpCompileEnvironment Env;
 }
 
-public abstract class CSharpCompilerBase : ICSharpCompiler
+public abstract class ICSharpCompilerBase : ICSharpCompilerService
 {
 	public IAssemblyCompileUnit CreateAssemblyUnit()
 	{
 		return new SimpleAssemblyCompileUnit();
 	}
 
-	public void Compile(string outputPath, List<IAssemblyCompileUnit> compileUnits)
+	public void Compile(string outputPath, List<IAssemblyCompileUnit> compileUnits, ICSharpCompileEnvironment env)
 	{
 		context = new CompileContext()
 		{
 			OutputPath = outputPath,
-			CompileUnits = compileUnits
+			CompileUnits = compileUnits,
+			Env = env
 		};
 		Compile(context);
 	}

@@ -1,12 +1,7 @@
+using ReBuildTool.Service.CompileService;
 using ResetCore.Common;
 
 namespace ReBuildTool.CSharpCompiler;
-
-public enum CompileConfiguration
-{
-	Debug,
-	Release
-}
 
 public class CSharpCompileArgs : CommandLineArgGroup<CSharpCompileArgs>
 {
@@ -14,5 +9,5 @@ public class CSharpCompileArgs : CommandLineArgGroup<CSharpCompileArgs>
 	public string CSharpBuildRoot { get; set; } = Environment.CurrentDirectory;
 	
 	[CmdLine("compile configuration")]
-	public CompileConfiguration CSCompileConfig { get; set; } = CompileConfiguration.Debug;
+	public CSharpCompileConfiguration CSCompileConfig { get; set; } = CSharpCompileConfiguration.Debug;
 }

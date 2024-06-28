@@ -1,7 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{d7888403-0066-40de-9ebe-727a587e6fea}") = "CompileRules", "D:\Document\MyProjects\ReBuildTool\Sample\BuildCpp\Intermedia\CppBuildRule\Project\CompileRules.csproj", "{d7888403-0066-40de-9ebe-727a587e6fea}"
+Project("{da8de26e-bb5d-4e2c-b329-56b86ee6073c}") = "CompileRules", "D:\MyProjects\ReBuildTool\Sample\BuildCpp\CompileRules.csproj", "{da8de26e-bb5d-4e2c-b329-56b86ee6073c}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,10 +9,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{d7888403-0066-40de-9ebe-727a587e6fea}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{d7888403-0066-40de-9ebe-727a587e6fea}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{d7888403-0066-40de-9ebe-727a587e6fea}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{d7888403-0066-40de-9ebe-727a587e6fea}.Release|Any CPU.Build.0 = Release|Any CPU
+		{da8de26e-bb5d-4e2c-b329-56b86ee6073c}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{da8de26e-bb5d-4e2c-b329-56b86ee6073c}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{da8de26e-bb5d-4e2c-b329-56b86ee6073c}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{da8de26e-bb5d-4e2c-b329-56b86ee6073c}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

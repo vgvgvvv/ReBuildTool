@@ -3,7 +3,7 @@ using ReBuildTool.Service.CompileService;
 
 namespace ReBuildTool.CSharpCompiler;
 
-public class SimpleAssemblyCompileUnit : IAssemblyCompileUnit
+public class SimpleAssemblyCompileUnit : IAssemblyCompileUnitBase
 {
 	public override string FileName { get; set; }
 	public override CompileOutputType CompileType { get; set; }

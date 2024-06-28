@@ -9,42 +9,52 @@ public enum CompileOutputType
 	Exe
 }
 
-public abstract class IAssemblyCompileUnit
+public interface IAssemblyCompileUnit
 {
-	public abstract string FileName { get; set; }
+	public string FileName { get; set; }
 	
-	public abstract CompileOutputType CompileType { get; set; }
+	public CompileOutputType CompileType { get; set; }
 	
-	public abstract string TargetFrameworkVersion { get; set; }
+	public string TargetFrameworkVersion { get; set; }
 	
-	public abstract List<NPath> SourceFiles { get; }
+	public List<NPath> SourceFiles { get; }
 	
-	public abstract List<string> Definitions { get; }
+	public List<string> Definitions { get; }
 
-	public abstract List<NPath> ReferenceDlls { get; }
+	public List<NPath> ReferenceDlls { get; }
 	
-	public abstract List<IAssemblyCompileUnit> References { get; }
+	public List<IAssemblyCompileUnit> References { get; }
 	
-	public abstract bool Unsafe { get; set; }
+	public bool Unsafe { get; set; }
 
-	public abstract bool TreatWarningsAsErrors { get; set; }
+	public bool TreatWarningsAsErrors { get; set; }
 	
-	public abstract string RootNamespace { get; set; }
+	public string RootNamespace { get; set; }
 }
 
-public abstract class ICSharpCompileEnvironment
+public enum CSharpCompileConfiguration
 {
-	public abstract bool AllowUnsafe { get; set; }
-	public abstract List<string> Definitions { get; }
-	public abstract List<string> AutoReferencedUnitNames { get; }
-	
-	public abstract NPath CsharpBuildRoot { get; }
+	Debug,
+	Release
 }
 
-public interface ICSharpCompiler : IService
+public interface ICSharpCompileEnvironment
+{
+	public CSharpCompileConfiguration Configuration { get; }
+	public bool AllowUnsafe { get; }
+	public List<string> Definitions { get; }
+	public List<string> AutoReferencedUnitNames { get; }
+
+	
+	public NPath CsharpBuildRoot { get; }
+}
+
+public interface ICSharpCompilerService : IService
 {
 	public IAssemblyCompileUnit CreateAssemblyUnit();
-	public void Compile(string outputPath, List<IAssemblyCompileUnit> compileUnits);
+
+	public void Compile(string outputPath, List<IAssemblyCompileUnit> compileUnits,
+		ICSharpCompileEnvironment env);
 	
 	public ICSharpCompileEnvironment DefaultEnvironment { get; }
 }

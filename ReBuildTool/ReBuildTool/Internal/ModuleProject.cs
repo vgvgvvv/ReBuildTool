@@ -1,9 +1,14 @@
 ﻿using System.Reflection;
 using Bullseye;
+using NiceIO;
 using ReBuildTool.Common;
+using ReBuildTool.CppCompiler.Standalone;
 using ReBuildTool.Internal.Ini;
 using ReBuildTool.Internal.Lua;
+using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.Context;
 using ReBuildTool.ToolChain;
+using ReBuildTool.ToolChain.Project;
 using ResetCore.Common;
 
 namespace ReBuildTool.Internal;
@@ -145,7 +150,7 @@ public class ModuleProject : IBuildItem
 {
 	public static ModuleProject Current { get; private set; }
 	
-	public CppBuildProject CppProject { get; private set; }
+	public ICppProject CppProject { get; private set; }
 
 	private ModuleProject(string target)
 	{
@@ -175,7 +180,9 @@ public class ModuleProject : IBuildItem
 
 	public ModuleProject Parse(string path)
 	{
-		CppProject = CppBuildProject.Create(path).Parse();
+		CppProject = 
+			ServiceContext.Instance.Create<ICppProject>(CppCompilerArgs.Get().CppBuildRoot.ToNPath()).Value;
+		CppProject.Parse();
 		ParseInternal(path);
 		return this;
 	}

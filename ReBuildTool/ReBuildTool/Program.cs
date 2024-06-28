@@ -1,5 +1,6 @@
 ﻿using Bullseye;
 using ReBuildTool.Internal;
+using ReBuildTool.Service.Context;
 using ResetCore.Common;
 
 Log.Info("Begin Generate..");
