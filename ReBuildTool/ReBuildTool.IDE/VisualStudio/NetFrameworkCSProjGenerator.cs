@@ -1,7 +1,9 @@
 ﻿using NiceIO;
 using ReBuildTool.Common;
+using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.IDEService.VisualStudio;
 
-namespace ReBuildTool.CSharpCompiler;
+namespace ReBuildTool.IDE.VisualStudio;
 
 public class NetFrameworkCSProj : ISlnSubProject
 {
@@ -14,7 +16,7 @@ public class NetFrameworkCSProj : ISlnSubProject
 		public static string ProjectReference = nameof(ProjectReference);
 	}
 	
-	public static NetFrameworkCSProj GenerateOrGetCSProj(SlnGenerator owner, IAssemblyCompileUnit unit, CompileEnvironment env, NPath output)
+	public static NetFrameworkCSProj GenerateOrGetCSProj(SlnGenerator owner, IAssemblyCompileUnit unit, ICSharpCompileEnvironment env, NPath output)
 	{
 		if (owner.GetSubProj(unit.FileName, out var csProj))
 		{
@@ -29,7 +31,7 @@ public class NetFrameworkCSProj : ISlnSubProject
 		var result = new NetFrameworkCSProj();
 		result.name = unit.FileName;
 		result.targetUnityAssembly = unit;
-		result.compileEnvironment = env;
+		result.icSharpCompileEnvironment = env;
 		result.outputFolder = output;
 		result.outputFolder.EnsureParentDirectoryExists();
 		result.codeBuilder = new XmlCodeBuilder();
@@ -104,10 +106,10 @@ public class NetFrameworkCSProj : ISlnSubProject
 			}
 			codeBuilder.WriteNode("TargetFrameworkVersion", targetUnityAssembly.TargetFrameworkVersion);
 			codeBuilder.WriteNode("FileAlignment", "512");
-			codeBuilder.WriteNode("BaseDirectory", CSharpCompileArgs.Get().CSharpBuildRoot);
+			codeBuilder.WriteNode("BaseDirectory",icSharpCompileEnvironment.CsharpBuildRoot);
 		}
 
-		var allowUnsafe = compileEnvironment.AllowUnsafe || targetUnityAssembly.Unsafe;
+		var allowUnsafe = icSharpCompileEnvironment.AllowUnsafe || targetUnityAssembly.Unsafe;
 		using (codeBuilder.CreateXmlScope(Tags.PropertyGroup, 
 			       new Tuple<string, string>("Condition", " '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ")))
 		{
@@ -117,7 +119,7 @@ public class NetFrameworkCSProj : ISlnSubProject
 			codeBuilder.WriteNode("OutputPath", outputFolder.Combine(@"bin\Debug"));
 			var definitions = new List<string>();
 			definitions.AddRange(targetUnityAssembly.Definitions);
-			definitions.AddRange(compileEnvironment.Definitions);
+			definitions.AddRange(icSharpCompileEnvironment.Definitions);
 			definitions.Add("DEBUG");
 			definitions.Add("TRACE");
 			codeBuilder.WriteNode("DefineConstants", string.Join(';', definitions));
@@ -136,7 +138,7 @@ public class NetFrameworkCSProj : ISlnSubProject
 			codeBuilder.WriteNode("OutputPath", outputFolder.Combine(@"bin\Release"));
 			var definitions = new List<string>();
 			definitions.AddRange(targetUnityAssembly.Definitions);
-			definitions.AddRange(compileEnvironment.Definitions);
+			definitions.AddRange(icSharpCompileEnvironment.Definitions);
 			codeBuilder.WriteNode("DefineConstants", string.Join(';', definitions));
 			codeBuilder.WriteNode("ErrorReport", "prompt");
 			codeBuilder.WriteNode("WarningLevel", "4");
@@ -186,7 +188,7 @@ public class NetFrameworkCSProj : ISlnSubProject
 			{
 				continue;
 			}
-			var csProj = GenerateOrGetCSProj(ownerSln, refUnit, compileEnvironment, outputFolder);
+			var csProj = GenerateOrGetCSProj(ownerSln, refUnit, icSharpCompileEnvironment, outputFolder);
 			using (codeBuilder.CreateXmlScope(Tags.ProjectReference,
 				       new Tuple<string, string>("Include", Path.Combine(csProj.outputFolder, csProj.name + ".csproj"))))
 			{
@@ -207,7 +209,7 @@ public class NetFrameworkCSProj : ISlnSubProject
 	public NPath fullPath => outputFolder.Combine(name + ".csproj");
 	public SlnGenerator ownerSln { get; private set; }
 	private IAssemblyCompileUnit targetUnityAssembly;
-	private CompileEnvironment compileEnvironment;
+	private ICSharpCompileEnvironment icSharpCompileEnvironment;
 	private NPath outputFolder;
 	private XmlCodeBuilder codeBuilder;
 	private bool generated = false;

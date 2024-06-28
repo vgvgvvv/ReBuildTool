@@ -1,7 +1,8 @@
 using System.Reflection;
 using NiceIO;
-using ReBuildTool.CSharpCompiler;
-using ResetCore.Common;
+using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.Context;
+using ReBuildTool.Service.IDEService.VisualStudio;
 
 namespace ReBuildTool.ToolChain;
 
@@ -45,7 +46,9 @@ public class CppBuildProject : ICppSourceProvider
 			ModuleRulePaths.Add(fileName.Substring(0, fileName.Length - ModuleDefineExtension.Length), moduleFile);
 		}
 		
-		BuildRuleCompileUnit = new SimpleAssemblyCompileUnit();
+		var compiler = ServiceContext.Instance.FindService<ICSharpCompiler>().Value;
+		
+		BuildRuleCompileUnit = compiler.CreateAssemblyUnit();
 		BuildRuleCompileUnit.SourceFiles.AddRange(targetFiles);
 		BuildRuleCompileUnit.SourceFiles.AddRange(moduleFiles);
 		BuildRuleCompileUnit.SourceFiles.AddRange(extraFiles);
@@ -56,9 +59,18 @@ public class CppBuildProject : ICppSourceProvider
 	public CppBuildProject Parse()
 	{
 		ParseRules();
-		
-		SlnGenerator slnGenerator = SlnGenerator.Create("CompileRules", ProjectRoot);
-		NetCoreCSProj.GenerateOrGetCSProj(slnGenerator, BuildRuleCompileUnit, CompileEnvironment.Default,
+
+		var compiler = ServiceContext.Instance.FindService<ICSharpCompiler>().Value;
+		var slnResult = ServiceContext.Instance.Create<ISlnGenerator>("CompileRules", ProjectRoot);
+
+		if (!slnResult)
+		{
+			throw new Exception("cannot parse sln generator");
+		}
+
+		var slnGenerator = slnResult.Value;
+
+		slnGenerator.GenerateOrGetNetCoreCSProj(BuildRuleCompileUnit, compiler.DefaultEnvironment,
 			CppBuildRuleProjectOutput);
 
 		slnGenerator.FlushProjectsAndSln();
@@ -107,7 +119,12 @@ public class CppBuildProject : ICppSourceProvider
 
 	private void BuildRuleAssembly()
 	{
-		ICSharpCompiler.Default.Compile(CppBuildRuleBinaryOutput, new List<IAssemblyCompileUnit>()
+		var compiler = ServiceContext.Instance.FindService<ICSharpCompiler>();
+		if (!compiler)
+		{
+			throw new Exception("cannot find compiler !!");
+		}
+		compiler.Value.Compile(CppBuildRuleBinaryOutput, new List<IAssemblyCompileUnit>()
 		{
 			BuildRuleCompileUnit
 		});

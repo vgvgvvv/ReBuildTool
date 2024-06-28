@@ -1,32 +1,32 @@
 ﻿using NiceIO;
 using ReBuildTool.Common;
+using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.IDEService.VisualStudio;
 
-namespace ReBuildTool.CSharpCompiler;
+namespace ReBuildTool.IDE.VisualStudio;
 
-public interface ISlnSubProject
+
+public class SlnGenerator : ISlnGenerator
 {
-	string name { get; }
-	Guid guid { get; }
-	NPath fullPath { get; }
-	
-	void FlushToFile();
-}
-
-public class SlnGenerator
-{
-	private SlnGenerator(string name)
+	private SlnGenerator(string name, NPath outputPath)
 	{
 		Name = name;
+		outputFolder = outputPath;
+		outputFolder.EnsureDirectoryExists();
 	}
 
-	public static SlnGenerator Create(string name, NPath outputPath)
+	public ISlnSubProject GenerateOrGetNetCoreCSProj(IAssemblyCompileUnit unit,
+		ICSharpCompileEnvironment env, NPath output)
 	{
-		var result = new SlnGenerator(name);
-		result.outputFolder = outputPath;
-		result.outputFolder.EnsureDirectoryExists();
-		return result;
+		return NetCoreCSProj.GenerateOrGetCSProj(this, unit, env, outputFolder);
 	}
-	
+
+	public ISlnSubProject GenerateOrGetNetFrameworkCSProj(IAssemblyCompileUnit unit,
+		ICSharpCompileEnvironment env, NPath output)
+	{
+		return NetFrameworkCSProj.GenerateOrGetCSProj(this, unit, env, output);
+	}
+
 	public void RegisterCsProj(ISlnSubProject proj)
 	{
 		if (!NetFrameworkCSProjs.TryGetValue(proj.guid, out var outProj))

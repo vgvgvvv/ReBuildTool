@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using NiceIO;
+using ReBuildTool.Service.CompileService;
 using ResetCore.Common;
 
 namespace ReBuildTool.CSharpCompiler;
@@ -169,7 +170,7 @@ internal class SimpleCompileContext
 	public List<SingleSimpleCompileUnitContext> CompileQueue = new();
 }
 
-public class SimpleCompiler : ICSharpCompiler
+public class SimpleCompiler : CSharpCompilerBase
 {
 	internal override void Compile(CompileContext compileContext)
 	{

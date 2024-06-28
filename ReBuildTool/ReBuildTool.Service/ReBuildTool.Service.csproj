@@ -7,13 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Vendor\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon\ReCSharpCommon.csproj" />
       <ProjectReference Include="..\ReBuildTool.Common\ReBuildTool.Common.csproj" />
-      <ProjectReference Include="..\ReBuildTool.Service\ReBuildTool.Service.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
     </ItemGroup>
 
 </Project>

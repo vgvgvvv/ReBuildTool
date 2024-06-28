@@ -1,4 +1,5 @@
 using NiceIO;
+using ReBuildTool.Service.CompileService;
 
 namespace ReBuildTool.CSharpCompiler;
 

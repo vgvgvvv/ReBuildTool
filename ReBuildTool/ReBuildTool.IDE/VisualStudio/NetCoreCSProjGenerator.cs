@@ -1,7 +1,10 @@
 using NiceIO;
 using ReBuildTool.Common;
+using ReBuildTool.IDE.VisualStudio;
+using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.IDEService.VisualStudio;
 
-namespace ReBuildTool.CSharpCompiler;
+namespace ReBuildTool.IDE.VisualStudio;
 
 public class NetCoreCSProj : ISlnSubProject
 {
@@ -17,7 +20,7 @@ public class NetCoreCSProj : ISlnSubProject
 	}
 	
 	public static NetCoreCSProj GenerateOrGetCSProj(SlnGenerator owner, IAssemblyCompileUnit unit,
-		CompileEnvironment env, NPath output)
+		ICSharpCompileEnvironment env, NPath output)
 	{
 		if (owner.GetSubProj(unit.FileName, out var csProj))
 		{
@@ -32,7 +35,7 @@ public class NetCoreCSProj : ISlnSubProject
 		var result = new NetCoreCSProj();
 		result.name = unit.FileName;
 		result.targetUnityAssembly = unit;
-		result.compileEnvironment = env;
+		result.icSharpCompileEnvironment = env;
 		result.outputFolder = output;
 		result.outputFolder.EnsureDirectoryExists();
 		result.codeBuilder = new XmlCodeBuilder();
@@ -111,7 +114,7 @@ public class NetCoreCSProj : ISlnSubProject
 			definitions.Add("TRACE");
 			definitions.Add("DEBUG");
 			definitions.AddRange(targetUnityAssembly.Definitions);
-			definitions.AddRange(compileEnvironment.Definitions);
+			definitions.AddRange(icSharpCompileEnvironment.Definitions);
 			codeBuilder.WriteNode("DefineConstants", string.Join(';', definitions));
 			codeBuilder.WriteNode("OutputPath", outputFolder.Combine(@"bin\Debug"));
 		}
@@ -125,7 +128,7 @@ public class NetCoreCSProj : ISlnSubProject
 			codeBuilder.WriteNode("TreatWarningsAsErrors", targetUnityAssembly.TreatWarningsAsErrors.ToString());
 			var definitions = new List<string>();
 			definitions.AddRange(targetUnityAssembly.Definitions);
-			definitions.AddRange(compileEnvironment.Definitions);
+			definitions.AddRange(icSharpCompileEnvironment.Definitions);
 			codeBuilder.WriteNode("DefineConstants", string.Join(';', definitions));
 			codeBuilder.WriteNode("OutputPath", outputFolder.Combine(@"bin\Release"));
 		}
@@ -192,7 +195,7 @@ public class NetCoreCSProj : ISlnSubProject
 		{
 			foreach (var compileUnit in targetUnityAssembly.References)
 			{
-				var proj = GenerateOrGetCSProj(ownerSln, compileUnit, compileEnvironment, outputFolder);
+				var proj = GenerateOrGetCSProj(ownerSln, compileUnit, icSharpCompileEnvironment, outputFolder);
 				
 				codeBuilder.WriteNodeWithoutValue("ProjectReference", 
 					new Tuple<string, string>("Include", proj.outputFolder.Combine(proj.name + ".csproj")));
@@ -207,7 +210,7 @@ public class NetCoreCSProj : ISlnSubProject
 	
 	public SlnGenerator ownerSln { get; private set; }
 	private IAssemblyCompileUnit targetUnityAssembly;
-	private CompileEnvironment compileEnvironment;
+	private ICSharpCompileEnvironment icSharpCompileEnvironment;
 	private NPath outputFolder;
 	private XmlCodeBuilder codeBuilder;
 	private bool generated = false;

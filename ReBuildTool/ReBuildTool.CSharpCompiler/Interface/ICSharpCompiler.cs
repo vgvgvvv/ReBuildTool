@@ -1,36 +1,8 @@
 ﻿using NiceIO;
+using ReBuildTool.Service.CompileService;
 
 namespace ReBuildTool.CSharpCompiler;
 
-
-public enum CompileOutputType
-{
-	Library,
-	Exe
-}
-
-public abstract class IAssemblyCompileUnit
-{
-	public abstract string FileName { get; set; }
-	
-	public abstract CompileOutputType CompileType { get; set; }
-	
-	public abstract string TargetFrameworkVersion { get; set; }
-	
-	public abstract List<NPath> SourceFiles { get; }
-	
-	public abstract List<string> Definitions { get; }
-
-	public abstract List<NPath> ReferenceDlls { get; }
-	
-	public abstract List<IAssemblyCompileUnit> References { get; }
-	
-	public abstract bool Unsafe { get; set; }
-
-	public abstract bool TreatWarningsAsErrors { get; set; }
-	
-	public abstract string RootNamespace { get; set; }
-}
 
 internal class DllCache
 {
@@ -45,8 +17,13 @@ internal class CompileContext
 	public Dictionary<string, DllCache> DllCache = new();
 }
 
-public abstract class ICSharpCompiler
+public abstract class CSharpCompilerBase : ICSharpCompiler
 {
+	public IAssemblyCompileUnit CreateAssemblyUnit()
+	{
+		return new SimpleAssemblyCompileUnit();
+	}
+
 	public void Compile(string outputPath, List<IAssemblyCompileUnit> compileUnits)
 	{
 		context = new CompileContext()
@@ -57,7 +34,7 @@ public abstract class ICSharpCompiler
 		Compile(context);
 	}
 
-	public static ICSharpCompiler Default { get; } = new SimpleCompiler();
+	public ICSharpCompileEnvironment DefaultEnvironment { get; } = new SimpleCompileEnvironment();
 
 	internal abstract void Compile(CompileContext compileContext);
 
