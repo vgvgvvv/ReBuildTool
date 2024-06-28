@@ -19,15 +19,16 @@ public interface ISlnGenerator : IProvideByService
 	
 	bool FlushProjectsAndSln();
 	
-	public string Name { get; }
+	string Name { get; }
 
-	public string OutputPath { get; }
+	string OutputPath { get; }
 
-	public ISlnSubProject GenerateOrGetNetCoreCSProj(IAssemblyCompileUnit unit,
-		ICSharpCompileEnvironment env, NPath output);
-
-	public ISlnSubProject GenerateOrGetNetFrameworkCSProj(IAssemblyCompileUnit unit,
+	ISlnSubProject GenerateOrGetNetCoreCSProj(IAssemblyCompileUnit unit,
 		ICSharpCompileEnvironment env, NPath output);
 	
+	ISlnSubProject GenerateOrGetNetFrameworkCSProj(IAssemblyCompileUnit unit,
+		ICSharpCompileEnvironment env, NPath output);
+
+	ISlnSubProject GenerateOrGetVCProj(ICppSourceProviderInterface source, NPath output);
 }
 

@@ -28,8 +28,13 @@ public class SlnGenerator : ISlnGenerator
 	{
 		return NetFrameworkCSProj.GenerateOrGetCSProj(this, unit, env, output);
 	}
+	
+	public ISlnSubProject GenerateOrGetVCProj(ICppSourceProviderInterface source, NPath output)
+	{
+		return VCProjectGenerator.GenerateOrGetVCProj(this, source, output);
+	}
 
-	public void RegisterCsProj(ISlnSubProject proj)
+	public void RegisterProj(ISlnSubProject proj)
 	{
 		if (!NetFrameworkCSProjs.TryGetValue(proj.guid, out var outProj))
 		{

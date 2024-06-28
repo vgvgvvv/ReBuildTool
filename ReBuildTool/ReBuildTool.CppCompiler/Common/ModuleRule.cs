@@ -1,13 +1,9 @@
-﻿namespace ReBuildTool.ToolChain;
+﻿using ReBuildTool.Service.CompileService;
 
-public enum BuildType
-{
-    StaticLibrary,
-    DynamicLibrary,
-    Executable
-}
+namespace ReBuildTool.ToolChain;
 
-public abstract class ModuleRule
+
+public abstract class ModuleRule : IModuleInterface
 {
     public BuildType BuildType { get; set; } = BuildType.DynamicLibrary;
     

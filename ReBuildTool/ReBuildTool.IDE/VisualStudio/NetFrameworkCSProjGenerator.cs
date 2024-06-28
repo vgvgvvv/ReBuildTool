@@ -38,7 +38,7 @@ public class NetFrameworkCSProj : ISlnSubProject
 		result.ownerSln = owner;
 		result.guid = Guid.NewGuid();
 		result.GenerateProject();
-		owner.RegisterCsProj(result);
+		owner.RegisterProj(result);
 		return result;
 	}
 

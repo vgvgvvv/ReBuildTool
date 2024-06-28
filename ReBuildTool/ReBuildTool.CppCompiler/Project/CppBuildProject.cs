@@ -6,11 +6,12 @@ using ReBuildTool.Service.IDEService.VisualStudio;
 
 namespace ReBuildTool.ToolChain.Project;
 
-public interface ICppSourceProvider
+public interface ICppSourceProvider : ICppSourceProviderInterface
 {
+	string Name { get; }
 	NPath ProjectRoot { get; }
-	Dictionary<string, TargetRule> TargetRules { get; }
-	Dictionary<string, ModuleRule> ModuleRules { get; }
+	Dictionary<string, ITargetInterface> TargetRules { get; }
+	Dictionary<string, IModuleInterface> ModuleRules { get; }
 }
 
 public class CppBuildProject : ICppSourceProvider, ICppProject
@@ -21,6 +22,7 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 	
 	private CppBuildProject(NPath workDirectory)
 	{
+		Name = workDirectory.FileName;
 		ProjectRoot = workDirectory;
 	}
 
@@ -179,7 +181,7 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		}
 	}
 
-	private void Build(CppBuilder builder, TargetRule targetRule)
+	private void Build(CppBuilder builder, ITargetInterface targetRule)
 	{
 		builder.SetSource(this)
 			.BuildTarget(targetRule);
@@ -193,12 +195,13 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		}
 	}
 
+	public string Name { get; }
 	public NPath ProjectRoot { get; }
 
 	public NPath IntermediaFolder => ProjectRoot.Combine("Intermedia");
 	
-	public Dictionary<string, TargetRule> TargetRules { get; } = new();
-	public Dictionary<string, ModuleRule> ModuleRules { get; } = new();
+	public Dictionary<string, ITargetInterface> TargetRules { get; } = new();
+	public Dictionary<string, IModuleInterface> ModuleRules { get; } = new();
 
 	private Dictionary<string, NPath> TargetRulePaths { get; } = new();
 	private Dictionary<string, NPath> ModuleRulePaths { get; } = new();

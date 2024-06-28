@@ -1,4 +1,5 @@
-﻿using ReBuildTool.ToolChain.Project;
+﻿using ReBuildTool.Service.CompileService;
+using ReBuildTool.ToolChain.Project;
 using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
@@ -47,13 +48,13 @@ public partial class CppBuilder
 		return this;
 	}
 	
-	public void BuildTarget(TargetRule targetRule)
+	public void BuildTarget(ITargetInterface targetRule)
 	{
 		PendingTargetRule(targetRule);
 		BuildPendingModules();
 	}
 
-	private void PendingTargetRule(TargetRule targetRule)
+	private void PendingTargetRule(ITargetInterface targetRule)
 	{
 		foreach (var moduleRule in targetRule.UsedModules)
 		{
@@ -72,7 +73,7 @@ public partial class CppBuilder
 		}	
 	}
 	
-	private void PendingModule(ModuleRule module)
+	private void PendingModule(IModuleInterface module)
 	{
 		foreach (var dep in module.Dependencies)
 		{
@@ -103,7 +104,7 @@ public partial class CppBuilder
 		}
 	}
 	
-	private bool BuildModule(ModuleRule module)
+	private bool BuildModule(IModuleInterface module)
 	{
 		CompileProcess process = CompileProcess.Create(module, this);
 		if (!process.Compile())
@@ -132,7 +133,7 @@ public partial class CppBuilder
 		return true;
 	}
 	
-	private Queue<ModuleRule> PendingModulesQueue { get; } = new();
+	private Queue<IModuleInterface> PendingModulesQueue { get; } = new();
 
 	public IToolChain CurrentToolChain { get; }
 	

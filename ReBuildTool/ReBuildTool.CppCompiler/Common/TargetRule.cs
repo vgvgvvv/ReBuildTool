@@ -1,6 +1,8 @@
-﻿namespace ReBuildTool.ToolChain;
+﻿using ReBuildTool.Service.CompileService;
 
-public abstract class TargetRule
+namespace ReBuildTool.ToolChain;
+
+public abstract class TargetRule : ITargetInterface
 {
     public List<string> UsedModules { get; } = new();
     

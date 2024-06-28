@@ -1,4 +1,5 @@
 ﻿using NiceIO;
+using ReBuildTool.Service.CompileService;
 using ReBuildTool.ToolChain.Project;
 using ResetCore.Common;
 
@@ -8,12 +9,12 @@ public partial class CppBuilder
 {
 	internal partial class CompileProcess
 	{
-		public static CompileProcess Create(ModuleRule module, CppBuilder owner)
+		public static CompileProcess Create(IModuleInterface module, CppBuilder owner)
 		{
 			return new CompileProcess(module, owner);
 		}
 		
-		private CompileProcess(ModuleRule module, CppBuilder owner)
+		private CompileProcess(IModuleInterface module, CppBuilder owner)
 		{
 			Module = module;
 			Owner = owner;
@@ -22,7 +23,7 @@ public partial class CppBuilder
 
 		#region ModuleInfos
 
-		private IEnumerable<string> GetDefinesForModule(ModuleRule module)
+		private IEnumerable<string> GetDefinesForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -44,7 +45,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<string> GetCompileFlagsForModule(ModuleRule module)
+		private IEnumerable<string> GetCompileFlagsForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -66,7 +67,7 @@ public partial class CppBuilder
 			}
 		}
 
-		private IEnumerable<string> GetLinkFlagsForModule(ModuleRule module)
+		private IEnumerable<string> GetLinkFlagsForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -88,7 +89,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<string> GetArchiveFlagsForModule(ModuleRule module)
+		private IEnumerable<string> GetArchiveFlagsForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -110,7 +111,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<string> GetIncludePathsForModule(ModuleRule module)
+		private IEnumerable<string> GetIncludePathsForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -132,7 +133,7 @@ public partial class CppBuilder
 			}
 		}
 
-		private IEnumerable<string> GetStaticLibrariesForModule(ModuleRule module)
+		private IEnumerable<string> GetStaticLibrariesForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -154,7 +155,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<string> GetDynamicLibrariesForModule(ModuleRule module)
+		private IEnumerable<string> GetDynamicLibrariesForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -176,7 +177,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<string> GetLibraryDirectoriesForModule(ModuleRule module)
+		private IEnumerable<string> GetLibraryDirectoriesForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -198,7 +199,7 @@ public partial class CppBuilder
 			}
 		}
 
-		private IEnumerable<ModuleRule> ModuleDependencies(ModuleRule module, HashSet<string>? checkedModules = null)
+		private IEnumerable<IModuleInterface> ModuleDependencies(IModuleInterface module, HashSet<string>? checkedModules = null)
 		{
 			if(checkedModules == null)
 			{
@@ -226,7 +227,7 @@ public partial class CppBuilder
 
 		#endregion
 		
-		private ModuleRule? GetModuleRuleByName(string name)
+		private IModuleInterface? GetModuleRuleByName(string name)
 		{
 			Source.ModuleRules.TryGetValue(name, out var moduleRule);
 			return moduleRule;
@@ -234,7 +235,7 @@ public partial class CppBuilder
 
 	
 		
-		public ModuleRule Module { get; }
+		public IModuleInterface Module { get; }
 		public CppBuilder Owner { get; }
 
 		private IToolChain ToolChain => Owner.CurrentToolChain;

@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using NiceIO;
+using ReBuildTool.Service.CompileService;
 using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
@@ -44,8 +45,11 @@ public partial class CppBuilder
 			var rspContent = string.Join(Environment.NewLine, LinkUnit.ObjectFiles.InQuotes());
 			LinkUnit.ResponseFile.EnsureParentDirectoryExists();
 			File.WriteAllText(LinkUnit.ResponseFile, rspContent, Encoding.UTF8);
-			LinkUnit.LinkArgsBuilder = ToolChain.MakeLinkArgsBuilder();
-			Module.AdditionLinkArgs(LinkUnit.LinkArgsBuilder);
+			if (Module is ModuleRule moduleRule)
+			{
+				LinkUnit.LinkArgsBuilder = ToolChain.MakeLinkArgsBuilder();
+				moduleRule.AdditionLinkArgs(LinkUnit.LinkArgsBuilder);
+			}
 			return true;
 		}
 		
