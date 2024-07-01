@@ -20,7 +20,7 @@ public class SlnGenerator : ISlnGenerator
 	public ISlnSubProject GenerateOrGetNetCoreCSProj(IAssemblyCompileUnit unit,
 		ICSharpCompileEnvironment env, NPath output)
 	{
-		return NetCoreCSProj.GenerateOrGetCSProj(this, unit, env, outputFolder);
+		return NetCoreCSProj.GenerateOrGetCSProj(this, unit, env, output);
 	}
 
 	public ISlnSubProject GenerateOrGetNetFrameworkCSProj(IAssemblyCompileUnit unit,
