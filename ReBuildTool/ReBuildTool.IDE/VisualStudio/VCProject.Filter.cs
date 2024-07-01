@@ -17,22 +17,31 @@ public partial class VCProject
 	class Filter
 	{
 		public Guid FilterGuid;
-		public string Path;
+		public string FilterName;
 		public List<NPath> Files { get; } = new();
 
 		public void Write(XmlCodeBuilder builder)
 		{
-			using (builder.CreateXmlScope(Tags.None, new Tuple<string, string>("Include", Path)))
+			using (builder.CreateXmlScope(Tags.Filter, new Tuple<string, string>("Include", FilterName)))
 			{
 				builder.WriteNode("UniqueIdentifier", FilterGuid.ToString());
 			}
 
 			foreach (var path in Files)
 			{
-				using (builder.CreateXmlScope(Tags.None,
+				var tag = Tags.None;
+				if (IsHeader(path))
+				{
+					tag = Tags.ClInclude;
+				}
+				else if (IsSource(path))
+				{
+					tag = Tags.ClCompile;
+				}
+				using (builder.CreateXmlScope(tag,
 					       new Tuple<string, string>("Include", path)))
 				{
-					builder.WriteNode(Tags.Filter, Path);
+					builder.WriteNode(Tags.Filter, FilterName);
 				}
 			}
 		}
@@ -50,7 +59,7 @@ public partial class VCProject
 			using(filterCodeBuilder.CreateXmlScope("ItemGroup"))
 			{
 				GenerateTargets();
-				GenerateRuleExtension();
+				// GenerateRuleExtension();
 				GenerateModules();
 				FlushAllFilters();
 			}
@@ -63,33 +72,16 @@ public partial class VCProject
 		Filter filter = new Filter()
 		{
 			FilterGuid = Guid.NewGuid(),
-			Path = InternalFilter.Targets
+			FilterName = InternalFilter.Targets
 		};
 		
-		foreach (var targetFile in cppSource.ProjectRoot.Files(true)
+		foreach (var targetFile in cppSource.SourceFolder.Files(true)
 			         .Where(file => file.FileName.EndsWith(ICppProject.TargetDefineExtension)))
 		{
 			filter.Files.Add(targetFile.RelativeTo(outputFolder));
 		}
 		
-		AllFilters.Add(filter.Path, filter);
-	}
-
-	private void GenerateRuleExtension()
-	{
-		Filter filter = new Filter()
-		{
-			FilterGuid = Guid.NewGuid(),
-			Path = InternalFilter.RuleExtension
-		};
-		
-		foreach (var targetFile in cppSource.ProjectRoot.Files(true)
-			         .Where(file => file.FileName.EndsWith(ICppProject.ExtensionDefineExtension)))
-		{
-			filter.Files.Add(targetFile.RelativeTo(outputFolder));
-		}
-		
-		AllFilters.Add(filter.Path, filter);
+		AllFilters.Add(filter.FilterName, filter);
 	}
 
 	private void GenerateModules()
@@ -97,23 +89,9 @@ public partial class VCProject
 		Filter sourceFilter = new Filter()
 		{
 			FilterGuid = Guid.NewGuid(),
-			Path = InternalFilter.Source
+			FilterName = InternalFilter.Source
 		};
-		AllFilters.Add(sourceFilter.Path, sourceFilter);
-		
-		Filter modulesFilter = new Filter()
-		{
-			FilterGuid = Guid.NewGuid(),
-			Path = InternalFilter.Modules
-		};
-		
-		foreach (var targetFile in cppSource.ProjectRoot.Files(true)
-			         .Where(file => file.FileName.EndsWith(ICppProject.ModuleDefineExtension)))
-		{
-			modulesFilter.Files.Add(targetFile.RelativeTo(outputFolder));
-		}
-		
-		AllFilters.Add(modulesFilter.Path, modulesFilter);
+		AllFilters.Add(sourceFilter.FilterName, sourceFilter);
 
 		cppSource.ModuleRules.Values.ToList().ForEach(GenerateModule);
 	}
@@ -121,14 +99,14 @@ public partial class VCProject
 	private void GenerateModule(IModuleInterface moduleInterface)
 	{
 		// generate all path filters
-		var path = new NPath(InternalFilter.Source).Combine(moduleInterface.ModuleDirectory.ToNPath().RelativeTo(cppSource.SourceFolder));
-		while (path.ToString() != InternalFilter.Source)
+		var path = moduleInterface.ModuleDirectory.ToNPath();
+		while (path.FileName != InternalFilter.Source)
 		{
 			if (!AllFilters.ContainsKey(path.ToString()))
 			{
 				var filter = new Filter()
 				{
-					Path = path,
+					FilterName = path.RelativeTo(cppSource.ProjectRoot),
 					FilterGuid = Guid.NewGuid()
 				};
 				AllFilters.Add(path, filter);
@@ -143,7 +121,7 @@ public partial class VCProject
 			{
 				folderFilter = new Filter()
 				{
-					Path = file.Parent,
+					FilterName = file.Parent.RelativeTo(cppSource.ProjectRoot),
 					FilterGuid = Guid.NewGuid()
 				};
 				AllFilters.Add(file.Parent, folderFilter);

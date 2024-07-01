@@ -2,8 +2,25 @@
 using ReBuildTool.Common;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.IDEService.VisualStudio;
+using ReBuildTool.ToolChain;
 
 namespace ReBuildTool.IDE.VisualStudio;
+
+public class VCProjectConfiguration : IProjectConfiguration
+{
+	public VCProjectConfiguration(Architecture arch, BuildConfiguration config)
+	{
+		Arch = arch;
+		Configuration = config;
+	}
+	
+	public string ConfigurationName => Configuration.ToString();
+	public string PlatformName => Arch.Name;
+	
+	public Architecture Arch { get; }
+	public BuildConfiguration Configuration { get; }
+	
+}
 
 public partial class VCProject : ISlnSubProject
 {
@@ -50,7 +67,32 @@ public partial class VCProject : ISlnSubProject
 		owner.RegisterProj(result);
 		return result;
 	}
-	
+
+	private static List<IProjectConfiguration> _projectConfigs = null;
+	public List<IProjectConfiguration> projectConfigs
+	{
+		get
+		{
+			if (_projectConfigs == null)
+			{
+				_projectConfigs = new List<IProjectConfiguration>();
+				var targetArchs = new Architecture[]
+					{ new x86Architecture(), new x64Architecture(), new ARMv7Architecture(), new ARM64Architecture() };
+				var buildConfigs = new BuildConfiguration[]
+					{ BuildConfiguration.Debug, BuildConfiguration.Release, BuildConfiguration.ReleasePlus, BuildConfiguration.ReleaseSize };
+				foreach (var targetArch in targetArchs)
+				{
+					foreach (var buildConfiguration in buildConfigs)
+					{
+						_projectConfigs.Add(new VCProjectConfiguration(targetArch, buildConfiguration));
+					}
+				}
+			}
+
+			return _projectConfigs;
+		}
+	}
+
 	public void FlushToFile()
 	{
 		File.WriteAllText(fullPath, projectCodeBuilder.ToString());
@@ -58,14 +100,14 @@ public partial class VCProject : ISlnSubProject
 		File.WriteAllText(commonPropPath, commonPropBuilder.ToString());
 	}
 
-	private bool IsHeader(NPath path)
+	private static bool IsHeader(NPath path)
 	{
 		return path.ExtensionWithDot == ".h" || 
 		       path.ExtensionWithDot == "hpp" || 
 		       path.ExtensionWithDot == "inl";
 	}
 		
-	private bool IsSource(NPath path)
+	private static bool IsSource(NPath path)
 	{
 		return path.ExtensionWithDot == ".cpp" || 
 		       path.ExtensionWithDot == "c" ||
@@ -74,7 +116,7 @@ public partial class VCProject : ISlnSubProject
 		       path.ExtensionWithDot == ".asm";
 	}
 
-	private bool IsOther(NPath path)
+	private static bool IsOther(NPath path)
 	{
 		return !IsHeader(path) && !IsSource(path);
 	}
@@ -82,8 +124,8 @@ public partial class VCProject : ISlnSubProject
 	public string name { get; private set; }
     public Guid guid { get; private set; }
     public NPath fullPath => outputFolder.Combine(name + ".vcxproj");
-    public NPath filterPath => outputFolder.Combine(name + ".vcxproj.filter");
-    public NPath commonPropPath => outputFolder.Combine(name + ".prop");
+    public NPath filterPath => outputFolder.Combine(name + ".vcxproj.filters");
+    public NPath commonPropPath => outputFolder.Combine(name + ".props");
 	
 	public SlnGenerator ownerSln { get; private set; }
 	private ICppSourceProviderInterface cppSource;

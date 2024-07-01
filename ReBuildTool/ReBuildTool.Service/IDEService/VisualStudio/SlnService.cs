@@ -10,7 +10,15 @@ public interface ISlnSubProject
 	Guid guid { get; }
 	NPath fullPath { get; }
 	
+	List<IProjectConfiguration> projectConfigs { get; }
+	
 	void FlushToFile();
+}
+
+public interface IProjectConfiguration
+{
+	string ConfigurationName { get; }
+	string PlatformName { get; }
 }
 
 public interface ISlnGenerator : IProvideByService

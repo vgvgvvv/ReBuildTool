@@ -7,6 +7,22 @@ namespace ReBuildTool.IDE.VisualStudio;
 
 public class NetFrameworkCSProj : ISlnSubProject
 {
+	
+	public class NetFrameworkCProjectConfiguration : IProjectConfiguration
+	{
+		private NetFrameworkCProjectConfiguration(string config, string platform)
+		{
+			ConfigurationName = config;
+			PlatformName = platform;
+		}
+
+		public static NetFrameworkCProjectConfiguration Debug => new ("Debug", "AnyCPU");
+		public static NetFrameworkCProjectConfiguration Release => new ("Release", "AnyCPU");
+
+		public string ConfigurationName { get; }
+		public string PlatformName { get; }
+	}
+	
 	private static class Tags
 	{
 		public static string Project = nameof(Project);
@@ -41,6 +57,12 @@ public class NetFrameworkCSProj : ISlnSubProject
 		owner.RegisterProj(result);
 		return result;
 	}
+
+	public List<IProjectConfiguration> projectConfigs { get; } = new()
+	{
+		NetFrameworkCProjectConfiguration.Debug,
+		NetFrameworkCProjectConfiguration.Release
+	};
 
 	public void FlushToFile()
 	{

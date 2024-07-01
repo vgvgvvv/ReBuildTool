@@ -77,9 +77,9 @@ public interface ICppSourceProviderInterface
 
 public interface ICppProject : IProvideByService
 {
-	public const string TargetDefineExtension = ".Target.cs";
-	public const string ModuleDefineExtension = ".Module.cs";
-	public const string ExtensionDefineExtension = ".Extension.cs";
+	public const string TargetDefineExtension = ".target.cs";
+	public const string ModuleDefineExtension = ".module.cs";
+	public const string ExtensionDefineExtension = ".extension.cs";
 	
 	void Parse();
 	void Setup();

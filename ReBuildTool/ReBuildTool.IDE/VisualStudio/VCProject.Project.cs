@@ -1,20 +1,14 @@
 ﻿using NiceIO;
 using ReBuildTool.Common;
 using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.IDEService.VisualStudio;
 using ReBuildTool.ToolChain;
 
 namespace ReBuildTool.IDE.VisualStudio;
 
 public partial class VCProject
 {
-	private class ProjectConfiguration
-	{
-		public Architecture TargetArch;
-		public BuildConfiguration Configuration;
-	}
-	
-	
-	
+
 	private void GenerateProject()
 	{
 		projectCodeBuilder.Builder.Clear();
@@ -33,49 +27,32 @@ public partial class VCProject
 
 	private void GenerateProjectConfigurations()
 	{
-		var targetArchs = new Architecture[]
-			{ new x86Architecture(), new x64Architecture(), new ARMv7Architecture(), new ARM64Architecture() };
-		var buildConfigs = new BuildConfiguration[]
-			{ BuildConfiguration.Debug, BuildConfiguration.Release, BuildConfiguration.ReleasePlus, BuildConfiguration.ReleaseSize };
-		
-		projectConfigurations.Clear();
-		foreach (var targetArch in targetArchs)
-		{
-			foreach (var buildConfiguration in buildConfigs)
-			{
-				projectConfigurations.Add(new ProjectConfiguration()
-				{
-					TargetArch = targetArch,
-					Configuration = buildConfiguration
-				});
-			}
-		}
-		
 		using(projectCodeBuilder.CreateXmlScope(Tags.ItemGroup, 
 			      new Tuple<string, string>("Label", "ProjectConfigurations")))
 		{
-			foreach (var configuration in projectConfigurations)
+			foreach (var configuration in projectConfigs)
 			{
 				using (projectCodeBuilder.CreateXmlScope(Tags.ProjectConfiguration,
 					       new Tuple<string, string>("Include",
-						       $"{configuration.Configuration}|{configuration.TargetArch.Name}")))
+						       $"{configuration.ConfigurationName}|{configuration.PlatformName}")))
 				{
-					projectCodeBuilder.WriteNode("Configuration", configuration.Configuration.ToString());
+					projectCodeBuilder.WriteNode("Configuration", configuration.ConfigurationName);
+					projectCodeBuilder.WriteNode("Platform", configuration.PlatformName);
 				}
 			}
 		}
 				
-		foreach (var configuration in projectConfigurations)
+		foreach (var configuration in projectConfigs)
 		{
 			GenerateProjectConfiguration(configuration);
 		}
 	}
 
-	private void GenerateProjectConfiguration(ProjectConfiguration configuration)
+	private void GenerateProjectConfiguration(IProjectConfiguration configuration)
 	{
 		using (projectCodeBuilder.CreateXmlScope("PropertyGroup",
 			       new Tuple<string, string>("Condition",
-				       $"'$(Configuration)|$(Platform)'=='{configuration.Configuration}|{configuration.TargetArch.Name}'")))
+				       $"'$(Configuration)|$(Platform)'=='{configuration.ConfigurationName}|{configuration.PlatformName}'")))
 		{
 			// TODO: provide build command
 			projectCodeBuilder.WriteNode("NMakeBuildCommandLine", "");
@@ -148,5 +125,4 @@ public partial class VCProject
 		}
 	}
 
-	private List<ProjectConfiguration> projectConfigurations = new();
 }

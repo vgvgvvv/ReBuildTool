@@ -36,21 +36,21 @@ public class SlnGenerator : ISlnGenerator
 
 	public void RegisterProj(ISlnSubProject proj)
 	{
-		if (!NetFrameworkCSProjs.TryGetValue(proj.guid, out var outProj))
+		if (!SubProjects.TryGetValue(proj.guid, out var outProj))
 		{
-			NetFrameworkCSProjsByName.Add(proj.name, proj);
-			NetFrameworkCSProjs.Add(proj.guid, proj);
+			SubProjectsByName.Add(proj.name, proj);
+			SubProjects.Add(proj.guid, proj);
 		}
 	}
 
 	public bool GetSubProj(string name, out ISlnSubProject? outProj)
 	{
-		return NetFrameworkCSProjsByName.TryGetValue(name, out outProj);
+		return SubProjectsByName.TryGetValue(name, out outProj);
 	}
 
 	public bool FlushProjectsAndSln()
 	{
-		foreach (var (key, proj) in NetFrameworkCSProjsByName)
+		foreach (var (key, proj) in SubProjectsByName)
 		{
 			proj.FlushToFile();
 		}
@@ -62,11 +62,13 @@ public class SlnGenerator : ISlnGenerator
 	private void FlushSln()
 	{
 		codeBuilder.AppendLine("Microsoft Visual Studio Solution File, Format Version 11.00");
-		codeBuilder.AppendLine("# Visual Studio 2010");
-		foreach (var (key, proj) in NetFrameworkCSProjsByName)
+		codeBuilder.AppendLine("# Visual Studio 2017");
+		codeBuilder.AppendLine("VisualStudioVersion = 17.0.31314.256");
+		codeBuilder.AppendLine("MinimumVisualStudioVersion = 10.0.40219.1");
+		foreach (var (key, proj) in SubProjectsByName)
 		{
 			codeBuilder.AppendLine(
-				$"Project(\"{{{proj.guid}}}\") = \"{proj.name}\", \"{proj.fullPath}\", \"{{{proj.guid}}}\"");
+				$"Project(\"{{{proj.guid}}}\") = \"{proj.name}\", \"{proj.fullPath.RelativeTo(outputFolder)}\", \"{{{proj.guid}}}\"");
 			codeBuilder.AppendLine("EndProject");
 		}
 
@@ -78,8 +80,11 @@ public class SlnGenerator : ISlnGenerator
 			{
 				codeBuilder.AddIndent();
 
-				codeBuilder.AppendLine("Debug|Any CPU = Debug|Any CPU");
-				codeBuilder.AppendLine("Release|Any CPU = Release|Any CPU");
+				var firstProj = SubProjects.First();
+				foreach (var c in firstProj.Value.projectConfigs)
+				{
+					codeBuilder.AppendLine($"{c.ConfigurationName}|{c.PlatformName} = {c.ConfigurationName}|{c.PlatformName}");
+				}
 				
 				codeBuilder.RemoveIndent();
 			}
@@ -89,12 +94,13 @@ public class SlnGenerator : ISlnGenerator
 			{
 				codeBuilder.AddIndent();
 
-				foreach (var (key, proj) in NetFrameworkCSProjsByName)
+				foreach (var (key, proj) in SubProjectsByName)
 				{
-					codeBuilder.AppendLine($"{{{proj.guid}}}.Debug|Any CPU.ActiveCfg = Debug|Any CPU");
-					codeBuilder.AppendLine($"{{{proj.guid}}}.Debug|Any CPU.Build.0 = Debug|Any CPU");
-					codeBuilder.AppendLine($"{{{proj.guid}}}.Release|Any CPU.ActiveCfg = Release|Any CPU");
-					codeBuilder.AppendLine($"{{{proj.guid}}}.Release|Any CPU.Build.0 = Release|Any CPU");
+					foreach (var c in proj.projectConfigs)
+					{
+						codeBuilder.AppendLine($"{{{proj.guid}}}.{c.ConfigurationName}|{c.PlatformName}.ActiveCfg = {c.ConfigurationName}|{c.PlatformName}");
+						codeBuilder.AppendLine($"{{{proj.guid}}}.{c.ConfigurationName}|{c.PlatformName}.Build.0 = {c.ConfigurationName}|{c.PlatformName}");
+					}
 				}
 				
 				codeBuilder.RemoveIndent();
@@ -121,9 +127,9 @@ public class SlnGenerator : ISlnGenerator
 	
 	public string OutputPath => outputFolder.Combine(Name + ".sln");
 	
-	public Dictionary<string, ISlnSubProject> NetFrameworkCSProjsByName { get; } =
+	public Dictionary<string, ISlnSubProject> SubProjectsByName { get; } =
 		new Dictionary<string, ISlnSubProject>();
-	public Dictionary<Guid, ISlnSubProject> NetFrameworkCSProjs { get; } = new Dictionary<Guid, ISlnSubProject>();
+	public Dictionary<Guid, ISlnSubProject> SubProjects { get; } = new Dictionary<Guid, ISlnSubProject>();
 
 	private NPath outputFolder;
 	private SourceCodeBuilder codeBuilder = new SourceCodeBuilder();

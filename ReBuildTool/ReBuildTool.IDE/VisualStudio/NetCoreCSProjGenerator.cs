@@ -6,8 +6,24 @@ using ReBuildTool.Service.IDEService.VisualStudio;
 
 namespace ReBuildTool.IDE.VisualStudio;
 
+
+
 public class NetCoreCSProj : ISlnSubProject
 {
+	public class NetCoreProjectConfiguration : IProjectConfiguration
+	{
+		private NetCoreProjectConfiguration(string config, string platform)
+		{
+			ConfigurationName = config;
+			PlatformName = platform;
+		}
+
+		public static NetCoreProjectConfiguration Debug => new ("Debug", "AnyCPU");
+		public static NetCoreProjectConfiguration Release => new ("Release", "AnyCPU");
+
+		public string ConfigurationName { get; }
+		public string PlatformName { get; }
+	}
 	
 	private static class Tags
 	{
@@ -46,6 +62,12 @@ public class NetCoreCSProj : ISlnSubProject
 		return result;
 	}
 
+
+	public List<IProjectConfiguration> projectConfigs { get; } = new()
+	{
+		NetCoreProjectConfiguration.Debug,
+		NetCoreProjectConfiguration.Release
+	};
 
 	public void FlushToFile()
 	{
