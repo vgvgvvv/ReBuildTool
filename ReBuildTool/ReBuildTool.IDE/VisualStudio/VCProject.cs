@@ -5,12 +5,19 @@ using ReBuildTool.Service.IDEService.VisualStudio;
 
 namespace ReBuildTool.IDE.VisualStudio;
 
-public class VCProject : ISlnSubProject
+public partial class VCProject : ISlnSubProject
 {
 	private class Tags
 	{
-		public static string ItemGroup = nameof(ItemGroup);
 		public static string ProjectConfiguration = nameof(ProjectConfiguration);
+		public static string Project = nameof(Project);
+		public static string ItemGroup = nameof(ItemGroup);
+		public static string PropertyGroup = nameof(PropertyGroup);
+		public static string Filter = nameof(Filter);
+		public static string ClCompile = nameof(ClCompile);
+		public static string ClInclude = nameof(ClInclude);
+		public static string None = nameof(None);
+		public static string Import = nameof(Import);
 	}
 	
 	
@@ -51,19 +58,25 @@ public class VCProject : ISlnSubProject
 		File.WriteAllText(commonPropPath, commonPropBuilder.ToString());
 	}
 
-	private void GenerateProject()
+	private bool IsHeader(NPath path)
 	{
+		return path.ExtensionWithDot == ".h" || 
+		       path.ExtensionWithDot == "hpp" || 
+		       path.ExtensionWithDot == "inl";
+	}
 		
+	private bool IsSource(NPath path)
+	{
+		return path.ExtensionWithDot == ".cpp" || 
+		       path.ExtensionWithDot == "c" ||
+		       path.ExtensionWithDot == "cc" ||
+		       path.ExtensionWithDot == "cxx" ||
+		       path.ExtensionWithDot == ".asm";
 	}
 
-	private void GenerateFilter()
+	private bool IsOther(NPath path)
 	{
-		
-	}
-
-	private void GenerateCommonProps()
-	{
-		
+		return !IsHeader(path) && !IsSource(path);
 	}
 	
 	public string name { get; private set; }

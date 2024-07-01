@@ -16,9 +16,7 @@ public interface ICppSourceProvider : ICppSourceProviderInterface
 
 public class CppBuildProject : ICppSourceProvider, ICppProject
 {
-	public const string TargetDefineExtension = ".Target.cs";
-	public const string ModuleDefineExtension = ".Module.cs";
-	public const string ExtensionDefineExtension = ".Extension.cs";
+
 	
 	private CppBuildProject(NPath workDirectory)
 	{
@@ -28,9 +26,9 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 
 	private void ParseRules()
 	{
-		var targetFiles = ProjectRoot.Files($"*{TargetDefineExtension}", true).ToList();
-		var moduleFiles = ProjectRoot.Files($"*{ModuleDefineExtension}", true).ToList();
-		var extraFiles = ProjectRoot.Files($"*{ExtensionDefineExtension}", true).ToList();
+		var targetFiles = ProjectRoot.Files($"*{ICppProject.TargetDefineExtension}", true).ToList();
+		var moduleFiles = ProjectRoot.Files($"*{ICppProject.ModuleDefineExtension}", true).ToList();
+		var extraFiles = ProjectRoot.Files($"*{ICppProject.ExtensionDefineExtension}", true).ToList();
 		
 		foreach (var targetFile in targetFiles)
 		{
@@ -40,7 +38,7 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		foreach (var moduleFile in moduleFiles)
 		{
 			var fileName = moduleFile.FileName;
-			ModuleRulePaths.Add(fileName.Substring(0, fileName.Length - ModuleDefineExtension.Length), moduleFile);
+			ModuleRulePaths.Add(fileName.Substring(0, fileName.Length - ICppProject.ModuleDefineExtension.Length), moduleFile);
 		}
 		
 		var compiler = ServiceContext.Instance.FindService<ICSharpCompilerService>().Value;
@@ -77,6 +75,27 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 	{
 		// generate dll && do init functions
 		BuildRuleAssembly();
+		GenerateCppProject();
+	}
+
+	public void GenerateCppProject()
+	{
+		if (NeedReBuildRuleAssembly())
+		{
+			BuildRuleAssembly();
+		}
+
+		InitAllRule();
+		
+		var slnResult = ServiceContext.Instance.Create<ISlnGenerator>(Name, ProjectRoot);
+		if (!slnResult)
+		{
+			throw new Exception("cannot parse sln generator");
+		}
+		
+		var slnGenerator = slnResult.Value;
+		slnGenerator.GenerateOrGetVCProj(this, CppProjectOutput);
+		slnGenerator.FlushProjectsAndSln();
 	}
 
 	public void Build(string? targetName = null)
@@ -112,6 +131,17 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		
 	}
 
+	public void Clean()
+	{
+		IntermediaFolder.DeleteIfExists(DeleteMode.Normal);
+	}
+
+	public void ReBuild(string? targetName = null)
+	{
+		Clean();
+		Build(targetName);
+	}
+	
 	private bool NeedReBuildRuleAssembly()
 	{
 		return !CppBuildRuleDllPath.Exists();
@@ -132,6 +162,11 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 
 	private void InitAllRule()
 	{
+		if (TargetRules.Count != 0 || ModuleRules.Count != 0)
+		{
+			return;
+		}
+		
 		var compileRuleAssembly = Assembly.LoadFile(CppBuildRuleDllPath);
 
 		var targetRules = compileRuleAssembly.GetTypes()
@@ -208,6 +243,7 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 	
 	private IAssemblyCompileUnit BuildRuleCompileUnit { get; set; }
 	private NPath CppBuildRuleProjectOutput => IntermediaFolder.Combine("CppBuildRule/Project");
+	private NPath CppProjectOutput => IntermediaFolder.Combine("CppProject");
 	private NPath CppBuildRuleBinaryOutput => IntermediaFolder.Combine("CppBuildRule/Binary");
 	private NPath CppBuildRuleDllPath => CppBuildRuleBinaryOutput.Combine($"{BuildRuleCompileUnit.FileName}.dll");
 
