@@ -59,4 +59,17 @@ public class Tests
         project.Build();
         
     }
+
+    [Test]
+    public void TestProjectGenerate()
+    {
+        CmdParser.Parse<Tests>();
+        ServiceContext.Instance.Init();
+        //CppCompilerArgs.Get().DryRun = true;
+        
+        var path = BuildCppFolder;
+        var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
+        project.Parse();
+        project.Setup();
+    }
 }

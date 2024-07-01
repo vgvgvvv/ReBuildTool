@@ -10,6 +10,8 @@ public interface ICppSourceProvider : ICppSourceProviderInterface
 {
 	string Name { get; }
 	NPath ProjectRoot { get; }
+	NPath SourceFolder { get; }
+	NPath IntermediaFolder { get; }
 	Dictionary<string, ITargetInterface> TargetRules { get; }
 	Dictionary<string, IModuleInterface> ModuleRules { get; }
 }
@@ -26,9 +28,9 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 
 	private void ParseRules()
 	{
-		var targetFiles = ProjectRoot.Files($"*{ICppProject.TargetDefineExtension}", true).ToList();
-		var moduleFiles = ProjectRoot.Files($"*{ICppProject.ModuleDefineExtension}", true).ToList();
-		var extraFiles = ProjectRoot.Files($"*{ICppProject.ExtensionDefineExtension}", true).ToList();
+		var targetFiles = SourceFolder.Files($"*{ICppProject.TargetDefineExtension}", true).ToList();
+		var moduleFiles = SourceFolder.Files($"*{ICppProject.ModuleDefineExtension}", true).ToList();
+		var extraFiles = SourceFolder.Files($"*{ICppProject.ExtensionDefineExtension}", true).ToList();
 		
 		foreach (var targetFile in targetFiles)
 		{
@@ -74,17 +76,12 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 	public void Setup()
 	{
 		// generate dll && do init functions
-		BuildRuleAssembly();
+		InitAllRule();
 		GenerateCppProject();
 	}
 
 	public void GenerateCppProject()
 	{
-		if (NeedReBuildRuleAssembly())
-		{
-			BuildRuleAssembly();
-		}
-
 		InitAllRule();
 		
 		var slnResult = ServiceContext.Instance.Create<ISlnGenerator>(Name, ProjectRoot);
@@ -105,11 +102,6 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 	
 	public void Build(string? targetName, IBuildConfigProvider? configProvider = null)
 	{
-		if (NeedReBuildRuleAssembly())
-		{
-			BuildRuleAssembly();
-		}
-
 		InitAllRule();
 		
 		CppBuilder builder = new CppBuilder(configProvider);
@@ -162,6 +154,11 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 
 	private void InitAllRule()
 	{
+		if (NeedReBuildRuleAssembly())
+		{
+			BuildRuleAssembly();
+		}
+		
 		if (TargetRules.Count != 0 || ModuleRules.Count != 0)
 		{
 			return;

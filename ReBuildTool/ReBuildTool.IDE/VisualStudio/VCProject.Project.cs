@@ -106,7 +106,7 @@ public partial class VCProject
 		
 		using (projectCodeBuilder.CreateXmlScope(Tags.ItemGroup))
 		{
-			foreach (var file in cppSource.ProjectRoot
+			foreach (var file in cppSource.SourceFolder
 				         .Files(true)
 				         .Where(IsOther))
 			{

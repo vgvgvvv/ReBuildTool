@@ -69,6 +69,8 @@ public interface ICppSourceProviderInterface
 {
 	string Name { get; }
 	NPath ProjectRoot { get; }
+	NPath SourceFolder { get; }
+	NPath IntermediaFolder { get; }
 	Dictionary<string, ITargetInterface> TargetRules { get; }
 	Dictionary<string, IModuleInterface> ModuleRules { get; }
 }
