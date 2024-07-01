@@ -11,6 +11,12 @@ public partial class VCProject
 		public static string RuleExtension = nameof(RuleExtension);
 		public static string Modules = nameof(Modules);
 	}
+
+	class Filter
+	{
+		public Guid FilterGuid;
+		public List<Filter> Filters { get; } = new();
+	}
 	
 	private void GenerateFilter()
 	{
@@ -90,15 +96,13 @@ public partial class VCProject
 			}
 		}
 		
-		foreach (var (key, module) in cppSource.ModuleRules)
-		{
-			GenerateModule(module);
-		}
 	}
 	
 	private void GenerateModule(IModuleInterface moduleInterface)
 	{
 		
 	}
+
+	private Dictionary<string, Filter> AllFilters = new();
 
 }

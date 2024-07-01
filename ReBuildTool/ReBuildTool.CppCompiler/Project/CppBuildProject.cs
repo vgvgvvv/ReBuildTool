@@ -234,6 +234,7 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 	public NPath ProjectRoot { get; }
 
 	public NPath IntermediaFolder => ProjectRoot.Combine("Intermedia");
+	public NPath SourceFolder => ProjectRoot.Combine("Source");
 	
 	public Dictionary<string, ITargetInterface> TargetRules { get; } = new();
 	public Dictionary<string, IModuleInterface> ModuleRules { get; } = new();
