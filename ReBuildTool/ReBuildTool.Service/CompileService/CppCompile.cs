@@ -26,7 +26,7 @@ public interface IModuleInterface
 
 	public List<string> PrivateDefines { get; }
 
-	public List<string> PublicCompilerFlags { get; }
+	public List<string> PublicCompileFlags { get; }
 
 	public List<string> PrivateCompileFlags { get; } 
 

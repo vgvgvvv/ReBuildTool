@@ -37,8 +37,6 @@ public partial class VCProject : ISlnSubProject
 		public static string Import = nameof(Import);
 	}
 	
-	
-
 	public static VCProject GenerateOrGetVCProj(SlnGenerator owner, ICppSourceProviderInterface source, NPath output)
 	{
 		if (owner.GetSubProj(source.Name, out var subProject))
@@ -51,21 +49,26 @@ public partial class VCProject : ISlnSubProject
 			throw new Exception("Project with same name already exists but is not a NetCoreCSProj");
 		}
 
-		VCProject result = new VCProject();
-		result.name = source.Name;
-		result.guid = Guid.NewGuid();
-		result.outputFolder = output;
-		result.cppSource = source;
-		result.outputFolder.EnsureDirectoryExists();
-		result.projectCodeBuilder = new XmlCodeBuilder();
-		result.filterCodeBuilder = new XmlCodeBuilder();
-		result.commonPropBuilder = new XmlCodeBuilder();
-		result.ownerSln = owner;
+		VCProject result = new VCProject(owner, source, output);
 		result.GenerateProject();
 		result.GenerateFilter();
 		result.GenerateCommonProps();
 		owner.RegisterProj(result);
 		return result;
+	}
+
+	private VCProject(SlnGenerator owner, ICppSourceProviderInterface source, NPath output)
+	{
+		name = source.Name;
+		guid = Guid.NewGuid();
+		outputFolder = output;
+		cppSource = source;
+		outputFolder.EnsureDirectoryExists();
+		projectCodeBuilder = new XmlCodeBuilder();
+		filterCodeBuilder = new XmlCodeBuilder();
+		commonPropBuilder = new XmlCodeBuilder();
+		ownerSln = owner;
+		generatorConfigProvider = new VCProjectConfigProvider();
 	}
 
 	private static List<IProjectConfiguration> _projectConfigs = null;
@@ -130,7 +133,9 @@ public partial class VCProject : ISlnSubProject
 	public SlnGenerator ownerSln { get; private set; }
 	private ICppSourceProviderInterface cppSource;
 	private NPath outputFolder;
-	private XmlCodeBuilder projectCodeBuilder;
-	private XmlCodeBuilder filterCodeBuilder;
-	private XmlCodeBuilder commonPropBuilder;
+	private XmlCodeBuilder projectCodeBuilder { get; }
+	private XmlCodeBuilder filterCodeBuilder { get; }
+	private XmlCodeBuilder commonPropBuilder { get; }
+
+	private VCProjectConfigProvider generatorConfigProvider { get; }
 }

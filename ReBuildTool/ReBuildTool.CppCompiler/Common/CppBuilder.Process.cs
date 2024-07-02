@@ -50,13 +50,13 @@ public partial class CppBuilder
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
 			{
-				foreach (var define in depModule.PublicCompilerFlags)
+				foreach (var define in depModule.PublicCompileFlags)
 				{
 					yield return define;
 				}
 			}
 
-			foreach (var publicDef in module.PublicCompilerFlags)
+			foreach (var publicDef in module.PublicCompileFlags)
 			{
 				yield return publicDef;
 			}

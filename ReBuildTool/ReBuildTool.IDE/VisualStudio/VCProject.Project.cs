@@ -3,6 +3,7 @@ using ReBuildTool.Common;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.IDEService.VisualStudio;
 using ReBuildTool.ToolChain;
+using ResetCore.Common;
 
 namespace ReBuildTool.IDE.VisualStudio;
 
@@ -120,8 +121,108 @@ public partial class VCProject
 		foreach (var includeFile in moduleInterface.ModuleDirectory.ToNPath()
 			         .Files(true).Where(IsSource))
 		{
-			projectCodeBuilder.WriteNodeWithoutValue("ClCompile", 
-				new Tuple<string, string>("Include", includeFile.RelativeTo(outputFolder)));
+			using (projectCodeBuilder.CreateXmlScope("ClCompile",
+				       new Tuple<string, string>("Include", includeFile.RelativeTo(outputFolder))))
+			{
+				List<string> additionalOptions = new();
+				additionalOptions.AddRange(GetOptionsForModule(moduleInterface));
+				projectCodeBuilder.WriteNode("AdditionalOptions", string.Join(';', additionalOptions));
+
+				List<NPath> additionalIncludeDirectories = new();
+				additionalIncludeDirectories.AddRange(GetIncludeDirectoriesForModule(moduleInterface));
+				projectCodeBuilder.WriteNode("AdditionalIncludeDirectories",
+					string.Join(';', additionalIncludeDirectories));
+				
+				List<NPath> additionalForcedIncludeFiles = new();
+				// TODO: pch
+				projectCodeBuilder.WriteNode("ForcedIncludeFiles",
+					string.Join(';', additionalForcedIncludeFiles));
+			}
+		}
+	}
+
+	private void GetDependencies(IModuleInterface module, HashSet<IModuleInterface> outModules, bool top = true)
+	{
+		if (outModules.Contains(module))
+		{
+			return;
+		}
+		foreach (var moduleName in module.Dependencies)
+		{
+			if (cppSource.ModuleRules.TryGetValue(moduleName, out var moduleInterface))
+			{
+				outModules.Add(moduleInterface);
+				GetDependencies(moduleInterface, outModules, false);
+			}
+			else
+			{
+				Log.Error($"cannot find module {moduleName} used by {module.TargetName}");
+			}
+		}
+
+		if (top)
+		{
+			outModules.Remove(module);
+		}
+	}
+
+	private IEnumerable<string> GetOptionsForModule(IModuleInterface module)
+	{
+		var depModules = new HashSet<IModuleInterface>();
+		GetDependencies(module, depModules);
+		foreach (var dep in depModules)
+		{
+			foreach (var flag in dep.PublicCompileFlags)
+			{
+				yield return flag;
+			}
+		}
+		
+		// cannot approve module flag for each unit by virtual method
+		
+		foreach (var flag in module.PrivateCompileFlags)
+		{
+			yield return flag;
+		}
+		
+		foreach (var flag in module.PublicCompileFlags)
+		{
+			yield return flag;
+		}
+		
+		foreach (var path in generatorConfigProvider.ToolChain.ToolChainIncludePaths())
+		{
+			yield return path;
+		}
+	}
+	
+	private IEnumerable<NPath> GetIncludeDirectoriesForModule(IModuleInterface module)
+	{
+		var depModules = new HashSet<IModuleInterface>();
+		GetDependencies(module, depModules);
+		foreach (var dep in depModules)
+		{
+			foreach (var path in dep.PublicIncludePaths)
+			{
+				yield return path.ToNPath();
+			}
+		}
+		
+		// cannot approve module flag for each unit by virtual method
+		
+		foreach (var path in module.PrivateIncludePaths)
+		{
+			yield return path.ToNPath();
+		}
+		
+		foreach (var path in module.PublicIncludePaths)
+		{
+			yield return path.ToNPath();
+		}
+		
+		foreach (var path in generatorConfigProvider.ToolChain.ToolChainIncludePaths())
+		{
+			yield return path;
 		}
 	}
 

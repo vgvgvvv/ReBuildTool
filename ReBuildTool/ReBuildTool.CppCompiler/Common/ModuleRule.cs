@@ -17,7 +17,7 @@ public abstract class ModuleRule : IModuleInterface
 
     public List<string> PrivateDefines { get; } = new();
 
-    public List<string> PublicCompilerFlags { get; } = new();
+    public List<string> PublicCompileFlags { get; } = new();
 
     public List<string> PrivateCompileFlags { get; } = new();
 
