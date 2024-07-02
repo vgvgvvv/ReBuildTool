@@ -56,21 +56,6 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 	public void Parse()
 	{
 		ParseRules();
-
-		var compiler = ServiceContext.Instance.FindService<ICSharpCompilerService>().Value;
-		var slnResult = ServiceContext.Instance.Create<ISlnGenerator>("CompileRules", ProjectRoot);
-
-		if (!slnResult)
-		{
-			throw new Exception("cannot parse sln generator");
-		}
-
-		var slnGenerator = slnResult.Value;
-
-		slnGenerator.GenerateOrGetNetCoreCSProj(BuildRuleCompileUnit, compiler.DefaultEnvironment,
-			CppBuildRuleProjectOutput);
-
-		slnGenerator.FlushProjectsAndSln();
 	}
 
 	public void Setup()
@@ -92,6 +77,9 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		
 		var slnGenerator = slnResult.Value;
 		slnGenerator.GenerateOrGetVCProj(this, CppProjectOutput);
+		var compiler = ServiceContext.Instance.FindService<ICSharpCompilerService>().Value;
+		slnGenerator.GenerateOrGetNetCoreCSProj(BuildRuleCompileUnit, compiler.DefaultEnvironment,
+			CppBuildRuleProjectOutput);
 		slnGenerator.FlushProjectsAndSln();
 	}
 
