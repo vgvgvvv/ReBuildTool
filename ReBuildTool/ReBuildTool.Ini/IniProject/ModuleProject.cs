@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Bullseye;
+using NiceIO;
 using ReBuildTool.IniProject.Ini;
 using ReBuildTool.Service.Global;
 using ReBuildTool.Service.CommandGroup;
@@ -145,7 +146,7 @@ public class ModuleProject : IIniProject, IBuildItem
 {
 	public static ModuleProject Current { get; private set; }
 	
-	private ModuleProject(string root)
+	private ModuleProject(NPath root)
 	{
 		TargetName = GlobalCmd.CommonCommand.Target;
 		ProjectRoot = root;
@@ -154,7 +155,9 @@ public class ModuleProject : IIniProject, IBuildItem
 
 	public void Parse()
 	{
-		var targetFile = GlobalPaths.SourceRoot.Combine($"{TargetName}{IniModuleBase.StaticTargetFileExtension}");
+		var targetFile = GlobalPaths.SourceRoot
+			.EnsureDirectoryExists()
+			.Combine($"{TargetName}{IniModuleBase.StaticTargetFileExtension}");
 		if (!targetFile.Exists())
 		{
 			var defaultContent = @"
@@ -287,7 +290,7 @@ public class ModuleProject : IIniProject, IBuildItem
 
 	public string TargetName { get; }
 	
-	public string ProjectRoot { get; }
+	public NPath ProjectRoot { get; }
 
 	private Dictionary<string, IniModule> IniModulesToHandle { get; } = new();
 	private Dictionary<string, IniTarget> IniTargetsToHandle { get; } = new();

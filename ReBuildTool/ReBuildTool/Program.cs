@@ -3,6 +3,7 @@ using ReBuildTool.IniProject;
 using ReBuildTool.Service.CommandGroup;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;
+using ReBuildTool.Service.Global;
 using ResetCore.Common;
 
 Log.Info("Begin Generate..");
@@ -12,10 +13,13 @@ CmdParser.Parse<Program>();
 var command = CmdParser.Get<ICommonCommandGroup>();
 BoosterSupport.SetupBooster();
 
+var root = GlobalPaths.ProjectRoot;
+var iniProject = ServiceContext.Instance.Create<IIniProject>(root);
+var cppProject = ServiceContext.Instance.Create<ICppProject>(root);
 var projects = new List<IProjectInterface>
 {
-    ServiceContext.Instance.Create<IIniProject>(command.ProjectRoot).Value,
-    ServiceContext.Instance.Create<ICppProject>(command.ProjectRoot).Value
+   iniProject.Value,
+   cppProject.Value
 };
 
 foreach (var project in projects)
