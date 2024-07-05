@@ -1,11 +1,8 @@
 ﻿using System.Reflection;
 using Bullseye;
-using NiceIO;
-using ReBuildTool.Common;
-using ReBuildTool.CppCompiler.Standalone;
+using ReBuildTool.Service.Global;
 using ReBuildTool.Internal.Ini;
-using ReBuildTool.Service.CompileService;
-using ReBuildTool.Service.Context;
+using ReBuildTool.Service.CommandGroup;
 using ResetCore.Common;
 
 namespace ReBuildTool.Internal;
@@ -147,8 +144,6 @@ public class ModuleProject : IBuildItem
 {
 	public static ModuleProject Current { get; private set; }
 	
-	public ICppProject CppProject { get; private set; }
-
 	private ModuleProject(string target)
 	{
 		TargetName = target;
@@ -157,7 +152,7 @@ public class ModuleProject : IBuildItem
 
 	public static ModuleProject Create(string target)
 	{
-		var targetFile = GlobalPaths.ProjectRoot.Combine($"{target}{IniModuleBase.StaticTargetFileExtension}");
+		var targetFile = CmdParser.Get<ICommonCommandGroup>().GetProjectRoot().Combine($"{target}{IniModuleBase.StaticTargetFileExtension}");
 		if (!targetFile.Exists())
 		{
 			var defaultContent = @"
@@ -177,9 +172,7 @@ public class ModuleProject : IBuildItem
 
 	public ModuleProject Parse(string path)
 	{
-		CppProject = 
-			ServiceContext.Instance.Create<ICppProject>(CppCompilerArgs.Get().ProjectRoot.Value.ToNPath()).Value;
-		CppProject.Parse();
+			
 		ParseInternal(path);
 		return this;
 	}
@@ -192,7 +185,6 @@ public class ModuleProject : IBuildItem
 
 	public void SetupInitTargets(Targets targets, ref List<string> newTargets)
 	{
-		targets.Add("CppProjectInit", ()=>CppProject.Setup());
 		if (IniTargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
 		{
 			var targetTargets = new List<string>();
@@ -207,7 +199,6 @@ public class ModuleProject : IBuildItem
 
 	public void SetupBuildTargets(Targets targets, ref List<string> newTargets)
 	{
-		targets.Add("CppProjectBuild", ()=>CppProject.Build());
 		if (IniTargetsToHandle.TryGetValue(TargetName, out var targetToHandle))
 		{
 			using (new TargetScope(this))

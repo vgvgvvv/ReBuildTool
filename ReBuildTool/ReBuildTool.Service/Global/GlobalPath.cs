@@ -1,19 +1,18 @@
-using NiceIO;
-using ResetCore.Common;
+﻿using NiceIO;
+using ReBuildTool.Service.CommandGroup;
 
-namespace ReBuildTool.Internal;
+namespace ReBuildTool.Service.Global;
 
 public class GlobalPaths
 {
-	public static NPath ProjectRoot => CommonCommandGroup.Get().ProjectRoot.Value.ToNPath();
+	public static NPath ProjectRoot => GlobalCmd.CommonCommand.GetProjectRoot();
 	
-	//{Root}/Binary/Platform/ReBuildTool/ReBuildTool.dll
-	public static NPath ToolRoot => typeof(Program).Assembly.Location.ToNPath().Parent.Parent.Parent.Parent;
+	public static NPath IntermediaPath => GlobalCmd.CommonCommand.GetIntermediaPath();
 	
-	public static NPath ScriptRoot => ToolRoot.Combine("BuildScript");
+	public static NPath ToolRoot => GlobalCmd.CommonCommand.GetToolRoot();
 	
-	public static NPath IntermediaPath => ProjectRoot.Combine("Intermedia");
-
+	public static NPath ScriptRoot => GlobalCmd.CommonCommand.GetScriptRoot();
+	
 	private static string? _reBuildToolHome = null;
 	public static NPath ReBuildToolHome
 	{

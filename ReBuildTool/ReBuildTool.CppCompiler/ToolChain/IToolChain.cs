@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using NiceIO;
-using ReBuildTool.Common;
+using ReBuildTool.Service.Global;
 using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;

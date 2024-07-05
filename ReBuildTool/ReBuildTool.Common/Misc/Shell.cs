@@ -2,7 +2,7 @@
 using NiceIO;
 using ResetCore.Common;
 
-namespace ReBuildTool.Common;
+namespace ReBuildTool.Service.Global;
 
 public class Shell : IDisposable
 {

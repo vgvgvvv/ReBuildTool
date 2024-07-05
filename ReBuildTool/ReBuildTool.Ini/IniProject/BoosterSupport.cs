@@ -1,6 +1,7 @@
 using NiceIO;
 using ReBuildTool.Actions;
 using ReBuildTool.Service.CommandGroup;
+using ReBuildTool.Service.Global;
 using ResetCore.Common;
 
 namespace ReBuildTool.Internal;

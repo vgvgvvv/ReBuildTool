@@ -1,6 +1,6 @@
 using System.Reflection;
 using Bullseye;
-using ReBuildTool.Common;
+using ReBuildTool.Service.Global;
 using ResetCore.Common;
 using ResetCore.Common.Parser.Ini;
 

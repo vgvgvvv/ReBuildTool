@@ -1,5 +1,5 @@
 using NiceIO;
-using ReBuildTool.Common;
+using ReBuildTool.Service.Global;
 using ReBuildTool.IDE.VisualStudio;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.IDEService.VisualStudio;

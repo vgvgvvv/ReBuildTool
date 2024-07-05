@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace ReBuildTool.Common;
+namespace ReBuildTool.Service.Global;
 
 public class PlatformHelper
 {

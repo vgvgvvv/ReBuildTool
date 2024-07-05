@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace ReBuildTool.Common;
+namespace ReBuildTool.Service.Global;
 
 public class SourceCodeBuilder
 {

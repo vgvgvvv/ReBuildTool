@@ -1,4 +1,4 @@
-﻿using ReBuildTool.Common;
+﻿using ReBuildTool.Service.Global;
 
 namespace ReBuildTool.ToolChain;
 

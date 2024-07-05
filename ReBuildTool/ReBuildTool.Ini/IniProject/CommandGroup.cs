@@ -1,16 +1,9 @@
-﻿using ReBuildTool.Common;
+﻿using ReBuildTool.Service.Global;
 using ReBuildTool.Service.CommandGroup;
 using ResetCore.Common;
 
 namespace ReBuildTool.Internal;
 
-public enum RunMode
-{
-    Init,
-    Build,
-    Clean,
-    ReBuild
-}
 
 public class CommonCommandGroup : CommandLineArgGroup<CommonCommandGroup>, ICommonCommandGroup
 {

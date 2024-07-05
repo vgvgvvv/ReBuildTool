@@ -1,8 +1,7 @@
 ﻿using NiceIO;
-using ReBuildTool.Common;
-using ReBuildTool.Internal;
+using ReBuildTool.Service.Global;
+using ReBuildTool.Service.CommandGroup;
 using ResetCore.Common;
-using ResetCore.Common.Parser.Ini;
 
 namespace ReBuildTool.Actions;
 
@@ -52,7 +51,7 @@ public class Git
     [ActionDefine("Git.Ignore")]
     public static void IgnoreWithPattern(string ignorePattern)
     {
-        var ignorePath = Path.Combine(GlobalPaths.ProjectRoot, ".gitignore");
+        var ignorePath = Path.Combine(CmdParser.Get<ICommonCommandGroup>().ProjectRoot, ".gitignore");
         if (!File.Exists(ignorePath))
         {
             File.WriteAllText(ignorePath, ignorePattern);

@@ -1,8 +1,6 @@
 ﻿using NiceIO;
-using ReBuildTool.Common;
-using ReBuildTool.Internal;
+using ReBuildTool.Service.Global;
 using ReCSharpCommon.Platform;
-using ResetCore.Common;
 
 namespace ReBuildTool.Actions;
 

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using NiceIO;
-using ReBuildTool.Common;
-using ReBuildTool.Internal;
+using ReBuildTool.Service.Global;
+using ReBuildTool.Service.CommandGroup;
 using ReCSharpCommon.Platform;
 
 namespace ReBuildTool.Actions;
@@ -9,7 +9,10 @@ namespace ReBuildTool.Actions;
 public class ResetHeaderTool
 {
     
-    public static NPath RHTDir => GlobalPaths.IntermediaPath.Combine("ResetHeaderTool").EnsureDirectoryExists();
+    public static NPath RHTDir => GlobalCmd.CommonCommand
+        .GetIntermediaPath()
+        .Combine("ResetHeaderTool")
+        .EnsureDirectoryExists();
     public static NPath RHTBinaryDir => RHTDir.Combine("Binary").EnsureDirectoryExists();
     
     

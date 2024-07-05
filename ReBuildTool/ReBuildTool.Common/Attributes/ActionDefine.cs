@@ -1,4 +1,4 @@
-﻿namespace ReBuildTool.Common;
+﻿namespace ReBuildTool.Service.Global;
 
 [AttributeUsage(AttributeTargets.Method)]
 public class ActionDefineAttribute : Attribute

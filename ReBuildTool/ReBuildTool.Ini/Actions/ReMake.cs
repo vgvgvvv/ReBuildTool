@@ -1,14 +1,16 @@
 ﻿using NiceIO;
-using ReBuildTool.Common;
-using ReBuildTool.Internal;
+using ReBuildTool.Service.Global;
+using ReBuildTool.Service.CommandGroup;
 using ResetCore.Common;
-using ResetCore.Common.Parser.Ini;
 
 namespace ReBuildTool.Actions;
 
 public class ReMake
 {
-    public static NPath ReMakeDir => GlobalPaths.IntermediaPath.Combine("ReMake").EnsureDirectoryExists();
+    public static NPath ReMakeDir => CmdParser.Get<ICommonCommandGroup>()
+        .GetIntermediaPath()
+        .Combine("ReMake")
+        .EnsureDirectoryExists();
 
 
     private static readonly string RootMakeListsContent = 
@@ -39,7 +41,7 @@ ReMake_AddSubDirsRec(""Src"")
         Git.IgnoreWithPattern("temp");
         Git.IgnoreWithPattern("*_API.h");
         Git.IgnoreWithPattern("*.Target.json");
-        
+
         var srcDir = GlobalPaths.ProjectRoot.Combine("Src").EnsureDirectoryExists();
         var testDir = GlobalPaths.ProjectRoot.Combine("Test").EnsureDirectoryExists();
         

@@ -1,4 +1,4 @@
-﻿namespace ReBuildTool.Common;
+﻿namespace ReBuildTool.Service.Global;
 
 public abstract class RuntimePlatform
 {
