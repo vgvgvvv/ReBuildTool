@@ -129,8 +129,8 @@ ${moduleName}::~${moduleName}()
 class ${moduleName}
 {
 public:
-    MainModule();
-    ~MainModule();
+    ${moduleName}();
+    ~${moduleName}();
 };
 ";
 				ContextArgs.Context context = new ContextArgs.Context();
