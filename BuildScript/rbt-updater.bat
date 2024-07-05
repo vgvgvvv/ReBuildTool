@@ -1,5 +1,3 @@
-cd  %~dp0
-
-cd "ReBuildTool/Binary/Win64/ReBuildTool.Updater/"
-
-call ReBuildTool.Updater.exe %*
+set CurrentDir=%~dp0
+@echo off
+call "%CurrentDir%/ReBuildTool/Binary/Win64/ReBuildTool/ReBuildTool.Updater.exe" %*
