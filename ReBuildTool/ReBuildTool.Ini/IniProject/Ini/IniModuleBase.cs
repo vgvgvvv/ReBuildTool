@@ -27,7 +27,6 @@ public abstract class IniModuleBase : ModuleBase
         catch (Exception e)
         {
             Log.Exception(e);
-            Environment.Exit(1);
         }
     }
 

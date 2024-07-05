@@ -180,7 +180,7 @@ public class ModuleProject : IIniProject, IBuildItem
 		Targets root = new Targets();
 		var targets = new List<string>();
 		SetupInitTargets(root, ref targets);
-		root.RunAndExitAsync(targets, 
+		root.RunWithoutExitingAsync(targets, 
 			ex => ex is SimpleExec.ExitCodeException)
 			.Wait();
 	}
@@ -190,7 +190,7 @@ public class ModuleProject : IIniProject, IBuildItem
 		Targets root = new Targets();
 		var targets = new List<string>();
 		SetupBuildTargets(root, ref targets);
-		root.RunAndExitAsync(targets, 
+		root.RunWithoutExitingAsync(targets, 
 				ex => ex is SimpleExec.ExitCodeException)
 			.Wait();
 	}
@@ -200,7 +200,7 @@ public class ModuleProject : IIniProject, IBuildItem
 		Targets root = new Targets();
 		var targets = new List<string>();
 		// TODO: clean
-		root.RunAndExitAsync(targets, 
+		root.RunWithoutExitingAsync(targets, 
 				ex => ex is SimpleExec.ExitCodeException)
 			.Wait();
 	}
@@ -210,7 +210,7 @@ public class ModuleProject : IIniProject, IBuildItem
 		Targets root = new Targets();
 		var targets = new List<string>();
 		// TODO: rebuild
-		root.RunAndExitAsync(targets, 
+		root.RunWithoutExitingAsync(targets, 
 				ex => ex is SimpleExec.ExitCodeException)
 			.Wait();
 	}

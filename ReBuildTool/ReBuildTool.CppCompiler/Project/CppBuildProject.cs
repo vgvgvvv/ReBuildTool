@@ -99,7 +99,7 @@ public class ${targetName}Module : ModuleRule
 			ContextArgs.Context context = new ContextArgs.Context();
 			context.AddArg("targetName", targetName);
 			ContextArgs text = new ContextArgs(defaultTargetContent);
-			File.WriteAllText(moduleFolder.Combine($"{moduleName}{ICppProject.TargetDefineExtension}"), text.GetText(context));
+			File.WriteAllText(moduleFolder.Combine($"{moduleName}{ICppProject.ModuleDefineExtension}"), text.GetText(context));
 
 		}
 
