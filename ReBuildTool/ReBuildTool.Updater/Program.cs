@@ -26,9 +26,13 @@ if (PlatformHelper.IsWindows())
 }
 else
 {
-	Cmd.RunCmd(rebuildToolGitRoot.Combine("BuildScript/BuildAll.sh"), "", rebuildToolGitRoot);
+	var buildAllSh = rebuildToolGitRoot.Combine("BuildScript/BuildAll.sh");
+	var buildUpdaterSh = rebuildToolGitRoot.Combine("BuildScript/BuildUpdater.sh");
+	Cmd.MakeExecutable(buildAllSh);
+	Cmd.MakeExecutable(buildUpdaterSh);
+	Cmd.RunCmd(buildAllSh, "", rebuildToolGitRoot);
 	if (!isRunningBuildedUpdater)
 	{
-		Cmd.RunCmd(rebuildToolGitRoot.Combine("BuildScript/BuildUpdater.sh"), "", rebuildToolGitRoot);
+		Cmd.RunCmd(buildUpdaterSh, "", rebuildToolGitRoot);
 	}
 }

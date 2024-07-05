@@ -53,6 +53,7 @@ initReBuildTool()
 
         echo "============= Build ReBuildTool ================"
         ./BuildAll.sh
+        ./BuildUpdater.sh
     else
       cd ReBuildTool/BuildScript
     fi
