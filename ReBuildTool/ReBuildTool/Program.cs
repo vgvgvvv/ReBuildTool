@@ -9,7 +9,10 @@ using ResetCore.Common;
 Log.Info("Begin Generate..");
 Log.Info(Environment.CommandLine);
 
-CmdParser.Parse<Program>();
+if (!CmdParser.Parse<Program>())
+{
+    return;
+}
 var command = CmdParser.Get<ICommonCommandGroup>();
 BoosterSupport.SetupBooster();
 

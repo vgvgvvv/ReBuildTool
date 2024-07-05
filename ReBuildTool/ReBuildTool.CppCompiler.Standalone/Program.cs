@@ -6,7 +6,10 @@ using ReBuildTool.Service.Context;
 using ResetCore.Common;
 
 
-CmdParser.Parse<Program>();
+if (!CmdParser.Parse<Program>())
+{
+	return;
+}
 ServiceContext.Instance.Init();
 
 var path = CppCompilerArgs.Get().ProjectRoot.Value.ToNPath();
