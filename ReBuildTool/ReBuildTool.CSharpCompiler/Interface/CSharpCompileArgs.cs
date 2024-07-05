@@ -7,7 +7,7 @@ namespace ReBuildTool.CSharpCompiler;
 public class CSharpCompileArgs : CommandLineArgGroup<CSharpCompileArgs>, ICommonCommandGroup
 {
 	[CmdLine("root of project, work directory as default")]
-	public CmdLineArg<string> ProjectRoot { get; set; } = CmdLineArg<string>.FromObject(Environment.CurrentDirectory);
+	public CmdLineArg<string> ProjectRoot { get; set; } = CmdLineArg<string>.FromObject(nameof(ProjectRoot), Environment.CurrentDirectory);
 	
 	[CmdLine("run mode: Init | Build", true)]
 	public CmdLineArg<RunMode> Mode { get; set; }
@@ -16,5 +16,5 @@ public class CSharpCompileArgs : CommandLineArgGroup<CSharpCompileArgs>, ICommon
 	public CmdLineArg<string> Target { get; set; }
 
 	[CmdLine("compile configuration")]
-	public CSharpCompileConfiguration CSCompileConfig { get; set; } = CSharpCompileConfiguration.Debug;
+	public CmdLineArg<CSharpCompileConfiguration> CSCompileConfig { get; set; } = CmdLineArg<CSharpCompileConfiguration>.FromObject(nameof(CSCompileConfig), CSharpCompileConfiguration.Debug);
 }

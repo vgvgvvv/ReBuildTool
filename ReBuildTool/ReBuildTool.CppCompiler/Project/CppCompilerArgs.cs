@@ -6,7 +6,7 @@ namespace ReBuildTool.CppCompiler.Standalone;
 public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonCommandGroup
 {
 	[CmdLine("root of project, work directory as default")]
-	public CmdLineArg<string> ProjectRoot { get; set; } = CmdLineArg<string>.FromObject(Environment.CurrentDirectory);
+	public CmdLineArg<string> ProjectRoot { get; set; } = CmdLineArg<string>.FromObject(nameof(ProjectRoot), Environment.CurrentDirectory);
 
 	[CmdLine("run mode: Init | Build", true)]
 	public CmdLineArg<RunMode> Mode { get; set; }
@@ -15,5 +15,5 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 	public CmdLineArg<string> Target { get; set; }
 
 	[CmdLine("dry run for test")] 
-	public CmdLineArg<bool> RunDry { get; set; } = CmdLineArg<bool>.FromObject(false);
+	public CmdLineArg<bool> RunDry { get; set; } = CmdLineArg<bool>.FromObject(nameof(RunDry), false);
 }
