@@ -10,6 +10,9 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 
 	[CmdLine("run mode: Init | Build", true)]
 	public CmdLineArg<RunMode> Mode { get; set; }
+	
+	[CmdLine("build target", true)] 
+	public CmdLineArg<string> Target { get; set; }
 
 	[CmdLine("dry run for test")] 
 	public CmdLineArg<bool> RunDry { get; set; } = CmdLineArg<bool>.FromObject(false);

@@ -1,11 +1,12 @@
 ﻿using System.Reflection;
 using Bullseye;
+using ReBuildTool.IniProject.Ini;
 using ReBuildTool.Service.Global;
-using ReBuildTool.Internal.Ini;
 using ReBuildTool.Service.CommandGroup;
+using ReBuildTool.Service.CompileService;
 using ResetCore.Common;
 
-namespace ReBuildTool.Internal;
+namespace ReBuildTool.IniProject;
 
 public class BuildActionMeta
 {
@@ -140,17 +141,18 @@ internal class TargetScope : IDisposable
 	public static Stack<TargetScopeItem> ScopeStack { get; } = new();
 }
 
-public class ModuleProject : IBuildItem
+public class ModuleProject : IIniProject, IBuildItem
 {
 	public static ModuleProject Current { get; private set; }
 	
-	private ModuleProject(string target)
+	private ModuleProject(string target, string root)
 	{
 		TargetName = target;
+		ProjectRoot = root;
 		Current = this;
 	}
 
-	public static ModuleProject Create(string target)
+	public static ModuleProject Create(string target, string root)
 	{
 		var targetFile = CmdParser.Get<ICommonCommandGroup>().GetProjectRoot().Combine($"{target}{IniModuleBase.StaticTargetFileExtension}");
 		if (!targetFile.Exists())
@@ -167,14 +169,52 @@ public class ModuleProject : IBuildItem
 			ContextArgs args = new ContextArgs(defaultContent);
 			targetFile.WriteAllText(args.GetText(context));
 		}
-		return new ModuleProject(target);
+		return new ModuleProject(target, root);
 	}
 
-	public ModuleProject Parse(string path)
+	public void Parse()
 	{
-			
-		ParseInternal(path);
-		return this;
+		ParseInternal(ProjectRoot);
+	}
+
+	public void Setup()
+	{
+		Targets root = new Targets();
+		var targets = new List<string>();
+		SetupInitTargets(root, ref targets);
+		root.RunAndExitAsync(targets, 
+			ex => ex is SimpleExec.ExitCodeException)
+			.Wait();
+	}
+
+	public void Build(string? targetName = null)
+	{
+		Targets root = new Targets();
+		var targets = new List<string>();
+		SetupBuildTargets(root, ref targets);
+		root.RunAndExitAsync(targets, 
+				ex => ex is SimpleExec.ExitCodeException)
+			.Wait();
+	}
+
+	public void Clean()
+	{
+		Targets root = new Targets();
+		var targets = new List<string>();
+		// TODO: clean
+		root.RunAndExitAsync(targets, 
+				ex => ex is SimpleExec.ExitCodeException)
+			.Wait();
+	}
+
+	public void ReBuild(string? targetName = null)
+	{
+		Targets root = new Targets();
+		var targets = new List<string>();
+		// TODO: rebuild
+		root.RunAndExitAsync(targets, 
+				ex => ex is SimpleExec.ExitCodeException)
+			.Wait();
 	}
 
 	public string Name => "ProjectRoot";
@@ -255,7 +295,10 @@ public class ModuleProject : IBuildItem
 	}
 
 	public string TargetName { get; }
+	
+	public string ProjectRoot { get; }
 
 	private Dictionary<string, IniModule> IniModulesToHandle { get; } = new();
 	private Dictionary<string, IniTarget> IniTargetsToHandle { get; } = new();
+	
 }

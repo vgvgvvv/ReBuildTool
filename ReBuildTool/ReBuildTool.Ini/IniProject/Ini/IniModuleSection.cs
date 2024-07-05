@@ -4,7 +4,7 @@ using ReBuildTool.Service.Global;
 using ResetCore.Common;
 using ResetCore.Common.Parser.Ini;
 
-namespace ReBuildTool.Internal.Ini;
+namespace ReBuildTool.IniProject.Ini;
 
 public class InitSection : ActionSection
 {
@@ -106,7 +106,7 @@ public class ActionSection : BaseSection, ITargetItem
                 index++;
             }
 
-            if (CommonCommandGroup.Get().RunDry)
+            if (IniProjectCommandGroup.Get().RunDry)
             {
                 subActions.Add(() =>
                 {

@@ -2,7 +2,7 @@ using Bullseye;
 using ResetCore.Common;
 using ResetCore.Common.Parser.Ini;
 
-namespace ReBuildTool.Internal.Ini;
+namespace ReBuildTool.IniProject.Ini;
 
 public class IniTarget : IniModuleBase, IBuildItem
 {

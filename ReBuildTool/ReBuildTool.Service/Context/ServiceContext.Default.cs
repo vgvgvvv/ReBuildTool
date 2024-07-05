@@ -9,8 +9,6 @@ public partial class ServiceContext
 {
 	public void InitByDefault()
 	{
-		
-
 		var ideDll = FindAssembly("ReBuildTool.IDE");
 		RegisterType<ISlnGenerator>(ideDll, "ReBuildTool.IDE.VisualStudio.SlnGenerator");
 		
@@ -21,6 +19,8 @@ public partial class ServiceContext
 		RegisterType<IAssemblyCompileUnit>(csharpDll, "ReBuildTool.CSharpCompiler.SimpleAssemblyCompileUnit");
 		RegisterService<ICSharpCompilerService>(csharpDll, "ReBuildTool.CSharpCompiler.SimpleCompiler");
 		
+		var iniDll = FindAssembly("ReBuildTool.Ini");
+		RegisterType<IIniProject>(cppDll, "ReBuildTool.IniProject.ModuleProject");
 	}
 
 	private Assembly FindAssembly(string name)

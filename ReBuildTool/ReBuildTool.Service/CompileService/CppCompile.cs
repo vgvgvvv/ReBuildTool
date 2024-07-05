@@ -75,15 +75,9 @@ public interface ICppSourceProviderInterface
 	Dictionary<string, IModuleInterface> ModuleRules { get; }
 }
 
-public interface ICppProject : IProvideByService
+public interface ICppProject : IProjectInterface
 {
 	public const string TargetDefineExtension = ".target.cs";
 	public const string ModuleDefineExtension = ".module.cs";
 	public const string ExtensionDefineExtension = ".extension.cs";
-	
-	void Parse();
-	void Setup();
-	void Build(string? targetName = null);
-	void Clean();
-	void ReBuild(string? targetName = null);
 }

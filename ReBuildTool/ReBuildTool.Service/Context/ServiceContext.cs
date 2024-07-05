@@ -27,8 +27,6 @@ public partial class ServiceContext : Singleton<ServiceContext>
 		InitByDefault();
 	}
 
-	protected override bool autoInit => false;
-
 	public Result<T> Create<T>(params object[] args) where T: class, IProvideByService
 	{
 		if (!TypeMap.TryGetValue(typeof(T), out var type))

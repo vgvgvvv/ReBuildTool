@@ -1,13 +1,17 @@
 using NiceIO;
 using ReBuildTool.Actions;
-using ReBuildTool.Service.CommandGroup;
 using ReBuildTool.Service.Global;
 using ResetCore.Common;
 
-namespace ReBuildTool.Internal;
+namespace ReBuildTool.IniProject;
 
 public class BoosterSupport
 {
+	public static void SetupBooster()
+	{
+		SetupBooster(BoosterCmdArgs.Get().BoosterSource);
+	}
+	
 	public static void SetupBooster(string boosterPath)
 	{
 		if (string.IsNullOrEmpty(boosterPath) || !File.Exists(boosterPath))
@@ -41,7 +45,7 @@ public class BoosterSupport
 			{
 				initBat.CreateFile();
 				ContextArgs.Context context = new ContextArgs.Context();
-				context.AddArg("targetName", CommonCommandGroup.Get().Target);
+				context.AddArg("targetName", IniProjectCommandGroup.Get().Target);
 				if (ex == ".sh")
 				{
 					initBat.WriteAllText(new ContextArgs(@"
@@ -68,7 +72,7 @@ cd %~dp0
 			{
 				buildBat.CreateFile();
 				ContextArgs.Context context = new ContextArgs.Context();
-				context.AddArg("targetName", CmdParser.Get<CommonCommandGroup>().Target);
+				context.AddArg("targetName", CmdParser.Get<IniProjectCommandGroup>().Target);
 				if (ex == ".sh")
 				{
 					buildBat.WriteAllText(new ContextArgs(@"
@@ -89,4 +93,10 @@ cd %~dp0
 			}
 		}
 	}
+}
+
+public class BoosterCmdArgs : CommandLineArgGroup<BoosterCmdArgs>
+{
+	[CmdLine("from booster, auto update booster script")]
+	public CmdLineArg<string> BoosterSource { get; private set; }
 }

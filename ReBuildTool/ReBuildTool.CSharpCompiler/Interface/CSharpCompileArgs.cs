@@ -11,7 +11,10 @@ public class CSharpCompileArgs : CommandLineArgGroup<CSharpCompileArgs>, ICommon
 	
 	[CmdLine("run mode: Init | Build", true)]
 	public CmdLineArg<RunMode> Mode { get; set; }
-	
+
+	[CmdLine("build target", true)] 
+	public CmdLineArg<string> Target { get; set; }
+
 	[CmdLine("compile configuration")]
 	public CSharpCompileConfiguration CSCompileConfig { get; set; } = CSharpCompileConfiguration.Debug;
 }

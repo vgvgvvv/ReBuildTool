@@ -17,6 +17,8 @@ public interface ICommonCommandGroup : ICommandLineArgGroup
 	
 	public CmdLineArg<RunMode> Mode { get; }
 	
+	public CmdLineArg<string> Target { get; }
+	
 }
 
 public static class CommonCommandGroupExtension

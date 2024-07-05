@@ -2,10 +2,10 @@
 using ReBuildTool.Service.CommandGroup;
 using ResetCore.Common;
 
-namespace ReBuildTool.Internal;
+namespace ReBuildTool.IniProject;
 
 
-public class CommonCommandGroup : CommandLineArgGroup<CommonCommandGroup>, ICommonCommandGroup
+public class IniProjectCommandGroup : CommandLineArgGroup<IniProjectCommandGroup>, ICommonCommandGroup
 {
     [CmdLine("root of project, work directory as default")] 
     public CmdLineArg<string> ProjectRoot { get; private set; } = CmdLineArg<string>.FromObject(Environment.CurrentDirectory);
@@ -19,10 +19,6 @@ public class CommonCommandGroup : CommandLineArgGroup<CommonCommandGroup>, IComm
     [CmdLine("run dry mode, just for test")] 
     public CmdLineArg<bool> RunDry { get; private set; } = CmdLineArg<bool>.FromObject(false);
 
-    [CmdLine("debug task graph, just for test")]
-    public CmdLineArg<bool> DebugTaskGraph { get; private set; }
-
-    [CmdLine("from booster, auto update booster script")]
-    public CmdLineArg<string> BoosterSource { get; private set; }
+ 
 
 }
