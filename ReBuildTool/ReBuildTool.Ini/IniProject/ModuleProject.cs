@@ -152,9 +152,9 @@ public class ModuleProject : IIniProject, IBuildItem
 		Current = this;
 	}
 
-	public static ModuleProject Create(string target, string root)
+	public void Parse()
 	{
-		var targetFile = CmdParser.Get<ICommonCommandGroup>().GetProjectRoot().Combine($"{target}{IniModuleBase.StaticTargetFileExtension}");
+		var targetFile = CmdParser.Get<ICommonCommandGroup>().GetProjectRoot().Combine($"{TargetName}{IniModuleBase.StaticTargetFileExtension}");
 		if (!targetFile.Exists())
 		{
 			var defaultContent = @"
@@ -165,15 +165,10 @@ public class ModuleProject : IIniProject, IBuildItem
 ";
 
 			ContextArgs.Context context = new ContextArgs.Context();
-			context.AddArg("targetName", target);
+			context.AddArg("targetName", TargetName);
 			ContextArgs args = new ContextArgs(defaultContent);
 			targetFile.WriteAllText(args.GetText(context));
 		}
-		return new ModuleProject(target, root);
-	}
-
-	public void Parse()
-	{
 		ParseInternal(ProjectRoot);
 	}
 
