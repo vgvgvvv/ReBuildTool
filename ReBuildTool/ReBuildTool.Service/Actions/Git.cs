@@ -67,9 +67,10 @@ public class Git
         }
     }
 
-    [ActionDefine("Git.Update")]
-    public static void Update(string targetPath)
+    [ActionDefine("Git.Pull")]
+    public static void Pull(string targetPath)
     {
-        SimpleExec.Command.Run("git", "update", targetPath);
+        SimpleExec.Command.Run("git", "reset --hard", targetPath);
+        SimpleExec.Command.Run("git", "pull", targetPath);
     }
 }

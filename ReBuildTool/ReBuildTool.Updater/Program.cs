@@ -11,7 +11,7 @@ if (!rbtToolHome.Exists())
 }
 else
 {
-	Git.Update(rebuildToolGitRoot);
+	Git.Pull(rebuildToolGitRoot);
 }
 
 var isRunningBuildedUpdater = Assembly.GetAssembly(typeof(Program)).Location.ToNPath().IsChildOf(rebuildToolGitRoot);
