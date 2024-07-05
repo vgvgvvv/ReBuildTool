@@ -5,7 +5,7 @@ namespace ReBuildTool.Internal;
 
 public class GlobalPaths
 {
-	public static NPath ProjectRoot => CommonCommandGroup.Get().ProjectRoot.ToNPath();
+	public static NPath ProjectRoot => CommonCommandGroup.Get().ProjectRoot.Value.ToNPath();
 	
 	//{Root}/Binary/Platform/ReBuildTool/ReBuildTool.dll
 	public static NPath ToolRoot => typeof(Program).Assembly.Location.ToNPath().Parent.Parent.Parent.Parent;

@@ -16,13 +16,17 @@ var moduleProject = ModuleProject.Create(command.Target)
 Targets root = new Targets();
 var targets = new List<string>();
 
-switch (command.Mode)
+switch (command.Mode.Value)
 {
     case RunMode.Init:
         moduleProject.SetupInitTargets(root, ref targets);
         break;
     case RunMode.Build:
         moduleProject.SetupBuildTargets(root, ref targets);
+        break;
+    case RunMode.Clean:
+        break;
+    case RunMode.ReBuild:
         break;
     default:
         break;

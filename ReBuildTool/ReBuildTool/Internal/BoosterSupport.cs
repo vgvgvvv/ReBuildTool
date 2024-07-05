@@ -1,5 +1,6 @@
 using NiceIO;
 using ReBuildTool.Actions;
+using ReBuildTool.Service.CommandGroup;
 using ResetCore.Common;
 
 namespace ReBuildTool.Internal;
@@ -66,7 +67,7 @@ cd %~dp0
 			{
 				buildBat.CreateFile();
 				ContextArgs.Context context = new ContextArgs.Context();
-				context.AddArg("targetName", CommonCommandGroup.Get().Target);
+				context.AddArg("targetName", CmdParser.Get<CommonCommandGroup>().Target);
 				if (ex == ".sh")
 				{
 					buildBat.WriteAllText(new ContextArgs(@"

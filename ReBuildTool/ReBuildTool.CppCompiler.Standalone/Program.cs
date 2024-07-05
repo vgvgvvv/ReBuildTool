@@ -9,7 +9,7 @@ using ResetCore.Common;
 CmdParser.Parse<Program>();
 ServiceContext.Instance.Init();
 
-var path = CppCompilerArgs.Get().CppBuildRoot.ToNPath();
+var path = CppCompilerArgs.Get().ProjectRoot.Value.ToNPath();
 var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
 project.Parse();
 project.Setup();

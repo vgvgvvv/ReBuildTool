@@ -4,11 +4,8 @@ using NiceIO;
 using ReBuildTool.Common;
 using ReBuildTool.CppCompiler.Standalone;
 using ReBuildTool.Internal.Ini;
-using ReBuildTool.Internal.Lua;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;
-using ReBuildTool.ToolChain;
-using ReBuildTool.ToolChain.Project;
 using ResetCore.Common;
 
 namespace ReBuildTool.Internal;
@@ -181,7 +178,7 @@ public class ModuleProject : IBuildItem
 	public ModuleProject Parse(string path)
 	{
 		CppProject = 
-			ServiceContext.Instance.Create<ICppProject>(CppCompilerArgs.Get().CppBuildRoot.ToNPath()).Value;
+			ServiceContext.Instance.Create<ICppProject>(CppCompilerArgs.Get().ProjectRoot.Value.ToNPath()).Value;
 		CppProject.Parse();
 		ParseInternal(path);
 		return this;
@@ -249,16 +246,6 @@ public class ModuleProject : IBuildItem
 			}
 		}
 		
-		{
-			var moduleFiles = Directory.GetFiles(path, $"*{LuaModuleBase.StaticModuleFileExtension}",
-				SearchOption.TopDirectoryOnly);
-			var modules = moduleFiles.Select(file => new LuaModule(file, this));
-			foreach (var module in modules)
-			{
-				LuaModulesToHandle.Add(module.Name, module);
-			}
-		}
-
 		foreach (var directory in Directory.GetDirectories(path))
 		{
 			ParseInternal(directory);
@@ -280,5 +267,4 @@ public class ModuleProject : IBuildItem
 
 	private Dictionary<string, IniModule> IniModulesToHandle { get; } = new();
 	private Dictionary<string, IniTarget> IniTargetsToHandle { get; } = new();
-	private Dictionary<string, LuaModule> LuaModulesToHandle { get; } = new();
 }

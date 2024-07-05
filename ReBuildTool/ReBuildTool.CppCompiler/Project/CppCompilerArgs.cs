@@ -5,8 +5,8 @@ namespace ReBuildTool.CppCompiler.Standalone;
 public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>
 {
 	[CmdLine("root of project, work directory as default")]
-	public string CppBuildRoot { get; set; } = Environment.CurrentDirectory;
+	public CmdLineArg<string> ProjectRoot { get; set; } = CmdLineArg<string>.FromObject(Environment.CurrentDirectory);
 
 	[CmdLine("dry run for test")] 
-	public bool DryRun { get; set; } = false;
+	public CmdLineArg<bool> RunDry { get; set; } = CmdLineArg<bool>.FromObject(false);
 }

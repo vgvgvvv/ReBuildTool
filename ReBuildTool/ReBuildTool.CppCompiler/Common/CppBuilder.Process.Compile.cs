@@ -86,7 +86,7 @@ public partial class CppBuilder
 			bool succ = true;
 			foreach (var invocation in CompileInvocation)
 			{
-				if (CppCompilerArgs.Get().DryRun)
+				if (CppCompilerArgs.Get().RunDry)
 				{
 					Log.Info($"Compile [{index}/{maxCount}]{invocation}");
 					index++;
