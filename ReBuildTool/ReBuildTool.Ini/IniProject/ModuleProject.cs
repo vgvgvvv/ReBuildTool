@@ -180,9 +180,16 @@ public class ModuleProject : IIniProject, IBuildItem
 		Targets root = new Targets();
 		var targets = new List<string>();
 		SetupInitTargets(root, ref targets);
-		root.RunWithoutExitingAsync(targets, 
-			ex => ex is SimpleExec.ExitCodeException)
-			.Wait();
+		if (targets.Count != 0)
+		{
+			root.RunWithoutExitingAsync(targets, 
+					ex => ex is SimpleExec.ExitCodeException)
+				.Wait();
+		}
+		else
+		{
+			Log.Warning("no init target found");
+		}
 	}
 
 	public void Build(string? targetName = null)
@@ -190,29 +197,48 @@ public class ModuleProject : IIniProject, IBuildItem
 		Targets root = new Targets();
 		var targets = new List<string>();
 		SetupBuildTargets(root, ref targets);
-		root.RunWithoutExitingAsync(targets, 
-				ex => ex is SimpleExec.ExitCodeException)
-			.Wait();
+		if (targets.Count != 0)
+		{
+			root.RunWithoutExitingAsync(targets, 
+					ex => ex is SimpleExec.ExitCodeException)
+				.Wait();
+		}
+		else
+		{
+			Log.Warning("no build target found");
+		}
 	}
 
 	public void Clean()
 	{
 		Targets root = new Targets();
 		var targets = new List<string>();
-		// TODO: clean
-		root.RunWithoutExitingAsync(targets, 
-				ex => ex is SimpleExec.ExitCodeException)
-			.Wait();
+		if (targets.Count != 0)
+		{
+			root.RunWithoutExitingAsync(targets, 
+					ex => ex is SimpleExec.ExitCodeException)
+				.Wait();
+		}
+		else
+		{
+			Log.Warning("no clean target found");
+		}
 	}
 
 	public void ReBuild(string? targetName = null)
 	{
 		Targets root = new Targets();
 		var targets = new List<string>();
-		// TODO: rebuild
-		root.RunWithoutExitingAsync(targets, 
-				ex => ex is SimpleExec.ExitCodeException)
-			.Wait();
+		if (targets.Count != 0)
+		{
+			root.RunWithoutExitingAsync(targets, 
+					ex => ex is SimpleExec.ExitCodeException)
+				.Wait();
+		}
+		else
+		{
+			Log.Warning("no rebuild target found");
+		}
 	}
 
 	public string Name => "ProjectRoot";

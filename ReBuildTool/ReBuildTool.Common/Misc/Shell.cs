@@ -110,7 +110,9 @@ public class Shell : IDisposable
 		ProcessStartInfo startInfo = new ProcessStartInfo();
 		startInfo.FileName = Program.ToString();
 		startInfo.UseShellExecute = false; 
-		startInfo.RedirectStandardOutput = true; 
+		startInfo.RedirectStandardOutput = true;
+		startInfo.RedirectStandardError = true;
+		startInfo.RedirectStandardInput = true;
         startInfo.CreateNoWindow = true;
         startInfo.Arguments = string.Join(' ', Arguments);
         foreach (var (key, value) in EnvVars)
@@ -138,6 +140,26 @@ public class Shell : IDisposable
         Process.Exited += (sender, args) =>
         {
 	        CurrentStatus = Status.Finished;
+	        var result = Process.StandardOutput.ReadToEnd();
+	        if (!string.IsNullOrEmpty(result))
+	        {
+		        if (!IsSuccess())
+		        {
+			        Log.Error(result);
+		        }
+		        else
+		        {
+			        Log.Info(result);
+		        }
+	        }
+	        if (!IsSuccess())
+	        {
+		        var errorInfo = Process.StandardError.ReadToEnd();
+		        if (!string.IsNullOrEmpty(result))
+		        {
+			        Log.Error(errorInfo);
+		        }
+	        }
         };
         
         Process.Start();
