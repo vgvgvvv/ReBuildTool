@@ -14,5 +14,5 @@ dotnet publish ..\%ProjectName%\%ProjectName%\%ProjectName%.csproj -r osx-arm64 
 dotnet publish ..\%ProjectName%\%ProjectName%\%ProjectName%.csproj -r linux-x64 -o ..\Binary\Linux64\%ProjectName%
 
 
-xcopy /Y rbt.bat %RBT_HOME%\rbt.bat
-xcopy /Y rbt-updater.bat %RBT_HOME%\rbt-updater.bat 
+xcopy /Y /f rbt.bat %RBT_HOME%\rbt.bat
+xcopy /Y /f rbt-updater.bat %RBT_HOME%\rbt-updater.bat 
