@@ -66,4 +66,10 @@ public class Git
             File.WriteAllLines(ignorePath, ignorePatterns);
         }
     }
+
+    [ActionDefine("Git.Update")]
+    public static void Update(string targetPath)
+    {
+        SimpleExec.Command.Run("git", "update", targetPath);
+    }
 }
