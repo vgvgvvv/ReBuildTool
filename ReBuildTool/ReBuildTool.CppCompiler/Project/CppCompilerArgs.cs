@@ -1,3 +1,4 @@
+using NiceIO;
 using ReBuildTool.Service.CommandGroup;
 using ResetCore.Common;
 
@@ -11,8 +12,8 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 	[CmdLine("run mode: Init | Build", true)]
 	public CmdLineArg<RunMode> Mode { get; set; }
 	
-	[CmdLine("build target", true)] 
-	public CmdLineArg<string> Target { get; set; }
+	[CmdLine("build target")] 
+	public CmdLineArg<string> Target { get; set; } = CmdLineArg<string>.FromObject(nameof(ProjectRoot), Path.GetFileName(Environment.CurrentDirectory));
 
 	[CmdLine("dry run for test")] 
 	public CmdLineArg<bool> RunDry { get; set; } = CmdLineArg<bool>.FromObject(nameof(RunDry), false);

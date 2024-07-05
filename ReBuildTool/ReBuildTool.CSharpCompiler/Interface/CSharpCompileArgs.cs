@@ -12,8 +12,8 @@ public class CSharpCompileArgs : CommandLineArgGroup<CSharpCompileArgs>, ICommon
 	[CmdLine("run mode: Init | Build", true)]
 	public CmdLineArg<RunMode> Mode { get; set; }
 
-	[CmdLine("build target", true)] 
-	public CmdLineArg<string> Target { get; set; }
+	[CmdLine("build target")] 
+	public CmdLineArg<string> Target { get; set; } = CmdLineArg<string>.FromObject(nameof(ProjectRoot), Path.GetFileName(Environment.CurrentDirectory));
 
 	[CmdLine("compile configuration")]
 	public CmdLineArg<CSharpCompileConfiguration> CSCompileConfig { get; set; } = CmdLineArg<CSharpCompileConfiguration>.FromObject(nameof(CSCompileConfig), CSharpCompileConfiguration.Debug);
