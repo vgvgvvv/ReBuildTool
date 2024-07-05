@@ -145,23 +145,23 @@ public class ModuleProject : IIniProject, IBuildItem
 {
 	public static ModuleProject Current { get; private set; }
 	
-	private ModuleProject(string target, string root)
+	private ModuleProject(string root)
 	{
-		TargetName = target;
+		TargetName = GlobalCmd.CommonCommand.Target;
 		ProjectRoot = root;
 		Current = this;
 	}
 
 	public void Parse()
 	{
-		var targetFile = CmdParser.Get<ICommonCommandGroup>().GetProjectRoot().Combine($"{TargetName}{IniModuleBase.StaticTargetFileExtension}");
+		var targetFile = GlobalPaths.SourceRoot.Combine($"{TargetName}{IniModuleBase.StaticTargetFileExtension}");
 		if (!targetFile.Exists())
 		{
 			var defaultContent = @"
 [Target]
 
 [Init]
-+Actions=(Name=""ReMake.Init"", Args=(projectName=""${targetName}""))
+; +Actions=(Name=""ReMake.Init"", Args=(projectName=""${targetName}""))
 ";
 
 			ContextArgs.Context context = new ContextArgs.Context();
@@ -213,10 +213,6 @@ public class ModuleProject : IIniProject, IBuildItem
 	}
 
 	public string Name => "ProjectRoot";
-	public string GetTargetName()
-	{
-		return Name;
-	}
 
 	public void SetupInitTargets(Targets targets, ref List<string> newTargets)
 	{

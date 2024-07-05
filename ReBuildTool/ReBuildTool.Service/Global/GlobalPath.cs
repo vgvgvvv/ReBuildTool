@@ -7,6 +7,8 @@ public class GlobalPaths
 {
 	public static NPath ProjectRoot => GlobalCmd.CommonCommand.GetProjectRoot();
 	
+	public static NPath SourceRoot => GlobalCmd.CommonCommand.GetProjectRoot();
+	
 	public static NPath IntermediaPath => GlobalCmd.CommonCommand.GetIntermediaPath();
 	
 	public static NPath ToolRoot => GlobalCmd.CommonCommand.GetToolRoot();

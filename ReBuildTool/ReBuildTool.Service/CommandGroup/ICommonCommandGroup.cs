@@ -28,6 +28,11 @@ public static class CommonCommandGroupExtension
 		return group.ProjectRoot.Value.ToNPath();
 	}
 	
+	public static NPath GetSourceRoot(this ICommonCommandGroup group)
+	{
+		return group.GetProjectRoot().Combine("Source");
+	}
+	
 	public static NPath GetToolRoot(this ICommonCommandGroup group)
 	{
 		return typeof(CommonCommandGroupExtension).Assembly.Location.ToNPath().Parent.Parent.Parent.Parent;

@@ -42,10 +42,10 @@ ReMake_AddSubDirsRec(""Src"")
         Git.IgnoreWithPattern("*_API.h");
         Git.IgnoreWithPattern("*.Target.json");
 
-        var srcDir = GlobalPaths.ProjectRoot.Combine("Src").EnsureDirectoryExists();
-        var testDir = GlobalPaths.ProjectRoot.Combine("Test").EnsureDirectoryExists();
+        var srcDir = GlobalPaths.SourceRoot.Combine("Src").EnsureDirectoryExists();
+        var testDir = GlobalPaths.SourceRoot.Combine("Test").EnsureDirectoryExists();
         
-        var rootMakeListsPath = GlobalPaths.ProjectRoot.Combine("CMakeLists.txt");
+        var rootMakeListsPath = GlobalPaths.SourceRoot.Combine("CMakeLists.txt");
         if (!rootMakeListsPath.Exists())
         {
             ContextArgs.Context context = new ContextArgs.Context();
