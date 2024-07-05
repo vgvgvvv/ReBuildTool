@@ -2,7 +2,9 @@ using System.Reflection;
 using NiceIO;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;
+using ReBuildTool.Service.Global;
 using ReBuildTool.Service.IDEService.VisualStudio;
+using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain.Project;
 
@@ -31,6 +33,13 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		var targetFiles = SourceFolder.Files($"*{ICppProject.TargetDefineExtension}", true).ToList();
 		var moduleFiles = SourceFolder.Files($"*{ICppProject.ModuleDefineExtension}", true).ToList();
 		var extraFiles = SourceFolder.Files($"*{ICppProject.ExtensionDefineExtension}", true).ToList();
+
+		if (targetFiles.Count == 0)
+		{
+			CreateDefaultProject();
+			ParseRules();
+			return;
+		}
 		
 		foreach (var targetFile in targetFiles)
 		{
@@ -51,6 +60,87 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		BuildRuleCompileUnit.SourceFiles.AddRange(extraFiles);
 		BuildRuleCompileUnit.ReferenceDlls.Add(Assembly.GetAssembly(typeof(CppBuildProject))!.Location.ToNPath());
 		BuildRuleCompileUnit.FileName = "CompileRules";
+	}
+
+	private void CreateDefaultProject()
+	{
+		SourceFolder.EnsureDirectoryExists();
+		var targetName = GlobalCmd.CommonCommand.Target.Value;
+
+		{
+			var defaultTargetContent = @"using ReBuildTool.ToolChain;
+
+public class ${targetName}Target : TargetRule
+{
+    public ${targetName}Target()
+    {
+        UsedModules.Add(""${targetName}Module"");
+    }
+} 
+";
+			ContextArgs.Context context = new ContextArgs.Context();
+			context.AddArg("targetName", targetName);
+			ContextArgs text = new ContextArgs(defaultTargetContent);
+			File.WriteAllText(SourceFolder.Combine($"{targetName}Target{ICppProject.TargetDefineExtension}"), text.GetText(context));
+		}
+
+		var moduleFolder = SourceFolder.Combine($"{targetName}Module").CreateDirectory();
+		var moduleName = $"{targetName}Module";
+		{
+			var defaultTargetContent = @"using ReBuildTool.ToolChain;
+
+public class ${targetName}Module : ModuleRule
+{
+    public ${targetName}Module()
+    {
+    }
+}
+";
+			ContextArgs.Context context = new ContextArgs.Context();
+			context.AddArg("targetName", targetName);
+			ContextArgs text = new ContextArgs(defaultTargetContent);
+			File.WriteAllText(moduleFolder.Combine($"{moduleName}{ICppProject.TargetDefineExtension}"), text.GetText(context));
+
+		}
+
+		{
+			var privateSourceFolder = moduleFolder.Combine("Private").CreateDirectory();
+			{
+				var moduleSourceContent = @"#include ""${moduleName}.h""
+
+${moduleName}::${moduleName}()
+{
+}
+
+${moduleName}::~${moduleName}()
+{
+}
+";
+				ContextArgs.Context context = new ContextArgs.Context();
+				context.AddArg("moduleName", moduleName);
+				ContextArgs text = new ContextArgs(moduleSourceContent);
+				File.WriteAllText(privateSourceFolder.Combine($"{moduleName}.cpp"), text.GetText(context));
+			}
+
+			var publicSourceFolder = moduleFolder.Combine("Public").CreateDirectory();
+			{
+				var moduleHeaderContent = @"#pragma once
+
+class ${moduleName}
+{
+public:
+    MainModule();
+    ~MainModule();
+};
+";
+				ContextArgs.Context context = new ContextArgs.Context();
+				context.AddArg("moduleName", moduleName);
+				ContextArgs text = new ContextArgs(moduleHeaderContent);
+				File.WriteAllText(publicSourceFolder.Combine($"{moduleName}.h"), text.GetText(context));
+			}
+			
+		}
+		
 	}
 
 	public void Parse()
