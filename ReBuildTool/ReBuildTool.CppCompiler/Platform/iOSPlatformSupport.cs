@@ -6,7 +6,7 @@ public class iOSPlatformSupport : IPlatformSupport
 {
 	public override bool Supports(RuntimePlatform platform)
 	{
-		throw new NotImplementedException();
+		return platform is iOSRuntimePlatform;
 	}
 
 	public override IToolChain MakeCppToolChain(Architecture architecture, BuildConfiguration buildConfiguration)

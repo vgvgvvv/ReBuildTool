@@ -2,11 +2,11 @@
 
 namespace ReBuildTool.ToolChain;
 
-public class MaxOsPlatformSupport : IPlatformSupport
+public class MacOSXPlatformSupport : IPlatformSupport
 {
 	public override bool Supports(RuntimePlatform platform)
 	{
-		throw new NotImplementedException();
+		return platform is MacOSXRuntimePlatform;
 	}
 
 	public override IToolChain MakeCppToolChain(Architecture architecture, BuildConfiguration buildConfiguration)

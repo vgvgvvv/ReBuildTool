@@ -1,5 +1,5 @@
-using NiceIO;
 using ReBuildTool.Service.CommandGroup;
+using ReBuildTool.ToolChain;
 using ResetCore.Common;
 
 namespace ReBuildTool.CppCompiler.Standalone;
@@ -17,4 +17,8 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 
 	[CmdLine("dry run for test")] 
 	public CmdLineArg<bool> RunDry { get; set; } = CmdLineArg<bool>.FromObject(nameof(RunDry), false);
+
+	[CmdLine("targetPlatform")] 
+	public CmdLineArg<PlatformSupportType> TargetPlatform { get; set; } =
+		CmdLineArg<PlatformSupportType>.FromObject(nameof(TargetPlatform), PlatformSupportType.Windows);
 }

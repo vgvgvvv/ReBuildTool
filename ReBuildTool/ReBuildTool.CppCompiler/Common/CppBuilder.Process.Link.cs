@@ -77,7 +77,7 @@ public partial class CppBuilder
 				? ToolChain.ExecutableExtension 
 				: ToolChain.DynamicLibraryExtension;
 			return Source.ProjectRoot.Combine("Binary")
-				.Combine(ToolChain.Name)
+				.Combine(IPlatformSupport.CurrentTargetPlatform.ToString())
 				.Combine(Options.Configuration.ToString())
 				.Combine(Options.Architecture.Name)
 				.Combine(Module.TargetName + ex);

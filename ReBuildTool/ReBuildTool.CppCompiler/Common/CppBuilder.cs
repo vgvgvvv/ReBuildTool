@@ -1,4 +1,6 @@
-﻿using ReBuildTool.Service.CompileService;
+﻿using ReBuildTool.CppCompiler.Standalone;
+using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.Global;
 using ReBuildTool.ToolChain.Project;
 using ResetCore.Common;
 
@@ -16,8 +18,7 @@ internal class BuildConfigArgsProvider : IBuildConfigProvider
 {
 	public IPlatformSupport GetBuildPlatform()
 	{
-		// TODO: use current platform instead
-		return new WindowsPlatformSupport();
+		return IPlatformSupport.CurrentTargetPlatformSupport;
 	}
 
 	public BuildOptions GetBuildOptions()

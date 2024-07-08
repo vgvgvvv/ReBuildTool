@@ -6,7 +6,7 @@ public class LinuxPlatformSupport : IPlatformSupport
 {
 	public override bool Supports(RuntimePlatform platform)
 	{
-		throw new NotImplementedException();
+		return platform is LinuxRuntimePlatform;
 	}
 
 	public override IToolChain MakeCppToolChain(Architecture architecture, BuildConfiguration buildConfiguration)
