@@ -8,6 +8,8 @@ namespace ReBuildTool.ToolChain;
 
 public abstract class IToolChain
 {
+	public abstract string Name { get; }
+	
 	public BuildConfiguration Configuration { get; private set; }
 	public Architecture Arch { get; private set; }
 	

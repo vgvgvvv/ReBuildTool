@@ -6,6 +6,7 @@ namespace ReBuildTool.ToolChain;
 
 public partial class MSVCToolChain : IToolChain
 {
+	public override string Name => "MSVC";
 	private MsvcSDK msvcSdk { get; }
 	
 	public MSVCToolChain(BuildConfiguration configuration, Architecture arch) : base(configuration, arch)

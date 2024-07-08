@@ -34,6 +34,7 @@ public partial class CppBuilder
 		private NPath ArchiveResultPath()
 		{
 			return Source.ProjectRoot.Combine("Binary")
+				.Combine(ToolChain.Name)
 				.Combine(Options.Configuration.ToString())
 				.Combine(Options.Architecture.Name)
 				.Combine(Module.TargetName + ToolChain.StaticLibraryExtension);
