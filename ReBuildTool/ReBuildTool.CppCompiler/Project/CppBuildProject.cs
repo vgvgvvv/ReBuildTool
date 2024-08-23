@@ -84,7 +84,7 @@ public class ${targetName}Target : TargetRule
 			File.WriteAllText(SourceFolder.Combine($"{targetName}Target{ICppProject.TargetDefineExtension}"), text.GetText(context));
 		}
 
-		var moduleFolder = SourceFolder.Combine($"{targetName}Module").CreateDirectory();
+		var moduleFolder = SourceFolder.Combine($"Src/{targetName}").CreateDirectory();
 		var moduleName = $"{targetName}Module";
 		{
 			var defaultTargetContent = @"using ReBuildTool.ToolChain;
