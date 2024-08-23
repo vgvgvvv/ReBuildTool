@@ -18,12 +18,12 @@ public class ReMake
 cmake_minimum_required(VERSION 3.17)
 project(${projectName})
 if(NOT REMAKE_ROOT_PATH)
-    set(ReMakeDir ${CMAKE_CURRENT_SOURCE_DIR}/Intermedia/ReMake)
+    set(ReMakeDir ${CMAKE_CURRENT_SOURCE_DIR}/../Intermedia/ReMake)
     include(${remakeInitPath})
     ReMake_InitProject()
 
-    ReMake_AddSubDirsRec(""Intermedia/ReMake"")
-    ReMake_AddSubDirsRec(""Intermedia/Git"")
+    ReMake_AddSubDirsRec(""../Intermedia/ReMake"")
+    ReMake_AddSubDirsRec(""../Intermedia/Git"")
     ReMake_AddSubDirsRec(""Test"")
 endif()
 
