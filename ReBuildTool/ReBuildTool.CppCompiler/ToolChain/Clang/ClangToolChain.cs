@@ -15,27 +15,27 @@ public abstract partial class ClangToolChain : IToolChain
 
 	public override Dictionary<string, string> EnvVars()
 	{
-		
+		return null;
 	}
 
 	public override IEnumerable<NPath> ToolChainIncludePaths()
 	{
-		
+		return null;
 	}
 
 	public override IEnumerable<NPath> ToolChainLibraryPaths()
 	{
-		
+		return null;
 	}
 
 	public override IEnumerable<NPath> ToolChainStaticLibraries()
 	{
-		
+		return null;
 	}
 
 	public override IEnumerable<NPath> ToolChainDynamicLibraries()
 	{
-		
+		return null;
 	}
 	
 	public override ICompileArgsBuilder MakeCompileArgsBuilder()

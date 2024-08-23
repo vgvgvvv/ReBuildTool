@@ -4,6 +4,6 @@ public abstract partial class ClangToolChain
 {
 	internal override CppLinkInvocation MakeLinkInvocation(CppLinkUnit cppLinkUnit)
 	{
-		
+		return null;
 	}
 }
