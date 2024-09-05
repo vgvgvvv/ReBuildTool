@@ -36,12 +36,12 @@ public partial class MSVCToolChain : IToolChain
 		return msvcSdk.GetLibraryDirectories();
 	}
 
-	public override IEnumerable<NPath> ToolChainStaticLibraries()
+	public override IEnumerable<string> ToolChainStaticLibraries()
 	{
 		yield break; 
 	}
 	
-	public override IEnumerable<NPath> ToolChainDynamicLibraries()
+	public override IEnumerable<string> ToolChainDynamicLibraries()
 	{
 		yield break; 
 	}

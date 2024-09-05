@@ -1,4 +1,5 @@
 ﻿using NiceIO;
+using ReBuildTool.ToolChain.SDK;
 using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
@@ -107,31 +108,10 @@ public partial class MSVCToolChain
 	
 	public override IEnumerable<string> ToolChainDefines()
 	{
-		yield return "_WIN32";
-		yield return "WIN32";
-		yield return "WIN32_THREADS";
-		yield return "_WINDOWS";
-		yield return "WINDOWS";
-		yield return "_UNICODE";
-		yield return "UNICODE";
-		yield return "_CRT_SECURE_NO_WARNINGS";
-		yield return "_SCL_SECURE_NO_WARNINGS";
-		yield return "_WINSOCK_DEPRECATED_NO_WARNINGS";
-		yield return "NOMINMAX";
-		
-		if (Configuration == BuildConfiguration.Debug)
+		foreach (var define in MSVCConst.DefaultDefines(Configuration, Arch))
 		{
-			yield return "_DEBUG";
-			yield return "DEBUG";
+			yield return define;
 		}
-		else
-		{
-			yield return "_NDEBUG";
-			yield return "NDEBUG";
-		}
-		
-		if (Arch is ARMv7Architecture)
-			yield return "__arm__";
 	}
 	
 	public override bool CanBeCompiled(NPath sourceFile)

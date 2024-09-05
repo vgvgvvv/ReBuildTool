@@ -1,19 +1,18 @@
-﻿namespace ReBuildTool.ToolChain;
+﻿using ResetCore.Common;
+
+namespace ReBuildTool.ToolChain;
 
 public abstract partial class ClangToolChain
 {
 	internal override CppArchiveInvocation MakeArchiveInvocation(CppArchiveUnit cppArchiveUnit)
 	{
-		return null;
+		var invocation = new CppArchiveInvocation();
+		invocation.ProgramName = ClangSdk.GetArchiver();
+		invocation.EnvVars.AddRange(EnvVars());
+		invocation.Arguments.AddRange(ArchiveArgsFor(cppArchiveUnit));
+		return invocation;
 	}
-	
-	private IEnumerable<string> ArchiveArgsFor(CppArchiveUnit unit)
-	{
-		return null;
-	}
-	
-	protected IEnumerable<string> DefaultArchiveFlags(CppArchiveUnit cppArchiveUnit)
-	{
-		return null;
-	}
+
+	protected abstract IEnumerable<string> ArchiveArgsFor(CppArchiveUnit unit);
+
 }

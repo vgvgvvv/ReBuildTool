@@ -1,37 +1,25 @@
-﻿using System.Collections;
-using NiceIO;
-using ResetCore.Common;
+﻿using NiceIO;
 
-namespace ReBuildTool.ToolChain;
+namespace ReBuildTool.ToolChain.Windows;
 
-public partial class MSVCToolChain 
+public partial class WindowsClangToolchain
 {
-	internal override CppLinkInvocation MakeLinkInvocation(CppLinkUnit cppLinkUnit)
-	{
-		var invocation = new CppLinkInvocation();
-		invocation.ProgramName = msvcSdk.LinkerPath;
-		invocation.EnvVars.AddRange(EnvVars());
-		invocation.Arguments.AddRange(LinkArgsFor(cppLinkUnit));
-		return invocation;
-	}
-
-	private IEnumerable<string> LinkArgsFor(CppLinkUnit cppLinkUnit)
-	{
-		yield return $"/out:{cppLinkUnit.OutputPath.InQuotes()}";
+    protected override IEnumerable<string> LinkArgsFor(CppLinkUnit cppLinkUnit)
+    {
+        yield return $"/out:{cppLinkUnit.OutputPath.InQuotes()}";
 		
-		// TODO: manifest
-		// TODO: module definition file
+        // TODO: manifest
+        // TODO: module definition file
 		
-		foreach (var defaultLinkFlag in DefaultLinkFlags(cppLinkUnit))
-		{
-			yield return defaultLinkFlag;
-		}
+        foreach (var defaultLinkFlag in DefaultLinkFlags(cppLinkUnit))
+        {
+            yield return defaultLinkFlag;
+        }
 		
-		yield return "@" + cppLinkUnit.ResponseFile.InQuotes();
-
-	}
-
-	protected IEnumerable<string> DefaultLinkFlags(CppLinkUnit cppLinkUnit)
+        yield return "@" + cppLinkUnit.ResponseFile.InQuotes();
+    }
+    
+    protected IEnumerable<string> DefaultLinkFlags(CppLinkUnit cppLinkUnit)
 	{
 		var linkBuilder = cppLinkUnit.LinkArgsBuilder as MSVCLinkArgsBuilder;
 		

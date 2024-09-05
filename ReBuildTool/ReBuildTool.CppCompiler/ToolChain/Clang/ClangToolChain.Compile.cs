@@ -1,4 +1,6 @@
 ﻿using NiceIO;
+using ReBuildTool.ToolChain.SDK;
+using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
 
@@ -6,26 +8,27 @@ public abstract partial class ClangToolChain
 {
 	internal override CppCompileInvocation MakeCompileInvocation(CppCompilationUnit compileUnit)
 	{
-		return null;
+		var invocation = new CppCompileInvocation();
+		invocation.ProgramName = CompilerExecutableFor(compileUnit.SourceFile);
+		invocation.EnvVars.AddRange(EnvVars());
+		invocation.Arguments.AddRange(CompileArgsFor(compileUnit));
+		return invocation;
 	}
 
-	public override IEnumerable<string> CompileArgsFor(CppCompilationUnit compileUnit)
-	{
-		return null;
-	}
+	// public abstract IEnumerable<string> CompileArgsFor(CppCompilationUnit compileUnit);
 
-	public override IEnumerable<string> ToolChainDefines()
-	{
-		return null;
-	}
+	//public abstract IEnumerable<string> ToolChainDefines();
 
 	public override bool CanBeCompiled(NPath sourceFile)
 	{
-		return false;
+		var ex = sourceFile.ExtensionWithDot;
+		return ex == ".cpp" || ex == ".c" || ex == ".cc" || ex == ".cxx" || ex == ".asm";
 	}
-
+	
 	public override NPath CompilerExecutableFor(NPath sourceFile)
 	{
-		return null;
+		return ClangSdk.GetCompiler();
 	}
+
+
 }

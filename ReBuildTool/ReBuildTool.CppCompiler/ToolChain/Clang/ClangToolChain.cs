@@ -11,31 +11,60 @@ public abstract partial class ClangToolChain : IToolChain
 
 	public override string Name => "Clang";
 
-	protected abstract ClangSDK clangSdk { get; }
+	protected abstract ClangSDK ClangSdk { get; }
+	
+	public abstract IEnumerable<ICppLibrary> CppLibraries();
 
 	public override Dictionary<string, string> EnvVars()
 	{
-		return null;
+		return new()
+		{
+			
+		};
 	}
 
 	public override IEnumerable<NPath> ToolChainIncludePaths()
 	{
-		return null;
+		foreach (var cppLibrary in CppLibraries())
+		{
+			foreach (var includePath in cppLibrary.IncludePaths())
+			{
+				yield return includePath;
+			}
+		}
 	}
 
 	public override IEnumerable<NPath> ToolChainLibraryPaths()
 	{
-		return null;
+		foreach (var cppLibrary in CppLibraries())
+		{
+			foreach (var includePath in cppLibrary.LibraryPaths())
+			{
+				yield return includePath;
+			}
+		}
 	}
 
-	public override IEnumerable<NPath> ToolChainStaticLibraries()
+	public override IEnumerable<string> ToolChainStaticLibraries()
 	{
-		return null;
+		foreach (var cppLibrary in CppLibraries())
+		{
+			foreach (var includePath in cppLibrary.StaticLibraries())
+			{
+				yield return includePath;
+			}
+		}
 	}
 
-	public override IEnumerable<NPath> ToolChainDynamicLibraries()
+	public override IEnumerable<string> ToolChainDynamicLibraries()
 	{
-		return null;
+		foreach (var cppLibrary in CppLibraries())
+		{
+			foreach (var includePath in cppLibrary.DynamicLibraries())
+			{
+				yield return includePath;
+			}
+		}
 	}
 	
 	public override ICompileArgsBuilder MakeCompileArgsBuilder()

@@ -3,6 +3,13 @@ using System.Runtime.InteropServices;
 
 namespace ReBuildTool.Service.Global;
 
+public enum BuildEnvironmentPlatform
+{
+    Windows,
+    Linux,
+    MacOSX
+}
+
 public class PlatformHelper
 {
     private static string? _OSUName;
@@ -26,6 +33,11 @@ public class PlatformHelper
     public static bool IsOSX()
     {
         return !IsWindows() && GetOSUname() == "Darwin";
+    }
+    
+    public static BuildEnvironmentPlatform GetBuildEnvironmentPlatform()
+    {
+        return Pick(BuildEnvironmentPlatform.Windows, BuildEnvironmentPlatform.MacOSX, BuildEnvironmentPlatform.Linux);
     }
 
     private static string GetOSUname()

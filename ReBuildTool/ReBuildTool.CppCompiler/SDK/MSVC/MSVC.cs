@@ -95,7 +95,7 @@ internal class VCPaths
 	public NPath VCRoot { get; }
 }
 
-internal abstract class MsvcSDK
+internal abstract class MsvcSDK : ICppLibrary
 {
 	public static Dictionary<Version, MsvcSDK> AllInstalledSDKs { get; } = new();
 
@@ -225,4 +225,40 @@ internal abstract class MsvcSDK
 	public VCPaths? CurrentVCPaths { get; private set; }
 	public Version Version { get; }
 	public NPath InstallPath { get; }
+	
+	public IEnumerable<NPath> IncludePaths()
+	{
+		foreach (var sdkInclude in GetSdkIncludeDirectories())
+		{
+			yield return sdkInclude;
+		}
+
+		foreach (var vcInclude in GetVcIncludeDirectories())
+		{
+			yield return vcInclude;
+		}
+	}
+
+	public IEnumerable<NPath> LibraryPaths()
+	{
+		foreach (var sdkLibrary in GetSdkLibraryDirectories())
+		{
+			yield return sdkLibrary;
+		}
+
+		foreach (var vcLibrary in GetVcLibraryDirectories())
+		{
+			yield return vcLibrary;
+		}
+	}
+
+	public IEnumerable<string> StaticLibraries()
+	{
+		yield break;
+	}
+
+	public IEnumerable<string> DynamicLibraries()
+	{
+		yield break;
+	}
 }

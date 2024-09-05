@@ -27,9 +27,9 @@ public abstract class IToolChain
 
 	public abstract IEnumerable<NPath> ToolChainLibraryPaths();
 
-	public abstract IEnumerable<NPath> ToolChainStaticLibraries();
+	public abstract IEnumerable<string> ToolChainStaticLibraries();
 	
-	public abstract IEnumerable<NPath> ToolChainDynamicLibraries();
+	public abstract IEnumerable<string> ToolChainDynamicLibraries();
 
 	public abstract bool CanBeCompiled(NPath sourceFile);
 

@@ -8,7 +8,11 @@ public class LinuxClangToolchain : ClangToolChain
 	{
 	}
 	
-	protected override ClangSDK clangSdk { get; }
+	protected override ClangSDK ClangSdk { get; }
+	public override IEnumerable<ICppLibrary> CppLibraries()
+	{
+		throw new NotImplementedException();
+	}
 
 	public override string ObjectExtension { get; }
 	public override string ExecutableExtension { get; }
