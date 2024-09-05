@@ -2,7 +2,7 @@
 
 namespace ReBuildTool.ToolChain.Linux;
 
-public class LinuxClangToolchain : ClangToolChain
+public partial class LinuxClangToolchain : ClangToolChain
 {
 	public LinuxClangToolchain(BuildConfiguration configuration, Architecture arch) : base(configuration, arch)
 	{
@@ -14,8 +14,8 @@ public class LinuxClangToolchain : ClangToolChain
 		throw new NotImplementedException();
 	}
 
-	public override string ObjectExtension { get; }
-	public override string ExecutableExtension { get; }
-	public override string StaticLibraryExtension { get; }
-	public override string DynamicLibraryExtension { get; }
+	public override string ObjectExtension => ".o";
+	public override string ExecutableExtension => string.Empty;
+	public override string StaticLibraryExtension => ".a";
+	public override string DynamicLibraryExtension => ".so";
 }

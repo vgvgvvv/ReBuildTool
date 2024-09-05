@@ -4,7 +4,7 @@ using ReBuildTool.ToolChain.SDK;
 
 namespace ReBuildTool.ToolChain.Android;
 
-public class AndroidClangToolchain : ClangToolChain
+public partial class AndroidClangToolchain : ClangToolChain
 {
 	public AndroidClangToolchain(BuildConfiguration configuration, Architecture arch, NPath ndkLocation) : base(configuration, arch)
 	{
