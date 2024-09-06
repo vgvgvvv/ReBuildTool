@@ -1,4 +1,5 @@
 ﻿using NiceIO;
+using ReBuildTool.ToolChain.SDK;
 
 namespace ReBuildTool.ToolChain;
 
@@ -10,29 +11,46 @@ public partial class GccToolChain : IToolChain
 
 	public override string Name => "Gcc";
 
+	public LinuxSDK LinuxSdk { get; } = new();
+
 	public override Dictionary<string, string> EnvVars()
 	{
-		throw new NotImplementedException();
+		return new()
+		{
+			
+		};
 	}
 
 	public override IEnumerable<NPath> ToolChainIncludePaths()
 	{
-		throw new NotImplementedException();
+		foreach (var includePath in LinuxSdk.IncludePaths())
+		{
+			yield return includePath;
+		}
 	}
 
 	public override IEnumerable<NPath> ToolChainLibraryPaths()
 	{
-		throw new NotImplementedException();
+		foreach (var libraryPath in LinuxSdk.LibraryPaths())
+		{
+			yield return libraryPath;
+		}
 	}
 
 	public override IEnumerable<string> ToolChainStaticLibraries()
 	{
-		throw new NotImplementedException();
+		foreach (var library in LinuxSdk.StaticLibraries())
+		{
+			yield return library;
+		}
 	}
 
 	public override IEnumerable<string> ToolChainDynamicLibraries()
 	{
-		throw new NotImplementedException();
+		foreach (var library in LinuxSdk.DynamicLibraries())
+		{
+			yield return library;
+		}
 	}
 	
 	public override ICompileArgsBuilder MakeCompileArgsBuilder()

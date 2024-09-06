@@ -1,4 +1,6 @@
-﻿using NiceIO;
+﻿using System.Collections;
+using NiceIO;
+using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
 
@@ -6,17 +8,105 @@ public partial class GccToolChain
 {
     internal override CppCompileInvocation MakeCompileInvocation(CppCompilationUnit compileUnit)
     {
-        return null;
+        var invocation = new CppCompileInvocation();
+        invocation.ProgramName = CompilerExecutableFor(compileUnit.SourceFile);
+        invocation.EnvVars.AddRange(EnvVars());
+        invocation.Arguments.AddRange(CompileArgsFor(compileUnit));
+        return invocation;
     }
 
     public override IEnumerable<string> CompileArgsFor(CppCompilationUnit compileUnit)
     {
-        return null;
+        if (compileUnit.SourceFile.ExtensionWithDot == ".asm")
+        {
+            foreach (var arg in CompileArgsForAssembly(compileUnit))
+            {
+                yield return arg;
+            }
+        }
+        else
+        {
+            foreach (var arg in CompileArgsForCpp(compileUnit))
+            {
+                yield return arg;
+            }
+        }
+    }
+
+    private IEnumerable<string> CompileArgsForAssembly(CppCompilationUnit compileUnit)
+    {
+        yield return "-arch";
+        if (Arch == new x64Architecture())
+        {
+            yield return "x86_64";
+        }
+        else if (Arch == new x86Architecture())
+        {
+            yield return "x86";
+        }
+        else
+        {
+            throw new NotImplementedException($"Unsupported architecture {Arch.Name}");
+        }
+
+        yield return "/-o";
+        yield return compileUnit.OutputFile.InQuotes();
+        
+        yield return compileUnit.SourceFile.InQuotes();
+    }
+
+    private IEnumerable<string> CompileArgsForCpp(CppCompilationUnit compileUnit)
+    {
+        foreach (var compileFlag in compileUnit.CompileFlags.Concat(DefaultCompileFlags(compileUnit)))
+        {
+            yield return compileFlag;
+        }
+			
+        foreach (var define in compileUnit.Defines.Concat(ToolChainDefines()))
+        {
+            yield return $"-D{define}";
+        }
+			
+        foreach (var includePath in compileUnit.IncludePaths.Concat(ToolChainIncludePaths()))
+        {
+            yield return $"-I\"{includePath}\"";
+        }
+
+        if (Configuration == BuildConfiguration.Debug)
+        {
+            yield return "-g3";
+        }
+        
+    }
+
+    private IEnumerable<string> DefaultCompileFlags(CppCompilationUnit unit)
+    {
+        if (Configuration == BuildConfiguration.Debug)
+        {
+            yield return "-O0";
+        }
+        
+        if (Configuration == BuildConfiguration.Release ||
+            Configuration == BuildConfiguration.ReleasePlus )
+        {
+            yield return "-O3";
+        }
+
+        if (Configuration == BuildConfiguration.ReleaseSize)
+        {
+            yield return "-Oz";
+        }
+        
+        foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
+        {
+            yield return argument;
+        }
+        
     }
 
     public override IEnumerable<string> ToolChainDefines()
     {
-        return null;
+        yield break;
     }
 
     public override bool CanBeCompiled(NPath sourceFile)
@@ -30,6 +120,6 @@ public partial class GccToolChain
 
     public override NPath CompilerExecutableFor(NPath sourceFile)
     {
-        return null;
+        return LinuxSdk.GetCompiler(sourceFile);
     }
 }

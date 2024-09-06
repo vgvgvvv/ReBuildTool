@@ -1,19 +1,54 @@
-﻿namespace ReBuildTool.ToolChain;
+﻿using NiceIO;
+using ResetCore.Common;
+
+namespace ReBuildTool.ToolChain;
 
 public partial class GccToolChain
 {
     internal override CppArchiveInvocation MakeArchiveInvocation(CppArchiveUnit cppArchiveUnit)
     {
-        return null;
+        var invocation = new CppArchiveInvocation();
+        invocation.ProgramName = LinuxSdk.GetArchiver();
+        invocation.EnvVars.AddRange(EnvVars());
+        invocation.Arguments.AddRange(ArchiveArgsFor(cppArchiveUnit));
+        return invocation;
     }
 	
     private IEnumerable<string> ArchiveArgsFor(CppArchiveUnit unit)
     {
-        return null;
+        yield return $"-o";
+        yield return unit.OutputPath.InQuotes();
+		
+        foreach (var defaultLinkFlag in DefaultArchiveFlags(unit))
+        {
+            yield return defaultLinkFlag;
+        }
+		
+        yield return "@" + unit.ResponseFile.InQuotes();
     }
 	
     protected IEnumerable<string> DefaultArchiveFlags(CppArchiveUnit cppArchiveUnit)
     {
-        return null;
+        var linkBuilder = cppArchiveUnit.ArchiveArgsBuilder;
+        
+        foreach (var argument in linkBuilder.GetAllArguments())
+        {
+            yield return argument;
+        }
+		
+        foreach (var staticLibrary in cppArchiveUnit.StaticLibraries)
+        {
+            yield return staticLibrary.ToNPath().InQuotes();
+        }
+		
+        foreach (var libraryPath in cppArchiveUnit.LibraryPaths)
+        {
+            yield return $"-L{libraryPath.InQuotes()}";
+        }
+        
+        foreach (var libpath in ToolChainLibraryPaths())
+        {
+            yield return $"-L{libpath.InQuotes()}";
+        }
     }
 }

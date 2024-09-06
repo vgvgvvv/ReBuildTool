@@ -47,5 +47,9 @@ public partial class MSVCToolChain
 			yield return $"/LIBPATH:{libraryPath.InQuotes()}";
 		}
 		
+		foreach (var libpath in ToolChainLibraryPaths())
+		{
+			yield return $"/LIBPATH:{libpath.InQuotes()}";
+		}
 	}
 }
