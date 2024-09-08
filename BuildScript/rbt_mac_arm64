@@ -1,0 +1,5 @@
+#!/bin/bash
+
+CURRENT_DIR=$(cd $(dirname $0); pwd)
+
+"$CURRENT_DIR/ReBuildTool/Binary/MacArm64/ReBuildTool/ReBuildTool" %*
