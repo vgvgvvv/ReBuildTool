@@ -76,6 +76,7 @@ exit /b 0
         echo "============= Build ReBuildTool ================"
 
         call BuildAll.bat
+        call BuildUpdater.bat
     ) else (
         cd "ReBuildTool/BuildScript"
     )
