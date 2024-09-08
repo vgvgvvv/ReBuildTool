@@ -1,11 +1,13 @@
-﻿using ReBuildTool.ToolChain.SDK;
+﻿using NiceIO;
+using ReBuildTool.ToolChain.SDK;
 
-namespace ReBuildTool.ToolChain.Linux;
+namespace ReBuildTool.ToolChain;
 
 public partial class LinuxClangToolchain : ClangToolChain
 {
-	public LinuxClangToolchain(BuildConfiguration configuration, Architecture arch) : base(configuration, arch)
+	public LinuxClangToolchain(BuildConfiguration configuration, Architecture arch, NPath clangSdkLocation) : base(configuration, arch)
 	{
+		ClangSdk = new LinuxClangSDK(clangSdkLocation);
 	}
 	
 	protected override ClangSDK ClangSdk { get; }

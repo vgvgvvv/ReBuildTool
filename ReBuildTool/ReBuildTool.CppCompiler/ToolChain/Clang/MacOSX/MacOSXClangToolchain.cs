@@ -1,11 +1,13 @@
 ﻿using ReBuildTool.ToolChain.SDK;
+using ReBuildTool.ToolChain.SDK.XCodeClang;
 
-namespace ReBuildTool.ToolChain.MacOSClangToolchain;
+namespace ReBuildTool.ToolChain;
 
 public partial class MacOSXClangToolchain : ClangToolChain
 {
 	public MacOSXClangToolchain(BuildConfiguration configuration, Architecture arch) : base(configuration, arch)
 	{
+		ClangSdk = new XCodeClangSDK();
 	}
 	
 	protected override ClangSDK ClangSdk { get; }

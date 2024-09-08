@@ -12,8 +12,14 @@ public abstract partial class ClangToolChain : IToolChain
 	public override string Name => "Clang";
 
 	protected abstract ClangSDK ClangSdk { get; }
-	
-	public abstract IEnumerable<ICppLibrary> CppLibraries();
+
+	public virtual IEnumerable<ICppLibrary> CppLibraries()
+	{
+		foreach (var cppLibrary in ClangSdk.GetCppLibs(Arch))
+		{
+			yield return cppLibrary;
+		}
+	}
 
 	public override Dictionary<string, string> EnvVars()
 	{

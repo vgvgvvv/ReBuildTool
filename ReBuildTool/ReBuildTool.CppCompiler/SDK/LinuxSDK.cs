@@ -51,7 +51,7 @@ public class LinuxSDK : ICppLibrary
         }
         else if (ex == ".asm")
         {
-            return new NPath("/usr/bin/as");
+            return new NPath("/usr/bin/nasm");
         }
         else
         {

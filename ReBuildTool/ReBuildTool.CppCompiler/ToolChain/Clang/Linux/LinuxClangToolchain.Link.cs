@@ -1,4 +1,4 @@
-﻿namespace ReBuildTool.ToolChain.Linux;
+﻿namespace ReBuildTool.ToolChain;
 
 public partial class LinuxClangToolchain 
 {

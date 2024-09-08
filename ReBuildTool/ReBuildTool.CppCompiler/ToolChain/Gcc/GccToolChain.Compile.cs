@@ -35,21 +35,13 @@ public partial class GccToolChain
 
     private IEnumerable<string> CompileArgsForAssembly(CppCompilationUnit compileUnit)
     {
-        yield return "-arch";
+        yield return "-f";
         if (Arch == new x64Architecture())
         {
-            yield return "x86_64";
-        }
-        else if (Arch == new x86Architecture())
-        {
-            yield return "x86";
-        }
-        else
-        {
-            throw new NotImplementedException($"Unsupported architecture {Arch.Name}");
+            yield return "-elf64";
         }
 
-        yield return "/-o";
+        yield return "-o";
         yield return compileUnit.OutputFile.InQuotes();
         
         yield return compileUnit.SourceFile.InQuotes();
@@ -115,7 +107,8 @@ public partial class GccToolChain
         return extension == ".c" || 
                extension == ".cpp" || 
                extension == ".cc" || 
-               extension == ".cxx";
+               extension == ".cxx" ||
+               extension == ".asm";
     }
 
     public override NPath CompilerExecutableFor(NPath sourceFile)

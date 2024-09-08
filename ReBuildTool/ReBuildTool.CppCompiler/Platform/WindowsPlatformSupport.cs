@@ -9,6 +9,8 @@ public class WindowsPlatformSupport : IPlatformSupport
 		return platform is WindowsDesktopRuntimePlatform;
 	}
 
+	// TODO: support clang toolchain
+	// new WindowsClangToolchain(buildConfiguration, architecture);
 	public override IToolChain MakeCppToolChain(Architecture architecture, BuildConfiguration buildConfiguration)
 	{
 		return new MSVCToolChain(buildConfiguration, architecture);

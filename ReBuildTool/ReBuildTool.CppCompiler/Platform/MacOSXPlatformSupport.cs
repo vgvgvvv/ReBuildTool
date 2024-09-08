@@ -11,6 +11,6 @@ public class MacOSXPlatformSupport : IPlatformSupport
 
 	public override IToolChain MakeCppToolChain(Architecture architecture, BuildConfiguration buildConfiguration)
 	{
-		throw new NotImplementedException();
+		return new MacOSXClangToolchain(buildConfiguration, architecture);
 	}
 }
