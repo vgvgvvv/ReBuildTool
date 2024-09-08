@@ -42,7 +42,8 @@ public partial class CppBuilder
 			LinkUnit.LibraryPaths = GetLibrarySearchPathForLinkUnit(LinkUnit);
 			LinkUnit.OutputPath = LinkResultPath();
 			LinkUnit.ResponseFile = LinkUnit.OutputPath.ChangeExtension(".rsp");
-			var rspContent = string.Join(Environment.NewLine, LinkUnit.ObjectFiles.InQuotes());
+			var normalized = LinkUnit.ObjectFiles.Select(objFilePath => objFilePath.InQuotes().ToString().Replace("\\", "/"));
+			var rspContent = string.Join(Environment.NewLine, normalized);
 			LinkUnit.ResponseFile.EnsureParentDirectoryExists();
 			File.WriteAllText(LinkUnit.ResponseFile, rspContent, Encoding.UTF8);
 			if (Module is ModuleRule moduleRule)

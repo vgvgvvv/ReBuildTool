@@ -39,8 +39,13 @@ public partial class CppBuilder
             foreach (var invocation in CompileInvocation)
             {
                 var unit = invocation.Unit;
+                var depFiles = GetAllCompileUnitDep(unit);
                 var target = new MakeFileGenerator.Target(unit.OutputFile.InQuotes(), MakeFileGenerator.TargetType.SubTarget);
                 target.Dependencies.Add(unit.SourceFile.InQuotes());
+                foreach (var depFile in depFiles)
+                {
+                    target.Dependencies.Add(depFile.InQuotes());
+                }
                 target.Invocations.Add(invocation.ToString());
                 generator.Targets.Add(target);
             }
@@ -130,6 +135,39 @@ public partial class CppBuilder
                 .Combine(Options.Architecture.Name)
                 .Combine("MakeFileCache", Module.TargetName, "makefile");
             result.EnsureParentDirectoryExists();
+            return result;
+        }
+        
+        private List<NPath> GetAllCompileUnitDep(CppCompilationUnit unit)
+        {
+            var result = new List<NPath>();
+            var includeInfos = unit.SourceFile.ReadAllLines()
+                .Where(l => l.StartsWith("#include"))
+                .Select(l =>
+                {
+                    var parts = l.Split(' ');
+                    if (parts.Length == 2)
+                    {
+                        var fileName = parts[1];
+                        return fileName.Substring(1, fileName.Length - 2);
+                    }
+                    return string.Empty;
+                })
+                .Where(n => !string.IsNullOrEmpty(n))
+                .ToList();
+            
+            foreach (var includePath in unit.IncludePaths)
+            {
+                foreach (var includeInfo in includeInfos)
+                {
+                    var file = includePath.Combine(includeInfo);
+                    if (file.Exists())
+                    {
+                        result.Add(file);
+                    }
+                }
+            }
+
             return result;
         }
     }

@@ -78,7 +78,7 @@ public class NDKClangCppLibrary : ICppLibrary
 {
 	public NDKClangSDK Owner { get; }
 	public Architecture Arch { get; }
-	
+
 	public bool UseStaticCppLibrary { get; set; } = true;
 	
 	public NDKClangCppLibrary(NDKClangSDK owner, Architecture arch)
@@ -98,6 +98,7 @@ public class NDKClangCppLibrary : ICppLibrary
 	public IEnumerable<NPath> LibraryPaths()
 	{
 		yield return Owner.RootPath.Combine("sources/cxx-stl/llvm-libc++/libs").Combine(GetArchFolderName(Arch));
+		yield return Owner.GetToolChainPath().Combine("lib");
 		//yield return Owner.RootPath.Combine("sources/cxx-stl/llvm-libc++abi/libs").Combine(GetArchFolderName(Arch));
 	}
 	

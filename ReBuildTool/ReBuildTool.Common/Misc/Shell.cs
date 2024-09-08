@@ -137,32 +137,34 @@ public class Shell : IDisposable
 	        }
         };
         
-        Process.Exited += (sender, args) =>
-        {
-	        CurrentStatus = Status.Finished;
-	        var result = Process.StandardOutput.ReadToEnd();
-	        if (!string.IsNullOrEmpty(result))
-	        {
-		        if (!IsSuccess())
-		        {
-			        Log.Error(result);
-		        }
-		        else
-		        {
-			        Log.Info(result);
-		        }
-	        }
-	        if (!IsSuccess())
-	        {
-		        var errorInfo = Process.StandardError.ReadToEnd();
-		        if (!string.IsNullOrEmpty(result))
-		        {
-			        Log.Error(errorInfo);
-		        }
-	        }
-        };
+        // Process.Exited += (sender, args) =>
+        // {
+	       //  CurrentStatus = Status.Finished;
+	       //  var result = Process.StandardOutput.ReadToEnd();
+	       //  if (!string.IsNullOrEmpty(result))
+	       //  {
+		      //   if (!IsSuccess())
+		      //   {
+			     //    Log.Error(result);
+		      //   }
+		      //   else
+		      //   {
+			     //    Log.Info(result);
+		      //   }
+	       //  }
+	       //  if (!IsSuccess())
+	       //  {
+		      //   var errorInfo = Process.StandardError.ReadToEnd();
+		      //   if (!string.IsNullOrEmpty(result))
+		      //   {
+			     //    Log.Error(errorInfo);
+		      //   }
+	       //  }
+        // };
         
         Process.Start();
+        Process.BeginErrorReadLine();
+        Process.BeginOutputReadLine();
         CurrentStatus = Status.Running;
 		return this;
 	}
@@ -176,6 +178,8 @@ public class Shell : IDisposable
 		if (Process != null)
 		{
 			Process.WaitForExit();
+			Process.CancelErrorRead();
+			Process.CancelOutputRead();
 			CurrentStatus = Status.Finished;
 		}
 		return this;
