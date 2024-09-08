@@ -9,42 +9,53 @@ using ResetCore.Common;
 Log.Info("Begin Generate..");
 Log.Info(Environment.CommandLine);
 
-if (!CmdParser.Parse<Program>())
+try
 {
-    return;
-}
-var command = CmdParser.Get<ICommonCommandGroup>();
-BoosterSupport.SetupBooster();
-
-var root = GlobalPaths.ProjectRoot;
-var iniProject = ServiceContext.Instance.Create<IIniProject>(root);
-var cppProject = ServiceContext.Instance.Create<ICppProject>(root);
-var projects = new List<IProjectInterface>
-{
-   iniProject.Value,
-   cppProject.Value
-};
-
-foreach (var project in projects)
-{
-    project.Parse();
-    switch (command.Mode.Value)
+    if (!CmdParser.Parse<Program>())
     {
-        case RunMode.Init:
-            project.Setup();
-            break;
-        case RunMode.Build:
-            project.Build(command.Target);
-            break;
-        case RunMode.Clean:
-            project.Clean();
-            break;
-        case RunMode.ReBuild:
-            project.ReBuild(command.Target);
-            break;
-        default:
-            break;
+        return;
     }
-}
+    var command = CmdParser.Get<ICommonCommandGroup>();
+    BoosterSupport.SetupBooster();
 
-Log.Info("Finished..");
+    
+    var root = GlobalPaths.ProjectRoot;
+    var iniProject = ServiceContext.Instance.Create<IIniProject>(root);
+    var cppProject = ServiceContext.Instance.Create<ICppProject>(root);
+    var projects = new List<IProjectInterface>
+    {
+        iniProject.Value,
+        cppProject.Value
+    };
+
+    foreach (var project in projects)
+    {
+        project.Parse();
+        switch (command.Mode.Value)
+        {
+            case RunMode.Init:
+                project.Setup();
+                break;
+            case RunMode.Build:
+                project.Build(command.Target);
+                break;
+            case RunMode.Clean:
+                project.Clean();
+                break;
+            case RunMode.ReBuild:
+                project.ReBuild(command.Target);
+                break;
+            default:
+                break;
+        }
+    }
+
+}
+catch (Exception e)
+{
+    Log.Error($"unhandled exception raised: {e}");
+}
+finally
+{
+    Log.Info("Finished..");
+}

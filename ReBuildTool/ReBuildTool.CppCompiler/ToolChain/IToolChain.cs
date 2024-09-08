@@ -82,7 +82,7 @@ internal class InvocationBase
 
 	public override string ToString()
 	{
-		return $"{ProgramName} {string.Join(' ', Arguments)}";
+		return $"\"{ProgramName}\" {string.Join(' ', Arguments)}";
 	}
 }
 

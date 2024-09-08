@@ -100,6 +100,7 @@ public partial class CppBuilder
 		{
 			var module = PendingModulesQueue.Dequeue();
 			Log.Info($"Build {module.TargetName} Begin...");
+			BuildMakeFile(module);
 			BuildModule(module);
 			Log.Info($"Build {module.TargetName} Done...");
 		}
@@ -108,7 +109,6 @@ public partial class CppBuilder
 	private bool BuildModule(IModuleInterface module)
 	{
 		CompileProcess process = CompileProcess.Create(module, this);
-		process.GenerateMakeFile();
 		if (!process.Compile())
 		{
 			Log.Error($"compile {module} failed !!");
@@ -132,6 +132,13 @@ public partial class CppBuilder
 			}
 		}
 		
+		return true;
+	}
+
+	private bool BuildMakeFile(IModuleInterface module)
+	{
+		CompileProcess process = CompileProcess.Create(module, this);
+		process.GenerateMakeFile();
 		return true;
 	}
 	

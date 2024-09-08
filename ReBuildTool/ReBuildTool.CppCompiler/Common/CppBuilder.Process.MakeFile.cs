@@ -39,9 +39,10 @@ public partial class CppBuilder
             foreach (var invocation in CompileInvocation)
             {
                 var unit = invocation.Unit;
-                var target = new MakeFileGenerator.Target(unit.OutputFile, MakeFileGenerator.TargetType.SubTarget);
-                target.Dependencies.Add(unit.SourceFile);
+                var target = new MakeFileGenerator.Target(unit.OutputFile.InQuotes(), MakeFileGenerator.TargetType.SubTarget);
+                target.Dependencies.Add(unit.SourceFile.InQuotes());
                 target.Invocations.Add(invocation.ToString());
+                generator.Targets.Add(target);
             }
             
         }
@@ -59,7 +60,7 @@ public partial class CppBuilder
             }
 
             var unit = LinkInvocation.Unit;
-            var target = new MakeFileGenerator.Target(unit.OutputPath, MakeFileGenerator.TargetType.MainTarget);
+            var target = new MakeFileGenerator.Target(unit.OutputPath.InQuotes(), MakeFileGenerator.TargetType.MainTarget);
             foreach (var objFile in unit.ObjectFiles)
             {
                 target.Dependencies.Add(objFile);
@@ -71,7 +72,7 @@ public partial class CppBuilder
                     var libPath = libraryPath.Combine(library);
                     if (libPath.Exists())
                     {
-                        target.Dependencies.Add(libPath);
+                        target.Dependencies.Add(libPath.InQuotes());
                     }
                 }
                 foreach (var library in unit.StaticLibraries)
@@ -79,11 +80,12 @@ public partial class CppBuilder
                     var libPath = libraryPath.Combine(library);
                     if (libPath.Exists())
                     {
-                        target.Dependencies.Add(libPath);
+                        target.Dependencies.Add(libPath.InQuotes());
                     }
                 }
             }
             target.Invocations.Add(LinkInvocation.ToString());
+            generator.Targets.Add(target);
         }
 
         private void CollectArchiveTarget(MakeFileGenerator generator)
@@ -99,7 +101,7 @@ public partial class CppBuilder
             }
             
             var unit = ArchiveInvocation.Unit;
-            var target = new MakeFileGenerator.Target(unit.OutputPath, MakeFileGenerator.TargetType.MainTarget);
+            var target = new MakeFileGenerator.Target(unit.OutputPath.InQuotes(), MakeFileGenerator.TargetType.MainTarget);
             foreach (var objFile in unit.ObjectFiles)
             {
                 target.Dependencies.Add(objFile);
@@ -111,11 +113,12 @@ public partial class CppBuilder
                     var libPath = libraryPath.Combine(library);
                     if (libPath.Exists())
                     {
-                        target.Dependencies.Add(libPath);
+                        target.Dependencies.Add(libPath.InQuotes());
                     }
                 }
             }
             target.Invocations.Add(ArchiveInvocation.ToString());
+            generator.Targets.Add(target);
         }
         
         
