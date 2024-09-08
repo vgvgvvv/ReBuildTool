@@ -8,7 +8,7 @@ public partial class GccToolChain
 {
     internal override CppCompileInvocation MakeCompileInvocation(CppCompilationUnit compileUnit)
     {
-        var invocation = new CppCompileInvocation();
+        var invocation = new CppCompileInvocation(compileUnit);
         invocation.ProgramName = CompilerExecutableFor(compileUnit.SourceFile);
         invocation.EnvVars.AddRange(EnvVars());
         invocation.Arguments.AddRange(CompileArgsFor(compileUnit));

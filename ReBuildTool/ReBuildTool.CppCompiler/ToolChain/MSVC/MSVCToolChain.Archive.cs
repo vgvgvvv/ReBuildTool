@@ -7,7 +7,7 @@ public partial class MSVCToolChain
 {
 	internal override CppArchiveInvocation MakeArchiveInvocation(CppArchiveUnit cppArchiveUnit)
 	{
-		var invocation = new CppArchiveInvocation();
+		var invocation = new CppArchiveInvocation(cppArchiveUnit);
 		invocation.ProgramName = msvcSdk.ArchiverPath;
 		invocation.EnvVars.AddRange(EnvVars());
 		invocation.Arguments.AddRange(ArchiveArgsFor(cppArchiveUnit));

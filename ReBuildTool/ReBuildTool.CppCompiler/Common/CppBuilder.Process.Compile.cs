@@ -33,7 +33,10 @@ public partial class CppBuilder
 		{
 			var relatePath = sourceFile.RelativeTo(Source.ProjectRoot);
 			var result = Source.ProjectRoot
-				.Combine("Intermedia", "ObjectCache", IPlatformSupport.CurrentTargetPlatform.ToString(), relatePath)
+				.Combine("Intermedia", IPlatformSupport.CurrentTargetPlatform.ToString())
+				.Combine(Options.Configuration.ToString())
+				.Combine(Options.Architecture.Name)
+				.Combine("ObjectCache", relatePath)
 				.ChangeExtension(ToolChain.ObjectExtension);
 			result.EnsureParentDirectoryExists();
 			return result;

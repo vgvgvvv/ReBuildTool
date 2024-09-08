@@ -7,7 +7,7 @@ public abstract partial class ClangToolChain
 {
 	internal override CppArchiveInvocation MakeArchiveInvocation(CppArchiveUnit cppArchiveUnit)
 	{
-		var invocation = new CppArchiveInvocation();
+		var invocation = new CppArchiveInvocation(cppArchiveUnit);
 		invocation.ProgramName = ClangSdk.GetArchiver();
 		invocation.EnvVars.AddRange(EnvVars());
 		invocation.Arguments.AddRange(ArchiveArgsFor(cppArchiveUnit));

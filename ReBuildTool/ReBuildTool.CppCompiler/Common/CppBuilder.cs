@@ -108,6 +108,7 @@ public partial class CppBuilder
 	private bool BuildModule(IModuleInterface module)
 	{
 		CompileProcess process = CompileProcess.Create(module, this);
+		process.GenerateMakeFile();
 		if (!process.Compile())
 		{
 			Log.Error($"compile {module} failed !!");

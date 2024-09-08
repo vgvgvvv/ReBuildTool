@@ -7,7 +7,7 @@ public partial class GccToolChain
 {
     internal override CppArchiveInvocation MakeArchiveInvocation(CppArchiveUnit cppArchiveUnit)
     {
-        var invocation = new CppArchiveInvocation();
+        var invocation = new CppArchiveInvocation(cppArchiveUnit);
         invocation.ProgramName = LinuxSdk.GetArchiver();
         invocation.EnvVars.AddRange(EnvVars());
         invocation.Arguments.AddRange(ArchiveArgsFor(cppArchiveUnit));

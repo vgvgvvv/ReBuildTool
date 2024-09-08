@@ -6,7 +6,7 @@ public abstract partial class ClangToolChain
 {
 	internal override CppLinkInvocation MakeLinkInvocation(CppLinkUnit cppLinkUnit)
 	{
-		var invocation = new CppLinkInvocation();
+		var invocation = new CppLinkInvocation(cppLinkUnit);
 		invocation.ProgramName = ClangSdk.GetLinker();
 		invocation.EnvVars.AddRange(EnvVars());
 		invocation.Arguments.AddRange(LinkArgsFor(cppLinkUnit));

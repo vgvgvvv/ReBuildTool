@@ -86,11 +86,32 @@ internal class InvocationBase
 	}
 }
 
-internal class CppCompileInvocation : InvocationBase { }
+internal class CppCompileInvocation : InvocationBase
+{
+	public CppCompileInvocation(CppCompilationUnit unit)
+	{
+		Unit = unit;
+	}
+	public CppCompilationUnit Unit { get; }
+}
 
-internal class CppLinkInvocation : InvocationBase { }
+internal class CppLinkInvocation : InvocationBase
+{
+	public CppLinkInvocation(CppLinkUnit unit)
+	{
+		Unit = unit;
+	}
+	public CppLinkUnit Unit { get; }
+}
 
-internal class CppArchiveInvocation : InvocationBase { }
+internal class CppArchiveInvocation : InvocationBase
+{
+	public CppArchiveInvocation(CppArchiveUnit unit)
+	{
+		Unit = unit;
+	}
+	public CppArchiveUnit Unit { get; }
+}
 
 public class IArgsBuilder
 {
