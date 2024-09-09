@@ -62,7 +62,13 @@ public partial class AndroidClangToolchain
         {
             yield return argument;
         }
-        
+
+        yield return "-target";
+        yield return NdkClangSdk.Setting.TargetPlatformName;
+
+        yield return "--sysroot=" + NdkClangSdk.SysRoot.InQuotes();
+            
+        yield return "-stdlib=libc++";
     }
 
     public override IEnumerable<string> ToolChainDefines()

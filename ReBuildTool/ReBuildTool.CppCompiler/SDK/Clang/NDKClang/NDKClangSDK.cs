@@ -3,12 +3,60 @@ using ReBuildTool.Service.Global;
 
 namespace ReBuildTool.ToolChain.SDK;
 
+public abstract class NDKTargetArchSetting
+{
+	public abstract string Version { get; }
+	public abstract string TargetPlatformName { get; }
+	public string TargetName => $"{TargetPlatformName}{Version}";
+}
+
+public class ARM32NDKTargetArchSetting : NDKTargetArchSetting
+{
+	public override string Version => "25";
+	public override string TargetPlatformName => "arm-linux-androideabi";
+}
+
+public class ARM64NDKTargetArchSetting : NDKTargetArchSetting
+{
+	public override string Version => "25";
+	public override string TargetPlatformName => "aarch64-linux-android";
+}
+
+public class X86NDKTargetArchSetting : NDKTargetArchSetting
+{
+	public override string Version => "25";
+	public override string TargetPlatformName => "i686-linux-android";
+}
+
+
+public class X64NDKTargetArchSetting : NDKTargetArchSetting
+{
+	public override string Version => "25";
+	public override string TargetPlatformName => "x86_64-linux-android";
+}
+
 public class NDKClangSDK : ClangSDK
 {
-	
-	public NDKClangSDK(NPath root, BuildEnvironmentPlatform buildPlatform) : base(root)
+	public NDKClangSDK(NPath root, BuildEnvironmentPlatform buildPlatform, Architecture arch) : base(root)
 	{
 		NDKVersion = root.FileName;
+		switch (arch)
+		{
+			case ARM64Architecture arm64Architecture:
+				Setting = new ARM64NDKTargetArchSetting();
+				break;
+			case ARMv7Architecture arMv7Architecture:
+				Setting = new ARM32NDKTargetArchSetting();
+				break;
+			case x64Architecture x64Architecture:
+				Setting = new X64NDKTargetArchSetting();
+				break;
+			case x86Architecture x86Architecture:
+				Setting = new X86NDKTargetArchSetting();
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(arch));
+		}
 		CurrentBuildPlatform = buildPlatform;
 	}
 
@@ -24,7 +72,7 @@ public class NDKClangSDK : ClangSDK
 		{
 			execName += ".exe";
 		}
-		return GetToolChainPath().Combine(execName);
+		return LLVMPath.Combine("bin").Combine(execName);
 	}
 
 	public override NPath GetLinker()
@@ -34,7 +82,7 @@ public class NDKClangSDK : ClangSDK
 		{
 			execName += ".exe";
 		}
-		return GetToolChainPath().Combine(execName);
+		return LLVMPath.Combine("bin").Combine(execName);
 	}
 
 	public override NPath GetArchiver()
@@ -44,33 +92,18 @@ public class NDKClangSDK : ClangSDK
 		{
 			execName += ".exe";
 		}
-		return GetToolChainPath().Combine(execName);
-	}
-
-	public NPath GetToolChainPath()
-	{
-		var root = RootPath.Combine("toolchains/llvm/prebuilt");
-		string platformFolderName;
-		switch (CurrentBuildPlatform)
-		{
-			case BuildEnvironmentPlatform.Windows:
-				platformFolderName = "windows-x86_64";
-				break;
-			case BuildEnvironmentPlatform.Linux:
-				platformFolderName = "linux-x86_64";
-				break;
-			case BuildEnvironmentPlatform.MacOSX:
-				platformFolderName = "darwin-x86_64";
-				break;
-			default:
-				throw new NotImplementedException($"not supported build platform {CurrentBuildPlatform}");
-		}
-
-		return root.Combine(platformFolderName).Combine("bin");
+		return LLVMPath.Combine("bin").Combine(execName);
 	}
 
 	public string NDKVersion { get; }
+	public NPath SysRootIncludePath => SysRoot.Combine("usr/include");
+	public NPath SysRootLibPath => SysRoot.Combine("usr/lib").Combine(Setting.TargetPlatformName);
+	public NPath SysRootLibVersionedPath => SysRoot.Combine("usr/lib").Combine(Setting.TargetPlatformName).Combine(Setting.Version);
+	public NPath LLVMPath => RootPath.Combine("toolchains/llvm/prebuilt").Combine(PlatformFolderName);
 	
+	public NPath SysRoot => LLVMPath.Combine("sysroot");
+	public string PlatformFolderName => PlatformHelper.Pick("windows-x86_64", "linux-x86_64", "darwin-x86_64");
+	public NDKTargetArchSetting Setting { get; }
 	public BuildEnvironmentPlatform CurrentBuildPlatform { get; }
 }
 
@@ -89,16 +122,14 @@ public class NDKClangCppLibrary : ICppLibrary
 	
 	public IEnumerable<NPath> IncludePaths()
 	{
-		var root = Owner.RootPath.Combine("sources/cxx-stl/");
-		yield return root.Combine("llvm-libc++/include");
-		yield return root.Combine("llvm-libc++abi/include");
-		yield return root.Combine("system/include");
+		yield return Owner.SysRootLibVersionedPath; // for crtbegin_so.o & crtend_so.o
+		yield return Owner.SysRootIncludePath.Combine("c++/v1");
 	}
 	
 	public IEnumerable<NPath> LibraryPaths()
 	{
-		yield return Owner.RootPath.Combine("sources/cxx-stl/llvm-libc++/libs").Combine(GetArchFolderName(Arch));
-		yield return Owner.GetToolChainPath().Combine("lib");
+		yield return Owner.SysRootLibPath;
+		yield return Owner.SysRootLibVersionedPath;
 		//yield return Owner.RootPath.Combine("sources/cxx-stl/llvm-libc++abi/libs").Combine(GetArchFolderName(Arch));
 	}
 	
@@ -106,8 +137,8 @@ public class NDKClangCppLibrary : ICppLibrary
 	{
 		if(UseStaticCppLibrary)
 		{
-			yield return "libc++_static.a";
-			yield return "libc++abi.a";
+			yield return "c++_static";
+			yield return "c++abi";
 		}
 	}
 	
@@ -115,8 +146,10 @@ public class NDKClangCppLibrary : ICppLibrary
 	{
 		if (!UseStaticCppLibrary)
 		{
-			yield return "libc++_shared.so";
+			yield return "c++_shared";
 		}
+		yield return "log";
+
 	}
 
 	private string GetArchFolderName(Architecture arch)

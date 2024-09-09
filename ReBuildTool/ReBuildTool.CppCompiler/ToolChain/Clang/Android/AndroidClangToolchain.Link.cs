@@ -26,7 +26,12 @@ public partial class AndroidClangToolchain
             yield return argument;
         }
 
-        // -nostdlib
+        yield return "-target";
+        yield return NdkClangSdk.Setting.TargetName;
+        
+        yield return "--sysroot="+NdkClangSdk.SysRoot.InQuotes().Replace("\\", "/");
+
+        yield return "--no-undefined";
         
         if (cppLinkUnit.OutputPath.ExtensionWithDot == DynamicLibraryExtension)
         {
@@ -39,6 +44,10 @@ public partial class AndroidClangToolchain
             yield return "-static";
         }
         
+        foreach (var includePath in ToolChainIncludePaths())
+        {
+            yield return $"-I\"{includePath}\"";
+        }
         
         foreach (var staticLibrary in ToolChainStaticLibraries())
         {

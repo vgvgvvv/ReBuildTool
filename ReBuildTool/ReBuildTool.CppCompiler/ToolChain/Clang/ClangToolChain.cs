@@ -25,7 +25,7 @@ public abstract partial class ClangToolChain : IToolChain
 	{
 		return new()
 		{
-			
+			{"PATH", Environment.GetEnvironmentVariable("PATH") ?? "" },
 		};
 	}
 
@@ -44,9 +44,9 @@ public abstract partial class ClangToolChain : IToolChain
 	{
 		foreach (var cppLibrary in CppLibraries())
 		{
-			foreach (var includePath in cppLibrary.LibraryPaths())
+			foreach (var libraryPath in cppLibrary.LibraryPaths())
 			{
-				yield return includePath;
+				yield return libraryPath;
 			}
 		}
 	}

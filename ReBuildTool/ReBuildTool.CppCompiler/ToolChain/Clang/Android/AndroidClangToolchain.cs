@@ -8,7 +8,16 @@ public partial class AndroidClangToolchain : ClangToolChain
 {
 	public AndroidClangToolchain(BuildConfiguration configuration, Architecture arch, NPath ndkLocation) : base(configuration, arch)
 	{
-		ClangSdk = new NDKClangSDK(ndkLocation, PlatformHelper.GetBuildEnvironmentPlatform());
+		ClangSdk = new NDKClangSDK(ndkLocation, PlatformHelper.GetBuildEnvironmentPlatform(), arch);
+	}
+
+	public override Dictionary<string, string> EnvVars()
+	{
+		var dict = base.EnvVars();
+		string spliter = PlatformHelper.IsWindows() ? ";" : ":";
+		var paths = dict["PATH"].Split(spliter).ToList();
+		dict["PATH"] = string.Join(spliter, paths);
+		return dict;
 	}
 
 	public override string ObjectExtension => ".o";
@@ -17,6 +26,8 @@ public partial class AndroidClangToolchain : ClangToolChain
 	public override string DynamicLibraryExtension => ".so";
 
 	protected override ClangSDK ClangSdk { get; }
+	
+	protected NDKClangSDK NdkClangSdk => ClangSdk as NDKClangSDK;
 	public override IEnumerable<ICppLibrary> CppLibraries()
 	{
 		foreach (var cppLibrary in ClangSdk.GetCppLibs(Arch))
