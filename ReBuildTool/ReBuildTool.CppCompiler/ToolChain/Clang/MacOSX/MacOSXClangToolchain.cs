@@ -11,9 +11,13 @@ public partial class MacOSXClangToolchain : ClangToolChain
 	}
 	
 	protected override ClangSDK ClangSdk { get; }
+	protected XCodeClangSDK XCodeClangSdk => ClangSdk as XCodeClangSDK;
 	public override IEnumerable<ICppLibrary> CppLibraries()
 	{
-		throw new NotImplementedException();
+		foreach (var cppLibrary in XCodeClangSdk.GetCppLibs(Arch))
+		{
+			yield return cppLibrary;
+		}
 	}
 
 	public override string ObjectExtension => ".o";
