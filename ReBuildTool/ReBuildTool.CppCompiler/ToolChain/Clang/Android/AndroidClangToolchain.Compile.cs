@@ -57,6 +57,8 @@ public partial class AndroidClangToolchain
         {
             yield return "-Oz";
         }
+
+        yield return $"-D__ANDROID_API__={NdkClangSdk.Setting.Version}";
         
         foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
         {
@@ -73,6 +75,12 @@ public partial class AndroidClangToolchain
 
     public override IEnumerable<string> ToolChainDefines()
     {
-        yield break;
+        yield return "LINUX";
+        yield return "ANDROID";
+        yield return "PLATFORM_ANDROID";
+        yield return "__linux__";
+        yield return "__STDC_FORMAT_MACROS";
+        if (Arch is ARM64Architecture)
+            yield return "TARGET_ARM64";
     }
 }
