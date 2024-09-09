@@ -18,6 +18,18 @@ fi
 
 echo "RBT_HOME is $RBT_HOME"
 
+case "$(uname -s)" in
+    Linux*)    OS="Linux";;
+    Darwin*)   OS="Mac";;
+    *)         OS="UNKNOWN: $(uname -s)"
+esac
+
+case "$(uname -m)" in
+    x86_64)   ARCH="64";;
+    arm64)    ARCH="Arm64";;
+    *)        ARCH="UNKNOWN: $(uname -m)"
+esac
+
 initReBuildTool()
 {
     if [ ! -d $RBT_HOME ]; then
@@ -66,7 +78,7 @@ initReBuildTool()
 
     if [ ! -z $TARGET_NAME ]; then
         echo "init $TARGET_NAME"
-        cd ../Binary/MacArm64/ReBuildTool
+        cd ../Binary/$OS$ARCH/ReBuildTool
         chmod +x ReBuildTool
         ./ReBuildTool --ProjectRoot $CURRENT_DIR --Mode Init --Target $TARGET_NAME --BoosterSource $CURRENT_SCRIPT_FULL_PATH
     else
