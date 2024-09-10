@@ -44,11 +44,6 @@ public partial class AndroidClangToolchain
             yield return "-static";
         }
         
-        foreach (var includePath in ToolChainIncludePaths())
-        {
-            yield return $"-I\"{includePath}\"";
-        }
-        
         foreach (var staticLibrary in ToolChainStaticLibraries())
         {
             yield return "-l" + staticLibrary.ToNPath().InQuotes();

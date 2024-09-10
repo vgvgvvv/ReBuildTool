@@ -49,6 +49,8 @@ public partial class GccToolChain
 
     private IEnumerable<string> CompileArgsForCpp(CppCompilationUnit compileUnit)
     {
+        yield return "-c";
+        
         foreach (var compileFlag in compileUnit.CompileFlags.Concat(DefaultCompileFlags(compileUnit)))
         {
             yield return compileFlag;
