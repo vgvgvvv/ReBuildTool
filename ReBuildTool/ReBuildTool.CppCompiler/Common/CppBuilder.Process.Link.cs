@@ -45,7 +45,7 @@ public partial class CppBuilder
 			var normalized = LinkUnit.ObjectFiles.Select(objFilePath => objFilePath.InQuotes().ToString().Replace("\\", "/"));
 			var rspContent = string.Join(Environment.NewLine, normalized);
 			LinkUnit.ResponseFile.EnsureParentDirectoryExists();
-			File.WriteAllText(LinkUnit.ResponseFile, rspContent, Encoding.UTF8);
+			File.WriteAllText(LinkUnit.ResponseFile, rspContent, new UTF8Encoding(false));
 			if (Module is ModuleRule moduleRule)
 			{
 				LinkUnit.LinkArgsBuilder = ToolChain.MakeLinkArgsBuilder();
