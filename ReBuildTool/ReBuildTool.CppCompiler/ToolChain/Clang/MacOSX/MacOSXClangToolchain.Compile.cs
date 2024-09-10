@@ -13,6 +13,23 @@ public partial class MacOSXClangToolchain
     private IEnumerable<string> CompileArgsForCpp(CppCompilationUnit compileUnit)
     {
         yield return "-c";
+
+        yield return "-arch";
+        if (Arch is x64Architecture)
+        {
+            yield return "x86_64";
+        }
+        else if (Arch is ARM64Architecture)
+        {
+            yield return "arm64";
+        }
+        else
+        {
+            throw new NotSupportedException($"Unsupported architecture {Arch.Name}");
+        }
+        
+        yield return "-isysroot";
+        yield return XCodeSdk.PlatformSDK.SDKPath;
         
         foreach (var compileFlag in compileUnit.CompileFlags.Concat(DefaultCompileFlags(compileUnit)))
         {
@@ -64,7 +81,6 @@ public partial class MacOSXClangToolchain
         }
         
         yield return "-stdlib=libc++";
-        
     }
 
     public override IEnumerable<string> ToolChainDefines()

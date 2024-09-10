@@ -26,7 +26,22 @@ public partial class MacOSXClangToolchain
             yield return argument;
         }
 
-        // -nostdlib
+        yield return "-isysroot";
+        yield return XCodeSdk.PlatformSDK.SDKPath;
+        
+        yield return "-arch";
+        if (Arch is x64Architecture)
+        {
+            yield return "x86_64";
+        }
+        else if (Arch is ARM64Architecture)
+        {
+            yield return "arm64";
+        }
+        else
+        {
+            throw new NotSupportedException($"Unsupported architecture {Arch.Name}");
+        }
         
         if (cppLinkUnit.OutputPath.ExtensionWithDot == DynamicLibraryExtension)
         {
