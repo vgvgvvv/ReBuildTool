@@ -15,4 +15,4 @@ case "$(uname -m)" in
 esac
 
 
-"$CURRENT_DIR/ReBuildTool/Binary/$OS$ARCH/ReBuildTool.Updater/ReBuildTool.Updater" %*
+"$CURRENT_DIR/ReBuildTool/Binary/$OS$ARCH/ReBuildTool.Updater/ReBuildTool.Updater" $*

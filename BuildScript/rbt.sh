@@ -14,4 +14,4 @@ case "$(uname -m)" in
     *)        ARCH="UNKNOWN: $(uname -m)"
 esac
 
-"$CURRENT_DIR/ReBuildTool/Binary/$OS$ARCH/ReBuildTool/ReBuildTool" %*
+"$CURRENT_DIR/ReBuildTool/Binary/$OS$ARCH/ReBuildTool/ReBuildTool" $*
