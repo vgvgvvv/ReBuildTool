@@ -30,9 +30,9 @@ else
 	var buildUpdaterSh = rebuildToolGitRoot.Combine("BuildScript/BuildUpdater.sh");
 	Cmd.MakeExecutable(buildAllSh);
 	Cmd.MakeExecutable(buildUpdaterSh);
-	Cmd.RunCmd(buildAllSh, "", rebuildToolGitRoot);
+	Cmd.RunCmd("/bin/bash", buildAllSh, rebuildToolGitRoot);
 	if (!isRunningBuildedUpdater)
 	{
-		Cmd.RunCmd(buildUpdaterSh, "", rebuildToolGitRoot);
+		Cmd.RunCmd("/bin/bash", buildUpdaterSh, rebuildToolGitRoot);
 	}
 }
