@@ -69,6 +69,11 @@ public partial class GccToolChain
             yield return "-g3";
         }
         
+        yield return "-o";
+        yield return compileUnit.OutputFile.InQuotes();
+        
+        yield return compileUnit.SourceFile.InQuotes();
+        
     }
 
     private IEnumerable<string> DefaultCompileFlags(CppCompilationUnit unit)
