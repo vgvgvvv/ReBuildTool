@@ -62,6 +62,7 @@ initReBuildTool()
         fi
 
         chmod +x BuildAll.sh
+        chmod +x BuildUpdater.sh
 
         echo "============= Build ReBuildTool ================"
         ./BuildAll.sh

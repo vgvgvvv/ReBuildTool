@@ -16,3 +16,10 @@ dotnet publish ../$ProjectName/$ProjectName/$ProjectName.csproj -r linux-x64 --s
 
 cp rbt.sh $RBT_HOME/rbt.sh
 cp rbt-updater.sh $RBT_HOME/rbt-updater.sh
+chmod +x $RBT_HOME/rbt.sh
+chmod +x $RBT_HOME/rbt-updater.sh
+
+cp rbt.sh $RBT_HOME/rbt
+cp rbt-updater.sh $RBT_HOME/rbt-updater
+chmod +x $RBT_HOME/rbt
+chmod +x $RBT_HOME/rbt-updater
