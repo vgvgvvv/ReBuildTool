@@ -1,4 +1,5 @@
-﻿using ReBuildTool.ToolChain.SDK;
+﻿using NiceIO;
+using ReBuildTool.ToolChain.SDK;
 using ReBuildTool.ToolChain.SDK.XCodeClang;
 
 namespace ReBuildTool.ToolChain;
@@ -7,14 +8,14 @@ public partial class MacOSXClangToolchain : ClangToolChain
 {
 	public MacOSXClangToolchain(BuildConfiguration configuration, Architecture arch) : base(configuration, arch)
 	{
-		ClangSdk = new XCodeClangSDK();
+		ClangSdk = new XCodeSDK("/Applications/Xcode.app".ToNPath(), XCodePlatformSDK.ApplePlatform.MacOSX);
 	}
 	
 	protected override ClangSDK ClangSdk { get; }
-	protected XCodeClangSDK XCodeClangSdk => ClangSdk as XCodeClangSDK;
+	protected XCodeSDK XCodeSdk => ClangSdk as XCodeSDK;
 	public override IEnumerable<ICppLibrary> CppLibraries()
 	{
-		foreach (var cppLibrary in XCodeClangSdk.GetCppLibs(Arch))
+		foreach (var cppLibrary in XCodeSdk.GetCppLibs(Arch))
 		{
 			yield return cppLibrary;
 		}

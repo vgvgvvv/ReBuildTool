@@ -12,6 +12,8 @@ public partial class MacOSXClangToolchain
     
     private IEnumerable<string> CompileArgsForCpp(CppCompilationUnit compileUnit)
     {
+        yield return "-c";
+        
         foreach (var compileFlag in compileUnit.CompileFlags.Concat(DefaultCompileFlags(compileUnit)))
         {
             yield return compileFlag;
@@ -31,6 +33,11 @@ public partial class MacOSXClangToolchain
         {
             yield return "-g3";
         }
+        
+        yield return "-o";
+        yield return compileUnit.OutputFile.InQuotes();
+        
+        yield return compileUnit.SourceFile.InQuotes();
     }
     
     private IEnumerable<string> DefaultCompileFlags(CppCompilationUnit unit)
@@ -55,6 +62,8 @@ public partial class MacOSXClangToolchain
         {
             yield return argument;
         }
+        
+        yield return "-stdlib=libc++";
         
     }
 
