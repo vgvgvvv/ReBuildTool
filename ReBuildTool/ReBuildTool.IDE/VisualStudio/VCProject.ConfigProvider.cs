@@ -1,4 +1,5 @@
-﻿using ReBuildTool.ToolChain;
+﻿using ReBuildTool.Service.Global;
+using ReBuildTool.ToolChain;
 
 namespace ReBuildTool.IDE.VisualStudio;
 
@@ -9,7 +10,18 @@ public partial class VCProject
 		public VCProjectConfigProvider()
 		{
 			options = new BuildOptions();
-			platform = new WindowsPlatformSupport();
+			if (PlatformHelper.IsWindows())
+			{
+				platform = new WindowsPlatformSupport();
+			}
+			else if (PlatformHelper.IsOSX())
+			{
+				platform = new MacOSXPlatformSupport();
+			}
+			else if (PlatformHelper.IsLinux())
+			{
+				platform = new LinuxPlatformSupport();
+			}
 			ToolChain = platform.MakeCppToolChain(options.Architecture, options.Configuration);
 		}
 		

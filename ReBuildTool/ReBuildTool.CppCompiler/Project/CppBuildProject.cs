@@ -3,6 +3,7 @@ using NiceIO;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;
 using ReBuildTool.Service.Global;
+using ReBuildTool.Service.IDEService.CMake;
 using ReBuildTool.Service.IDEService.VisualStudio;
 using ResetCore.Common;
 
@@ -158,19 +159,37 @@ public:
 	public void GenerateCppProject()
 	{
 		InitAllRule();
-		
-		var slnResult = ServiceContext.Instance.Create<ISlnGenerator>(Name, ProjectRoot);
-		if (!slnResult)
+
+		if (PlatformHelper.IsWindows())
 		{
-			throw new Exception("cannot parse sln generator");
+			var slnResult = ServiceContext.Instance.Create<ISlnGenerator>(Name, ProjectRoot);
+			if (!slnResult)
+			{
+				throw new Exception("cannot parse sln generator");
+			}
+		
+			var slnGenerator = slnResult.Value;
+			slnGenerator.GenerateOrGetVCProj(this, CppProjectOutput);
+			var compiler = ServiceContext.Instance.FindService<ICSharpCompilerService>().Value;
+			slnGenerator.GenerateOrGetNetCoreCSProj(BuildRuleCompileUnit, compiler.DefaultEnvironment,
+				CppBuildRuleProjectOutput);
+			slnGenerator.FlushProjectsAndSln();
+		}
+		else if (PlatformHelper.IsLinux() || PlatformHelper.IsOSX())
+		{
+			// TODO: generate cmake project
+			var cmakeResult = ServiceContext.Instance.Create<ICMakeGenerator>(Name, ProjectRoot);
+			if (!cmakeResult)
+			{
+				throw new Exception("cannot parse cmake generator");
+			}
+
+			var cmakeProject = cmakeResult.Value;
+			cmakeProject.GenerateCMakeProject(this, CppProjectOutput);
+
+			cmakeProject.FlushAllCMakeFile();
 		}
 		
-		var slnGenerator = slnResult.Value;
-		slnGenerator.GenerateOrGetVCProj(this, CppProjectOutput);
-		var compiler = ServiceContext.Instance.FindService<ICSharpCompilerService>().Value;
-		slnGenerator.GenerateOrGetNetCoreCSProj(BuildRuleCompileUnit, compiler.DefaultEnvironment,
-			CppBuildRuleProjectOutput);
-		slnGenerator.FlushProjectsAndSln();
 	}
 
 	public void Build(string? targetName = null)
