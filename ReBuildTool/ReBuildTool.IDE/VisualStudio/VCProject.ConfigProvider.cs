@@ -9,7 +9,6 @@ public partial class VCProject
 	{
 		public VCProjectConfigProvider()
 		{
-			options = new BuildOptions();
 			if (PlatformHelper.IsWindows())
 			{
 				platform = new WindowsPlatformSupport();
@@ -22,6 +21,11 @@ public partial class VCProject
 			{
 				platform = new LinuxPlatformSupport();
 			}
+			else
+			{
+				throw new NotSupportedException("not supported platform");
+			}
+			options = BuildOptions.CreateDefault(platform);
 			ToolChain = platform.MakeCppToolChain(options.Architecture, options.Configuration);
 		}
 		

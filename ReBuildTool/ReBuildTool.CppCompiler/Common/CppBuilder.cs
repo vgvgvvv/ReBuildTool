@@ -23,7 +23,7 @@ internal class BuildConfigArgsProvider : IBuildConfigProvider
 
 	public BuildOptions GetBuildOptions()
 	{
-		return new BuildOptions();
+		return BuildOptions.CreateDefault(GetBuildPlatform());
 	}
 }
 
