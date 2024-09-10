@@ -8,11 +8,15 @@ public partial class MacOSXClangToolchain : ClangToolChain
 {
 	public MacOSXClangToolchain(BuildConfiguration configuration, Architecture arch) : base(configuration, arch)
 	{
-		ClangSdk = new XCodeSDK("/Applications/Xcode.app".ToNPath(), XCodePlatformSDK.ApplePlatform.MacOSX);
+		MacOSXCodeSdk = new XCodeSDK("/Applications/Xcode.app".ToNPath(), XCodePlatformSDK.ApplePlatform.MacOSX);
 	}
 	
-	protected override ClangSDK ClangSdk { get; }
+	private XCodeSDK MacOSXCodeSdk { get; }
+	
+	protected override ClangSDK ClangSdk => MacOSXCodeSdk;
+	
 	protected XCodeSDK XCodeSdk => ClangSdk as XCodeSDK;
+	
 	public override IEnumerable<ICppLibrary> CppLibraries()
 	{
 		foreach (var cppLibrary in XCodeSdk.GetCppLibs(Arch))
