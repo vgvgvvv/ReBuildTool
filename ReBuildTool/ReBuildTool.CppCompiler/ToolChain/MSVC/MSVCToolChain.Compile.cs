@@ -75,7 +75,7 @@ public partial class MSVCToolChain
 		if (Configuration == BuildConfiguration.Debug)
 		{
 			yield return "/Od";
-
+			yield return "/MDd";
 			// '/RTC1' and '/clr' command-line options are incompatible
 			// if (!hasClrFlag && !DontLinkCrt)
 			// 	yield return "/RTC1"; // runtime errror check
@@ -98,6 +98,8 @@ public partial class MSVCToolChain
 			yield return "/GF"; // Eliminate Duplicate Strings
 			// Generate enhanced debugging information for optimized code in non-debug builds.
 			yield return "/Zo"; // Enhance Optimized Debugging
+			
+			yield return "/MDd";
 		}
 		
 		foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
