@@ -96,10 +96,29 @@ public class SlnGenerator : ISlnGenerator
 
 				foreach (var (key, proj) in SubProjectsByName)
 				{
-					foreach (var c in proj.projectConfigs)
+					if (proj is VCProject vcProj)
 					{
-						codeBuilder.AppendLine($"{{{proj.guid}}}.{c.ConfigurationName}|{c.PlatformName}.ActiveCfg = {c.ConfigurationName}|{c.PlatformName}");
-						codeBuilder.AppendLine($"{{{proj.guid}}}.{c.ConfigurationName}|{c.PlatformName}.Build.0 = {c.ConfigurationName}|{c.PlatformName}");
+						foreach (var c in proj.projectConfigs)
+						{
+							codeBuilder.AppendLine($"{{{proj.guid}}}.{c.ConfigurationName}|{c.PlatformName}.ActiveCfg = {c.ConfigurationName}|{c.PlatformName}");
+							codeBuilder.AppendLine($"{{{proj.guid}}}.{c.ConfigurationName}|{c.PlatformName}.Build.0 = {c.ConfigurationName}|{c.PlatformName}");
+						}
+					}
+					else if (proj is NetFrameworkCSProj || proj is NetCoreCSProj)
+					{
+						foreach (var c in proj.projectConfigs)
+						{
+							if (c.ConfigurationName == "Debug")
+							{
+								codeBuilder.AppendLine($"{{{proj.guid}}}.{c.ConfigurationName}|x64.ActiveCfg = Debug|Any CPU");
+								codeBuilder.AppendLine($"{{{proj.guid}}}.{c.ConfigurationName}|x64.Build.0 = Debug|Any CPU");
+							}
+							else
+							{
+								codeBuilder.AppendLine($"{{{proj.guid}}}.{c.ConfigurationName}|x64.ActiveCfg = Release|Any CPU");
+								codeBuilder.AppendLine($"{{{proj.guid}}}.{c.ConfigurationName}|x64.Build.0 = Release|Any CPU");
+							}
+						}
 					}
 				}
 				
