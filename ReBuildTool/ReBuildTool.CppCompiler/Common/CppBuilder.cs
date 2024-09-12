@@ -115,7 +115,7 @@ public partial class CppBuilder
 			return false;
 		}
 
-		if (module.BuildType != BuildType.StaticLibrary)
+		if (module.TargetBuildType != BuildType.StaticLibrary)
 		{
 			if (!process.Link())
 			{

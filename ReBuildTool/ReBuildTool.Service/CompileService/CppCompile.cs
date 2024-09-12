@@ -14,7 +14,7 @@ public enum BuildType
 
 public interface IModuleInterface
 {
-	public BuildType BuildType { get; }
+	public BuildType TargetBuildType { get; }
     
 	public string TargetName => GetType().Name;
     

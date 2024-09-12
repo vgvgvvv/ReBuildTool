@@ -13,7 +13,7 @@ public partial class CppBuilder
         {
             var makeFile = new MakeFileGenerator();
             CollectCompileTarget(makeFile);
-            if (Module.BuildType != BuildType.StaticLibrary)
+            if (Module.TargetBuildType != BuildType.StaticLibrary)
             {
                 CollectLinkTarget(makeFile);
             }

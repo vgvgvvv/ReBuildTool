@@ -234,7 +234,20 @@ public:
 	
 	private bool NeedReBuildRuleAssembly()
 	{
-		return !CppBuildRuleDllPath.Exists();
+		if (!CppBuildRuleDllPath.Exists())
+		{
+			return true;
+		}
+		var lastBuildTime = File.GetLastWriteTime(CppBuildRuleDllPath);
+		foreach (var sourceFile in BuildRuleCompileUnit.SourceFiles)
+		{
+			var fileTime = File.GetLastWriteTime(sourceFile);
+			if(fileTime > lastBuildTime)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void BuildRuleAssembly()

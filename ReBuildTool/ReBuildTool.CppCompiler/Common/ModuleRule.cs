@@ -5,7 +5,7 @@ namespace ReBuildTool.ToolChain;
 
 public abstract class ModuleRule : IModuleInterface
 {
-    public BuildType BuildType { get; set; } = BuildType.DynamicLibrary;
+    public BuildType TargetBuildType { get; set; } = BuildType.DynamicLibrary;
     
     public string TargetName => GetType().Name;
     

@@ -74,7 +74,7 @@ public partial class CppBuilder
 
 		private NPath LinkResultPath()
 		{
-			var ex = Module.BuildType == BuildType.Executable 
+			var ex = Module.TargetBuildType == BuildType.Executable 
 				? ToolChain.ExecutableExtension 
 				: ToolChain.DynamicLibraryExtension;
 			return Source.ProjectRoot.Combine("Binary")
