@@ -60,6 +60,7 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		BuildRuleCompileUnit.SourceFiles.AddRange(moduleFiles);
 		BuildRuleCompileUnit.SourceFiles.AddRange(extraFiles);
 		BuildRuleCompileUnit.ReferenceDlls.Add(Assembly.GetAssembly(typeof(CppBuildProject))!.Location.ToNPath());
+		BuildRuleCompileUnit.ReferenceDlls.Add(Assembly.GetAssembly(typeof(IModuleInterface))!.Location.ToNPath());
 		BuildRuleCompileUnit.FileName = "CompileRules";
 	}
 
