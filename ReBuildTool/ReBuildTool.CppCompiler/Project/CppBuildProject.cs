@@ -232,6 +232,8 @@ public:
 		Build(targetName);
 	}
 	
+#region Setup
+
 	private bool NeedReBuildRuleAssembly()
 	{
 		if (!CppBuildRuleDllPath.Exists())
@@ -310,6 +312,7 @@ public:
 			var ruleName = rule.GetType().Name;
 			if (ModuleRulePaths.TryGetValue(ruleName, out var moduleRulePath))
 			{
+				GenerateModuleCodes(rule);
 				rule.ModuleDirectory = moduleRulePath.Parent;
 				rule.SourceDirectories.Add(moduleRulePath.Parent.Combine("Public"));
 				rule.SourceDirectories.Add(moduleRulePath.Parent.Combine("Private"));
@@ -324,6 +327,15 @@ public:
 		}
 	}
 
+	private void GenerateModuleCodes(IModuleInterface module)
+	{
+		ModuleRule.GenerateCode(module, IntermediaFolder);
+	}
+
+#endregion
+
+#region Build
+
 	private void Build(CppBuilder builder, ITargetInterface targetRule)
 	{
 		builder.SetSource(this)
@@ -337,6 +349,8 @@ public:
 			Build(builder, targetRule);
 		}
 	}
+
+#endregion
 
 	public string Name { get; }
 	public NPath ProjectRoot { get; }

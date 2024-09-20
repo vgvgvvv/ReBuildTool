@@ -3,7 +3,7 @@
 namespace ReBuildTool.ToolChain;
 
 
-public abstract class ModuleRule : IModuleInterface
+public abstract partial class ModuleRule : IModuleInterface
 {
     public BuildType TargetBuildType { get; set; } = BuildType.DynamicLibrary;
     

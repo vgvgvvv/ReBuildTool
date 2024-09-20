@@ -43,6 +43,23 @@ public partial class CppBuilder
 			{
 				yield return publicDef;
 			}
+
+			var targetNameUpper = module.TargetName.ToUpper();
+			if (module.TargetBuildType == BuildType.StaticLibrary)
+			{
+				yield return $"{targetNameUpper}_BUILT_AS_STATIC";
+				yield return $"{targetNameUpper}_NO_EXPORTS";
+			}
+			else if (module.TargetBuildType == BuildType.DynamicLibrary)
+			{
+				yield return $"{targetNameUpper}_BUILT_AS_DYNAMIC";
+				yield return $"{targetNameUpper}_EXPORTS";
+			}
+			else if (module.TargetBuildType == BuildType.Executable)
+			{
+				yield return $"{targetNameUpper}_BUILT_AS_EXECUTABLE";
+				yield return $"{targetNameUpper}_EXPORTS";
+			}
 		}
 		
 		private IEnumerable<string> GetCompileFlagsForModule(IModuleInterface module)
