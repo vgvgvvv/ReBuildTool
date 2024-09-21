@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using NiceIO;
 using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.IDEService;
+using ReBuildTool.Service.IDEService.CMake;
 using ReBuildTool.Service.IDEService.VisualStudio;
 
 namespace ReBuildTool.Service.Context;
@@ -11,6 +13,8 @@ public partial class ServiceContext
 	{
 		var ideDll = FindAssembly("ReBuildTool.IDE");
 		RegisterType<ISlnGenerator>(ideDll, "ReBuildTool.IDE.VisualStudio.SlnGenerator");
+		RegisterType<ICMakeGenerator>(ideDll, "ReBuildTool.IDE.CMake.CMakeGenerator");
+		RegisterType<IGenerateIDEProjService>(ideDll, "ReBuildTool.IDE.Common.IDEProjectGenerator");
 		
 		var cppDll = FindAssembly("ReBuildTool.CppCompiler");
 		RegisterType<ICppProject>(cppDll, "ReBuildTool.ToolChain.Project.CppBuildProject");

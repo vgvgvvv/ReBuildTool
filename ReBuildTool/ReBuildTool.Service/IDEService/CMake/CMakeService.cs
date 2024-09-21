@@ -6,9 +6,9 @@ namespace ReBuildTool.Service.IDEService.CMake;
 
 public interface ICMakeLists
 {
-    string name { get; }
+    string Name { get; }
     
-    NPath fullPath { get; }
+    NPath FullPath { get; }
 
     bool FlushToFile();
 }

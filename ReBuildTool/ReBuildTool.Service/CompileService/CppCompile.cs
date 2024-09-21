@@ -10,8 +10,6 @@ public enum BuildType
 	Executable
 }
 
-
-
 public interface IModuleInterface
 {
 	public BuildType TargetBuildType { get; }
