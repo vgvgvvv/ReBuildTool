@@ -104,7 +104,7 @@ public class NDKClangSDK : ClangSDK
 	public NPath LLVMPath => RootPath.Combine("toolchains/llvm/prebuilt").Combine(PlatformFolderName);
 	
 	public NPath SysRoot => LLVMPath.Combine("sysroot");
-	public string PlatformFolderName => PlatformHelper.Pick("windows-x86_64", "linux-x86_64", "darwin-x86_64");
+	public string PlatformFolderName => PlatformHelper.Pick("windows-x86_64", "darwin-x86_64", "linux-x86_64");
 	public NDKTargetArchSetting Setting { get; }
 	public BuildEnvironmentPlatform CurrentBuildPlatform { get; }
 }
