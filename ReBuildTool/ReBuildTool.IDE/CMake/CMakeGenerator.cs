@@ -4,6 +4,7 @@ using NiceIO;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Global;
 using ReBuildTool.Service.IDEService.CMake;
+using ReBuildTool.ToolChain;
 
 namespace ReBuildTool.IDE.CMake;
 
@@ -220,6 +221,19 @@ public class CMakeTarget
 		
 		#endregion
 
+		#region dep
+		
+		builder.AppendLine("target_link_libraries(");
+		builder.AppendLine(TargetName);
+		builder.AppendLine("PUBLIC");
+		foreach (string dependency in Dependencies)
+		{
+			builder.AppendLine(dependency);
+		}
+		builder.AppendLine(")");
+
+		#endregion
+
 	}
 }
 
@@ -249,6 +263,10 @@ public class CMakeLists : ICMakeLists
 	private CMakeTarget TargetFromRule(IModuleInterface rule)
 	{
 		var target = new CMakeTarget();
+
+		var cppBuilder = new CppBuilder();
+		rule = cppBuilder.CompleteModuleInfo(rule);
+		
 		target.TargetName = rule.TargetName;
 		target.TargetBuildType = rule.TargetBuildType;
 		target.PublicIncludePaths.AddRange(rule.PublicIncludePaths.Select(p => p.ToNPath()));

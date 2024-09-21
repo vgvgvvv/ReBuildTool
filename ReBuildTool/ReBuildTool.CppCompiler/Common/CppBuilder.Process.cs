@@ -7,7 +7,7 @@ namespace ReBuildTool.ToolChain;
 
 public partial class CppBuilder
 {
-	internal partial class CompileProcess
+	public partial class CompileProcess
 	{
 		public static CompileProcess Create(IModuleInterface module, CppBuilder owner)
 		{
@@ -23,7 +23,7 @@ public partial class CppBuilder
 
 		#region ModuleInfos
 
-		private IEnumerable<string> GetDefinesForModule(IModuleInterface module)
+		internal IEnumerable<string> GetDefinesForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -60,9 +60,14 @@ public partial class CppBuilder
 				yield return $"{targetNameUpper}_BUILT_AS_EXECUTABLE";
 				yield return $"{targetNameUpper}_EXPORTS";
 			}
+			
+			foreach (var define in Options.CustomDefines)
+			{
+				yield return define;
+			}
 		}
 		
-		private IEnumerable<string> GetCompileFlagsForModule(IModuleInterface module)
+		internal IEnumerable<string> GetCompileFlagsForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -82,9 +87,14 @@ public partial class CppBuilder
 			{
 				yield return publicDef;
 			}
+			
+			foreach (var compileFlag in Options.CustomCompileFlags)
+			{
+				yield return compileFlag;
+			}
 		}
 
-		private IEnumerable<string> GetLinkFlagsForModule(IModuleInterface module)
+		internal IEnumerable<string> GetLinkFlagsForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -106,7 +116,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<string> GetArchiveFlagsForModule(IModuleInterface module)
+		internal IEnumerable<string> GetArchiveFlagsForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -128,7 +138,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<string> GetIncludePathsForModule(IModuleInterface module)
+		internal IEnumerable<string> GetIncludePathsForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -148,9 +158,14 @@ public partial class CppBuilder
 			{
 				yield return publicDef;
 			}
+			
+			foreach (var includePath in Options.CustomIncludeDirectories)
+			{
+				yield return includePath;
+			}
 		}
 
-		private IEnumerable<string> GetStaticLibrariesForModule(IModuleInterface module)
+		internal IEnumerable<string> GetStaticLibrariesForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -172,7 +187,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<string> GetDynamicLibrariesForModule(IModuleInterface module)
+		internal IEnumerable<string> GetDynamicLibrariesForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -194,7 +209,7 @@ public partial class CppBuilder
 			}
 		}
 		
-		private IEnumerable<string> GetLibraryDirectoriesForModule(IModuleInterface module)
+		internal IEnumerable<string> GetLibraryDirectoriesForModule(IModuleInterface module)
 		{
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
@@ -216,7 +231,7 @@ public partial class CppBuilder
 			}
 		}
 
-		private IEnumerable<IModuleInterface> ModuleDependencies(IModuleInterface module, HashSet<string>? checkedModules = null)
+		internal IEnumerable<IModuleInterface> ModuleDependencies(IModuleInterface module, HashSet<string>? checkedModules = null)
 		{
 			if(checkedModules == null)
 			{

@@ -6,7 +6,7 @@ namespace ReBuildTool.ToolChain;
 
 public partial class CppBuilder
 {
-	internal partial class CompileProcess
+	public partial class CompileProcess
 	{
 		public bool Archive()
 		{

@@ -13,8 +13,8 @@ public enum BuildType
 public interface IModuleInterface
 {
 	public BuildType TargetBuildType { get; }
-    
-	public string TargetName => GetType().Name;
+
+	public string TargetName { get; }
     
 	public List<string> PublicIncludePaths { get; } 
 

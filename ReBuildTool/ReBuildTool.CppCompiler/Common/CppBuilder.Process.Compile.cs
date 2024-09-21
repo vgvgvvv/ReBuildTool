@@ -6,7 +6,7 @@ namespace ReBuildTool.ToolChain;
 
 public partial class CppBuilder
 {
-	internal partial class CompileProcess
+	public partial class CompileProcess
 	{
 		
 		public bool Compile()
@@ -125,11 +125,6 @@ public partial class CppBuilder
 					yield return define;
 				}
 			}
-			
-			foreach (var define in Options.CustomDefines)
-			{
-				yield return define;
-			}
 		}
 		
 		private IEnumerable<string> GetCompileFlagsForCompileUnit(CppCompilationUnit unit)
@@ -145,11 +140,6 @@ public partial class CppBuilder
 				{
 					yield return compileFlag;
 				}
-			}
-			
-			foreach (var compileFlag in Options.CustomCompileFlags)
-			{
-				yield return compileFlag;
 			}
 		}
 		
@@ -168,11 +158,6 @@ public partial class CppBuilder
 				}
 			}
 			
-			
-			foreach (var includePath in Options.CustomIncludeDirectories)
-			{
-				yield return includePath;
-			}
 		}
 
 		#endregion
