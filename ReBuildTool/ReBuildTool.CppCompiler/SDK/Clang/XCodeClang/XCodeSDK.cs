@@ -90,9 +90,11 @@ public class XCodeSDK : ClangSDK
 	public NPath XCodeToolchainBinLocation => XCodeToolchainRoot.Combine("usr/bin");
 	public NPath XCodeClangLocation => XCodeToolchainBinLocation.Combine("clang++");
 	
+	
 	public NPath XCodePlatformLocation => XCodeLocation.Combine("Contents/Developer/Platforms");
 	
-	public NPath DefaultClangLocation { get; } = "usr/bin/clang++".ToNPath();
+	public NPath DefaultClangLocation { get; } = "/usr/bin/clang++".ToNPath();
+	public NPath DefaultArToolLocation { get; } = "/usr/bin/ar".ToNPath();
 	
 	public override IEnumerable<ICppLibrary> GetCppLibs(Architecture arch)
 	{
@@ -111,7 +113,7 @@ public class XCodeSDK : ClangSDK
 
 	public override NPath GetArchiver()
 	{
-		return FindClang();
+		return FindArTool();
 	}
 
 	private NPath FindClang()
@@ -120,9 +122,21 @@ public class XCodeSDK : ClangSDK
 		{
 			return XCodeClangLocation;
 		}
-		else if (DefaultClangLocation.Exists())
+		else if (DefaultArToolLocation.Exists())
 		{
-			return DefaultClangLocation;
+			return DefaultArToolLocation;
+		}
+		else
+		{
+			throw new Exception("Clang not found");
+		}
+	}
+
+	private NPath FindArTool()
+	{
+		if (DefaultArToolLocation.Exists())
+		{
+			return DefaultArToolLocation;
 		}
 		else
 		{

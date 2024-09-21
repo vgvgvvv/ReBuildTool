@@ -48,10 +48,10 @@ public partial class CppBuilder
 			ArchiveUnit.StaticLibraries = GetStaticLibraryForArchiveUnit(ArchiveUnit);
 			ArchiveUnit.LibraryPaths = GetLibrarySearchPathForArchiveUnit(ArchiveUnit);
 			ArchiveUnit.OutputPath = ArchiveResultPath();
-			ArchiveUnit.ResponseFile = LinkUnit.OutputPath.ChangeExtension(".rsp");
-			var rspContent = string.Join(Environment.NewLine, LinkUnit.ObjectFiles.InQuotes());
+			ArchiveUnit.ResponseFile = ArchiveUnit.OutputPath.ChangeExtension(".rsp");
+			var rspContent = string.Join(Environment.NewLine, ArchiveUnit.ObjectFiles.InQuotes());
 			ArchiveUnit.ResponseFile.EnsureParentDirectoryExists();
-			File.WriteAllText(LinkUnit.ResponseFile, rspContent, Encoding.UTF8);
+			File.WriteAllText(ArchiveUnit.ResponseFile, rspContent, Encoding.UTF8);
 			ArchiveUnit.ArchiveArgsBuilder = ToolChain.MakeArchiveArgsBuilder();
 			if(Module is ModuleRule moduleRule)
 			{

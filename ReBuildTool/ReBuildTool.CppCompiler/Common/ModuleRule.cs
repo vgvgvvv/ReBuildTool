@@ -5,9 +5,9 @@ namespace ReBuildTool.ToolChain;
 
 public abstract partial class ModuleRule : IModuleInterface
 {
-    public BuildType TargetBuildType { get; set; } = BuildType.DynamicLibrary;
+    public virtual BuildType TargetBuildType { get; set; } = BuildType.DynamicLibrary;
     
-    public string TargetName => GetType().Name;
+    public virtual string TargetName => GetType().Name;
     
     public List<string> PublicIncludePaths { get; } = new();
 

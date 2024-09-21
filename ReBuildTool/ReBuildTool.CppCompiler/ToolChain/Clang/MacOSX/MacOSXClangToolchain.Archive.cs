@@ -6,39 +6,15 @@ public partial class MacOSXClangToolchain
 {
     protected override IEnumerable<string> ArchiveArgsFor(CppArchiveUnit unit)
     {
-        yield return $"-o";
+        yield return "rcs";
         yield return unit.OutputPath.InQuotes();
 		
-        foreach (var defaultLinkFlag in DefaultArchiveFlags(unit))
+        var lines = File.ReadLines(unit.ResponseFile);
+        foreach (var line in lines)
         {
-            yield return defaultLinkFlag;
+            yield return $"\"{line}\"";
         }
-		
-        yield return "@" + unit.ResponseFile.InQuotes();
+        
     }
 
-    protected IEnumerable<string> DefaultArchiveFlags(CppArchiveUnit cppArchiveUnit)
-    {
-        var linkBuilder = cppArchiveUnit.ArchiveArgsBuilder;
-        
-        foreach (var argument in linkBuilder.GetAllArguments())
-        {
-            yield return argument;
-        }
-        
-        foreach (var staticLibrary in cppArchiveUnit.StaticLibraries)
-        {
-            yield return staticLibrary.ToNPath().InQuotes();
-        }
-        
-        foreach (var libraryPath in cppArchiveUnit.LibraryPaths)
-        {
-            yield return $"-L{libraryPath.InQuotes()}";
-        }
-        
-        foreach (var libpath in ToolChainLibraryPaths())
-        {
-            yield return $"-L{libpath.InQuotes()}";
-        }
-    }
 }
