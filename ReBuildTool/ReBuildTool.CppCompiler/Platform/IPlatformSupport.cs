@@ -1,4 +1,4 @@
-﻿using ReBuildTool.CppCompiler.Standalone;
+﻿using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.Global;
 
 namespace ReBuildTool.ToolChain;

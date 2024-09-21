@@ -1,6 +1,6 @@
 ﻿using NiceIO;
 
-using ReBuildTool.CppCompiler.Standalone;
+using ReBuildTool.CppCompiler;
 
 namespace ReBuildTool.ToolChain;
 

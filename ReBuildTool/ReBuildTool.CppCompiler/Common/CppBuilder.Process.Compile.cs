@@ -1,5 +1,5 @@
 ﻿using NiceIO;
-using ReBuildTool.CppCompiler.Standalone;
+using ReBuildTool.CppCompiler;
 using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;

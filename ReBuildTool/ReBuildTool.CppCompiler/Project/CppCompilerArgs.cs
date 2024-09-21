@@ -2,7 +2,7 @@ using ReBuildTool.Service.CommandGroup;
 using ReBuildTool.ToolChain;
 using ResetCore.Common;
 
-namespace ReBuildTool.CppCompiler.Standalone;
+namespace ReBuildTool.CppCompiler;
 
 public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonCommandGroup
 {
@@ -30,4 +30,13 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 	
 	[CmdLine("clang path")]
 	public CmdLineArg<string> ClangPath { get; set; }
+}
+
+public class AndroidCompilerArgs : CommandLineArgGroup<AndroidCompilerArgs>
+{
+	[CmdLine("location of android ndk root")]
+	public CmdLineArg<string> NDKRoot { get; set; }
+	
+	[CmdLine("location of android sdk root")]
+	public CmdLineArg<string> SDKRoot { get; set; }
 }
