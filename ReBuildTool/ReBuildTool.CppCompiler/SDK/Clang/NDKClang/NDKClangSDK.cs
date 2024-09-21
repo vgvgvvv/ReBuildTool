@@ -1,4 +1,6 @@
 ﻿using NiceIO;
+
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.Global;
 
 namespace ReBuildTool.ToolChain.SDK;
@@ -12,26 +14,26 @@ public abstract class NDKTargetArchSetting
 
 public class ARM32NDKTargetArchSetting : NDKTargetArchSetting
 {
-	public override string Version => "25";
+	public override string Version => AndroidCompilerArgs.Get().NDKTargetVersion.Value.ToString();
 	public override string TargetPlatformName => "arm-linux-androideabi";
 }
 
 public class ARM64NDKTargetArchSetting : NDKTargetArchSetting
 {
-	public override string Version => "25";
+	public override string Version => AndroidCompilerArgs.Get().NDKTargetVersion.Value.ToString();
 	public override string TargetPlatformName => "aarch64-linux-android";
 }
 
 public class X86NDKTargetArchSetting : NDKTargetArchSetting
 {
-	public override string Version => "25";
+	public override string Version => AndroidCompilerArgs.Get().NDKTargetVersion.Value.ToString();
 	public override string TargetPlatformName => "i686-linux-android";
 }
 
 
 public class X64NDKTargetArchSetting : NDKTargetArchSetting
 {
-	public override string Version => "25";
+	public override string Version => AndroidCompilerArgs.Get().NDKTargetVersion.Value.ToString();
 	public override string TargetPlatformName => "x86_64-linux-android";
 }
 

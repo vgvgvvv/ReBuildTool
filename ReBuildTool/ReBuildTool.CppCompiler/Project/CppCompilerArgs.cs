@@ -39,4 +39,7 @@ public class AndroidCompilerArgs : CommandLineArgGroup<AndroidCompilerArgs>
 	
 	[CmdLine("location of android sdk root")]
 	public CmdLineArg<string> SDKRoot { get; set; }
+	
+	[CmdLine("ndk toolchain version to use")]
+	public CmdLineArg<int> NDKTargetVersion { get; set; } = CmdLineArg<int>.FromObject(nameof(NDKTargetVersion), 25);
 }
