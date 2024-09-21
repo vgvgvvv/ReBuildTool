@@ -5,6 +5,7 @@ namespace ReBuildTool.ToolChain;
 
 public enum PlatformSupportType
 {
+	None,
 	Windows,
 	iOS,
 	Linux,
@@ -23,8 +24,35 @@ public abstract class IPlatformSupport
 		{ PlatformSupportType.Android, new AndroidPlatformSupport() }
 	};
 
-	public static PlatformSupportType CurrentTargetPlatform => CppCompilerArgs.Get().TargetPlatform;
-	
+	public static PlatformSupportType CurrentTargetPlatform
+	{
+		get
+		{
+			var targetPlatform = CppCompilerArgs.Get().TargetPlatform.Value;
+			if (targetPlatform == PlatformSupportType.None)
+			{
+				if (PlatformHelper.IsWindows())
+				{
+					targetPlatform = PlatformSupportType.Windows;
+				}
+				else if (PlatformHelper.IsLinux())
+				{
+					targetPlatform = PlatformSupportType.Linux;
+				}
+				else if (PlatformHelper.IsOSX())
+				{
+					targetPlatform = PlatformSupportType.MacOSX;
+				}
+				else
+				{
+					throw new PlatformNotSupportedException();	
+				}
+			}
+
+			return targetPlatform;
+		}
+	}
+
 	public static IPlatformSupport CurrentTargetPlatformSupport => SupprtedPlatforms[CurrentTargetPlatform];
 	
 	public abstract bool Supports(RuntimePlatform platform);

@@ -18,9 +18,9 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 	[CmdLine("dry run for test")] 
 	public CmdLineArg<bool> RunDry { get; set; } = CmdLineArg<bool>.FromObject(nameof(RunDry), false);
 
-	[CmdLine("targetPlatform")] 
+	[CmdLine("targetPlatform")]
 	public CmdLineArg<PlatformSupportType> TargetPlatform { get; set; } =
-		CmdLineArg<PlatformSupportType>.FromObject(nameof(TargetPlatform), PlatformSupportType.Windows);
+		CmdLineArg<PlatformSupportType>.FromObject(nameof(TargetPlatform), PlatformSupportType.None);
 	
 	[CmdLine("target architecture")]
 	public CmdLineArg<string> TargetArch { get; set; }
