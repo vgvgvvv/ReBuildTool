@@ -1,5 +1,7 @@
 ﻿using NiceIO;
 
+using ReBuildTool.CppCompiler.Standalone;
+
 namespace ReBuildTool.ToolChain;
 
 public class BuildOptions
@@ -8,30 +10,59 @@ public class BuildOptions
 	public static BuildOptions CreateDefault(IPlatformSupport platformSupport)
 	{
 		var option = new BuildOptions();
-		if (platformSupport is WindowsPlatformSupport)
+
+		var archName = CppCompilerArgs.Get().TargetArch.Value;
+		if (string.IsNullOrEmpty(archName))
 		{
-			option.Architecture = new x64Architecture();
-		}
-		else if (platformSupport is iOSPlatformSupport)
-		{
-			option.Architecture = new ARM64Architecture();
-		}
-		else if (platformSupport is LinuxPlatformSupport)
-		{
-			option.Architecture = new x64Architecture();
-		}
-		else if (platformSupport is MacOSXPlatformSupport)
-		{
-			option.Architecture = new ARM64Architecture();
-		}
-		else if (platformSupport is AndroidPlatformSupport)
-		{
-			option.Architecture = new ARM64Architecture();
-		}
+			if (platformSupport is WindowsPlatformSupport)
+			{
+				option.Architecture = new x64Architecture();
+			}
+			else if (platformSupport is iOSPlatformSupport)
+			{
+				option.Architecture = new ARM64Architecture();
+			}
+			else if (platformSupport is LinuxPlatformSupport)
+			{
+				option.Architecture = new x64Architecture();
+			}
+			else if (platformSupport is MacOSXPlatformSupport)
+			{
+				option.Architecture = new ARM64Architecture();
+			}
+			else if (platformSupport is AndroidPlatformSupport)
+			{
+				option.Architecture = new ARM64Architecture();
+			}
+			else
+			{
+				throw new NotSupportedException("not supported platform");
+			}
+		} 
 		else
 		{
-			throw new NotSupportedException("not supported platform");
+			if (archName == "x86")
+			{
+				option.Architecture = new x86Architecture();
+			}
+			else if (archName == "x64")
+			{
+				option.Architecture = new x64Architecture();
+			}
+			else if (archName == "arm32")
+			{
+				option.Architecture = new ARMv7Architecture();
+			} 
+			else if (archName == "arm64")
+			{
+				option.Architecture = new ARM64Architecture();
+			}
+			else
+			{
+				throw new NotSupportedException($"not supported arch {archName}, only support : x86, x64, arm32, arm64");
+			}
 		}
+		
 		return option;
 	}
 
