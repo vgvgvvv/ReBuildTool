@@ -85,7 +85,10 @@ public partial class MacOSXClangToolchain
 
     public override IEnumerable<string> ToolChainDefines()
     {
-        yield break;
+        foreach (string toolChainDefine in base.ToolChainDefines())
+        {
+            yield return toolChainDefine;
+        }
     }
     
 }

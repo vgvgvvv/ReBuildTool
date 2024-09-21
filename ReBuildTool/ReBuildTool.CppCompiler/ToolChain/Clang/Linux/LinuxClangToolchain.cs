@@ -11,9 +11,14 @@ public partial class LinuxClangToolchain : ClangToolChain
 	}
 	
 	protected override ClangSDK ClangSdk { get; }
+	
+	public LinuxClangSDK LinuxSdk => ClangSdk as LinuxClangSDK;
 	public override IEnumerable<ICppLibrary> CppLibraries()
 	{
-		throw new NotImplementedException();
+		foreach (var cppLibrary in ClangSdk.GetCppLibs(Arch))
+		{
+			yield return cppLibrary;
+		}
 	}
 
 	public override string ObjectExtension => ".o";

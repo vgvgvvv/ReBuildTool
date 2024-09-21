@@ -110,6 +110,7 @@ public partial class MSVCToolChain
 	
 	public override IEnumerable<string> ToolChainDefines()
 	{
+		yield return "COMPILER_MSVC";
 		foreach (var define in MSVCConst.DefaultDefines(Configuration, Arch))
 		{
 			yield return define;
@@ -119,7 +120,7 @@ public partial class MSVCToolChain
 	public override bool CanBeCompiled(NPath sourceFile)
 	{
 		var ex = sourceFile.ExtensionWithDot;
-		return ex == ".cpp" || ex == ".cc" || ex == ".c" || ex == ".asm";
+		return ex == ".cpp" || ex == ".cc" || ex == ".c" || ex == ".asm" || ex == ".inl";
 	}
 	
 	public override NPath CompilerExecutableFor(NPath sourceFile)

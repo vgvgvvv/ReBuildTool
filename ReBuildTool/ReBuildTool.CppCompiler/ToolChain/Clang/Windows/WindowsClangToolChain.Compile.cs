@@ -43,6 +43,10 @@ public partial class WindowsClangToolchain
     
     public override IEnumerable<string> ToolChainDefines()
     {
+        foreach (string toolChainDefine in base.ToolChainDefines())
+        {
+            yield return toolChainDefine;
+        }
         foreach (var define in MSVCConst.DefaultDefines(Configuration, Arch))
         {
             yield return define;

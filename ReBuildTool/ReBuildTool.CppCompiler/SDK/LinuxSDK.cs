@@ -41,8 +41,8 @@ public class LinuxSDK : ICppLibrary
     {
         yield break;
     }
-
-    public NPath GetCompiler(NPath sourceFile)
+    
+    public virtual NPath GetCompiler(NPath sourceFile)
     {
         var ex = sourceFile.ExtensionWithDot;
         if(ex == ".c" || ex == ".cpp" || ex == ".cc" || ex == ".cxx")

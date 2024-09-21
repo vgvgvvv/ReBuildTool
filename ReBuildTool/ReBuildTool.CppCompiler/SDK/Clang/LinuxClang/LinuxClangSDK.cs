@@ -6,25 +6,28 @@ public class LinuxClangSDK : ClangSDK
 {
     public LinuxClangSDK(NPath root) : base(root)
     {
+        LinuxSDK = new LinuxSDK();
     }
-
+    
+    private LinuxSDK LinuxSDK { get; set; }
+    
     public override IEnumerable<ICppLibrary> GetCppLibs(Architecture arch)
     {
-        yield break;
+        yield return LinuxSDK;
     }
 
     public override NPath GetCompiler()
     {
-        throw new NotImplementedException();
+        return RootPath.Combine("clang++");
     }
 
     public override NPath GetLinker()
     {
-        throw new NotImplementedException();
+        return RootPath.Combine("clang++");
     }
 
     public override NPath GetArchiver()
     {
-        throw new NotImplementedException();
+        return RootPath.Combine("clang++");
     }
 }

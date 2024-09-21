@@ -105,7 +105,7 @@ public partial class GccToolChain
 
     public override IEnumerable<string> ToolChainDefines()
     {
-        yield break;
+        yield return "COMPILER_GCC";
     }
 
     public override bool CanBeCompiled(NPath sourceFile)
@@ -115,7 +115,8 @@ public partial class GccToolChain
                extension == ".cpp" || 
                extension == ".cc" || 
                extension == ".cxx" ||
-               extension == ".asm";
+               extension == ".asm" ||
+               extension == ".inl";
     }
 
     public override NPath CompilerExecutableFor(NPath sourceFile)

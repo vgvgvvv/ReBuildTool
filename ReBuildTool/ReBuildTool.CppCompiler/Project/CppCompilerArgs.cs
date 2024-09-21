@@ -21,4 +21,10 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 	[CmdLine("targetPlatform")] 
 	public CmdLineArg<PlatformSupportType> TargetPlatform { get; set; } =
 		CmdLineArg<PlatformSupportType>.FromObject(nameof(TargetPlatform), PlatformSupportType.Windows);
+	
+	[CmdLine("use clang")]
+	public CmdLineArg<bool> UseClang { get; set; } = CmdLineArg<bool>.FromObject(nameof(UseClang), false);
+	
+	[CmdLine("clang path")]
+	public CmdLineArg<string> ClangPath { get; set; }
 }

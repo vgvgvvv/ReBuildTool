@@ -19,6 +19,11 @@ public abstract partial class ClangToolChain
 
 	//public abstract IEnumerable<string> ToolChainDefines();
 
+	public override IEnumerable<string> ToolChainDefines()
+	{
+		yield return "COMPILER_CLANG";
+	}
+
 	public override bool CanBeCompiled(NPath sourceFile)
 	{
 		var ex = sourceFile.ExtensionWithDot;

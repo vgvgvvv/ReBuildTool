@@ -75,6 +75,11 @@ public partial class AndroidClangToolchain
 
     public override IEnumerable<string> ToolChainDefines()
     {
+        foreach (string toolChainDefine in base.ToolChainDefines())
+        {
+            yield return toolChainDefine;
+        }
+        
         yield return "LINUX";
         yield return "ANDROID";
         yield return "PLATFORM_ANDROID";
