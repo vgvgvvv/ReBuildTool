@@ -45,7 +45,7 @@ public class BoosterSupport
 			{
 				initBat.CreateFile();
 				ContextArgs.Context context = new ContextArgs.Context();
-				context.AddArg("targetName", IniProjectCommandGroup.Get().Target);
+				context.AddArg("targetName", IniProjectCommandGroup.Get().TargetName);
 				if (ex == ".sh")
 				{
 					initBat.WriteAllText(new ContextArgs(@"
@@ -72,7 +72,7 @@ cd %~dp0
 			{
 				buildBat.CreateFile();
 				ContextArgs.Context context = new ContextArgs.Context();
-				context.AddArg("targetName", CmdParser.Get<IniProjectCommandGroup>().Target);
+				context.AddArg("targetName", CmdParser.Get<IniProjectCommandGroup>().TargetName);
 				if (ex == ".sh")
 				{
 					buildBat.WriteAllText(new ContextArgs(@"

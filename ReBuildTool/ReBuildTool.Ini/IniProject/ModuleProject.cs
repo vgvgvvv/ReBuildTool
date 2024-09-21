@@ -150,6 +150,10 @@ public class ModuleProject : IIniProject, IBuildItem
 	{
 		TargetName = GlobalCmd.CommonCommand.Target;
 		ProjectRoot = root;
+		if (string.IsNullOrEmpty(TargetName))
+		{
+			TargetName = ProjectRoot.FileName;
+		}
 		Current = this;
 	}
 

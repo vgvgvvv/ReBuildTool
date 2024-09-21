@@ -14,11 +14,22 @@ public class IniProjectCommandGroup : CommandLineArgGroup<IniProjectCommandGroup
     public CmdLineArg<RunMode> Mode { get; private set; } = CmdLineArg<RunMode>.FromObject(nameof(Mode),RunMode.Init);
 
     [CmdLine("build target")] 
-    public CmdLineArg<string> Target { get; private set; } = CmdLineArg<string>.FromObject(nameof(ProjectRoot), Path.GetFileName(Environment.CurrentDirectory));
+    public CmdLineArg<string> Target { get; private set; }
 
     [CmdLine("run dry mode, just for test")] 
     public CmdLineArg<bool> RunDry { get; private set; } = CmdLineArg<bool>.FromObject(nameof(RunDry),false);
+    
+    public string TargetName
+    {
+        get 
+        {
+            if (string.IsNullOrEmpty(Target.Name))
+            {
+                return ProjectRoot.Name;
+            }
+            return Target.Value;
+        }
+    }
 
- 
 
 }

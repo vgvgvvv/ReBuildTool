@@ -69,6 +69,10 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 	{
 		SourceFolder.EnsureDirectoryExists();
 		var targetName = GlobalCmd.CommonCommand.Target.Value;
+		if (string.IsNullOrEmpty(targetName))
+		{
+			targetName = ProjectRoot.FileName;
+		}
 
 		{
 			var defaultTargetContent = @"using ReBuildTool.ToolChain;

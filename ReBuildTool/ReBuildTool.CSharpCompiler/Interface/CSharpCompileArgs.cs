@@ -13,7 +13,7 @@ public class CSharpCompileArgs : CommandLineArgGroup<CSharpCompileArgs>, ICommon
 	public CmdLineArg<RunMode> Mode { get; set; }
 
 	[CmdLine("build target")] 
-	public CmdLineArg<string> Target { get; set; } = CmdLineArg<string>.FromObject(nameof(ProjectRoot), Path.GetFileName(Environment.CurrentDirectory));
+	public CmdLineArg<string> Target { get; set; }
 
 	[CmdLine("compile configuration")]
 	public CmdLineArg<CSharpCompileConfiguration> CSCompileConfig { get; set; } = CmdLineArg<CSharpCompileConfiguration>.FromObject(nameof(CSCompileConfig), CSharpCompileConfiguration.Debug);

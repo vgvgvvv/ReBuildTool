@@ -27,6 +27,11 @@ try
         iniProject.Value,
         cppProject.Value
     };
+    var targetName = command.Target.Value;
+    if (string.IsNullOrEmpty(targetName))
+    {
+        targetName = root.FileName;
+    }
 
     foreach (var project in projects)
     {
@@ -37,13 +42,13 @@ try
                 project.Setup();
                 break;
             case RunMode.Build:
-                project.Build(command.Target);
+                project.Build(targetName);
                 break;
             case RunMode.Clean:
                 project.Clean();
                 break;
             case RunMode.ReBuild:
-                project.ReBuild(command.Target);
+                project.ReBuild(targetName);
                 break;
             default:
                 break;
