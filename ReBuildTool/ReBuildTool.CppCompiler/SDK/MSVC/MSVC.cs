@@ -123,12 +123,15 @@ internal abstract class MsvcSDK : ICppLibrary
 	
 	protected static MsvcSDK? Create(Version version, NPath installPath)
 	{
-		// if(version.Major == 15)
-		// {
-		// 	return Msvc15.Create(version, installPath);
-		// }
-		// else 
-		if (version.Major == 17)
+		if(version.Major == 15)
+		{
+			return Msvc15.Create(version, installPath);
+		}
+		else if(version.Major == 16)
+		{
+			return Msvc16.Create(version, installPath);
+		}
+		else if (version.Major == 17)
 		{
 			return Msvc17.Create(version, installPath);
 		}

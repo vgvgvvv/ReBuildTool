@@ -2,11 +2,15 @@
 
 namespace ReBuildTool.ToolChain.SDK;
 
-internal class Msvc15 : MsvcSDK
+internal class Msvc16 : MsvcSDK
 {
 	public static MsvcSDK Create(Version version, NPath path)
 	{
-		return new Msvc15(version, path);
+		return new Msvc16(version, path);
+	}
+	
+	public Msvc16(Version version, NPath installPath) : base(version, installPath)
+	{
 	}
 
 	public override IEnumerable<NPath> GetSdkIncludeDirectories()
@@ -34,7 +38,7 @@ internal class Msvc15 : MsvcSDK
 		throw new NotImplementedException();
 	}
 
-	public override NPath CompilerPath
+	public override NPath CompilerPath 
 	{
 		get;
 	}
@@ -58,10 +62,4 @@ internal class Msvc15 : MsvcSDK
 	{
 		get;
 	}
-
-	protected Msvc15(Version version, NPath path) : base(version, path)
-	{
-	}
-	
-
 }
