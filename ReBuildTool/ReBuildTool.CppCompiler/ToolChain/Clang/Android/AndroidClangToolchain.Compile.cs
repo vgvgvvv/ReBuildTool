@@ -65,6 +65,8 @@ public partial class AndroidClangToolchain
             yield return argument;
         }
 
+        yield return "-fPIC";
+        
         yield return "-target";
         yield return NdkClangSdk.Setting.TargetPlatformName;
 

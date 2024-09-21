@@ -112,7 +112,7 @@ public class NDKClangCppLibrary : ICppLibrary
 	public NDKClangSDK Owner { get; }
 	public Architecture Arch { get; }
 
-	public bool UseStaticCppLibrary { get; set; } = true;
+	public bool UseStaticCppLibrary { get; set; } = false;
 	
 	public NDKClangCppLibrary(NDKClangSDK owner, Architecture arch)
 	{
@@ -128,7 +128,9 @@ public class NDKClangCppLibrary : ICppLibrary
 	
 	public IEnumerable<NPath> LibraryPaths()
 	{
-		yield return Owner.SysRootLibPath;
+		// https://stackoverflow.com/questions/19768267/relocation-r-x86-64-32s-against-linking-error
+		// yield return Owner.SysRootLibPath; // dont use this, it cause link failed...
+		
 		yield return Owner.SysRootLibVersionedPath;
 		//yield return Owner.RootPath.Combine("sources/cxx-stl/llvm-libc++abi/libs").Combine(GetArchFolderName(Arch));
 	}
@@ -137,7 +139,7 @@ public class NDKClangCppLibrary : ICppLibrary
 	{
 		if(UseStaticCppLibrary)
 		{
-			yield return "c++_static";
+			yield return "c++";
 			yield return "c++abi";
 		}
 	}
@@ -146,7 +148,7 @@ public class NDKClangCppLibrary : ICppLibrary
 	{
 		if (!UseStaticCppLibrary)
 		{
-			yield return "c++_shared";
+			yield return "c++";
 		}
 		yield return "log";
 
