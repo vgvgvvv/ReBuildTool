@@ -89,7 +89,7 @@ public class NDKClangSDK : ClangSDK
 
 	public override NPath GetArchiver()
 	{
-		var execName = "clang++";
+		var execName = "llvm-ar";
 		if (CurrentBuildPlatform == BuildEnvironmentPlatform.Windows)
 		{
 			execName += ".exe";
