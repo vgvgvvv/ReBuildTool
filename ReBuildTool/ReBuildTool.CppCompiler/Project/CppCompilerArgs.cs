@@ -22,14 +22,41 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 	public CmdLineArg<PlatformSupportType> TargetPlatform { get; set; } =
 		CmdLineArg<PlatformSupportType>.FromObject(nameof(TargetPlatform), PlatformSupportType.None);
 	
-	[CmdLine("target architecture")]
+	[CmdLine("target architecture : x86 | x64 | arm32 | arm64")]
 	public CmdLineArg<string> TargetArch { get; set; }
+	
+	[CmdLine("build configuration : Debug | Release | ReleasePlus | ReleaseSize")]
+	public CmdLineArg<BuildConfiguration> BuildConfig { get; set; } = CmdLineArg<BuildConfiguration>.FromObject(nameof(BuildConfiguration), BuildConfiguration.Debug);
 	
 	[CmdLine("use clang")]
 	public CmdLineArg<bool> UseClang { get; set; } = CmdLineArg<bool>.FromObject(nameof(UseClang), false);
 	
 	[CmdLine("clang path")]
 	public CmdLineArg<string> ClangPath { get; set; }
+	
+	[CmdLine("custom include directories")]
+	public CmdLineArg<List<string>> CustomIncludeDirs { get; set; }
+	
+	[CmdLine("custom defines")]
+	public CmdLineArg<List<string>> CustomDefines { get; set; }
+	
+	[CmdLine("custom compile flags")]
+	public CmdLineArg<List<string>> CustomCompileFlags { get; set; }
+	
+	[CmdLine("custom link flags")]
+	public CmdLineArg<List<string>> CustomLinkFlags { get; set; }
+	
+	[CmdLine("custom static libraries")]
+	public CmdLineArg<List<string>> CustomStaticLibraries { get; set; }
+	
+	[CmdLine("custom dynamic libraries")]
+	public CmdLineArg<List<string>> CustomDynamicLibraries { get; set; }
+	
+	[CmdLine("custom library directories")]
+	public CmdLineArg<List<string>> CustomLibraryDirectories { get; set; }
+	
+	[CmdLine("custom archive flags")]
+	public CmdLineArg<List<string>> CustomArchiveFlags { get; set; }
 }
 
 public class AndroidCompilerArgs : CommandLineArgGroup<AndroidCompilerArgs>

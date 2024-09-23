@@ -11,7 +11,8 @@ public class BuildOptions
 	{
 		var option = new BuildOptions();
 
-		var archName = CppCompilerArgs.Get().TargetArch.Value;
+		var cppCompileArgs = CppCompilerArgs.Get();
+		var archName = cppCompileArgs.TargetArch.Value;
 		if (string.IsNullOrEmpty(archName))
 		{
 			if (platformSupport is WindowsPlatformSupport)
@@ -62,6 +63,18 @@ public class BuildOptions
 				throw new NotSupportedException($"not supported arch {archName}, only support : x86, x64, arm32, arm64");
 			}
 		}
+
+		option.Configuration = cppCompileArgs.BuildConfig;
+		option.CustomIncludeDirectories.AddRange(
+			cppCompileArgs.CustomIncludeDirs.Value.Select(p => p.ToNPath()));
+		option.CustomDefines.AddRange(cppCompileArgs.CustomDefines.Value);
+		option.CustomCompileFlags.AddRange(cppCompileArgs.CustomCompileFlags.Value);
+		option.CustomLinkFlags.AddRange(cppCompileArgs.CustomLinkFlags.Value);
+		option.CustomStaticLibraries.AddRange(cppCompileArgs.CustomStaticLibraries.Value);
+		option.CustomDynamicLibraries.AddRange(cppCompileArgs.CustomDynamicLibraries.Value);
+		option.CustomLibraryDirectories.AddRange(
+			cppCompileArgs.CustomLibraryDirectories.Value.Select(p=>p.ToNPath()));
+		option.CustomArchiveFlags.AddRange(cppCompileArgs.CustomArchiveFlags.Value);
 		
 		return option;
 	}
