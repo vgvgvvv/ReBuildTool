@@ -65,16 +65,47 @@ public class BuildOptions
 		}
 
 		option.Configuration = cppCompileArgs.BuildConfig;
-		option.CustomIncludeDirectories.AddRange(
-			cppCompileArgs.CustomIncludeDirs.Value.Select(p => p.ToNPath()));
-		option.CustomDefines.AddRange(cppCompileArgs.CustomDefines.Value);
-		option.CustomCompileFlags.AddRange(cppCompileArgs.CustomCompileFlags.Value);
-		option.CustomLinkFlags.AddRange(cppCompileArgs.CustomLinkFlags.Value);
-		option.CustomStaticLibraries.AddRange(cppCompileArgs.CustomStaticLibraries.Value);
-		option.CustomDynamicLibraries.AddRange(cppCompileArgs.CustomDynamicLibraries.Value);
-		option.CustomLibraryDirectories.AddRange(
-			cppCompileArgs.CustomLibraryDirectories.Value.Select(p=>p.ToNPath()));
-		option.CustomArchiveFlags.AddRange(cppCompileArgs.CustomArchiveFlags.Value);
+		if (cppCompileArgs.CustomIncludeDirs.IsSet)
+		{
+			option.CustomIncludeDirectories.AddRange(
+				cppCompileArgs.CustomIncludeDirs.Value.Select(p => p.ToNPath()));
+		}
+
+		if (cppCompileArgs.CustomDefines.IsSet)
+		{
+			option.CustomDefines.AddRange(cppCompileArgs.CustomDefines.Value);
+		}
+
+		if (cppCompileArgs.CustomCompileFlags.IsSet)
+		{
+			option.CustomCompileFlags.AddRange(cppCompileArgs.CustomCompileFlags.Value);
+		}
+
+		if (cppCompileArgs.CustomLinkFlags.IsSet)
+		{
+			option.CustomLinkFlags.AddRange(cppCompileArgs.CustomLinkFlags.Value);
+		}
+
+		if (cppCompileArgs.CustomStaticLibraries.IsSet)
+		{
+			option.CustomStaticLibraries.AddRange(cppCompileArgs.CustomStaticLibraries.Value);
+		}
+
+		if (cppCompileArgs.CustomDynamicLibraries.IsSet)
+		{
+			option.CustomDynamicLibraries.AddRange(cppCompileArgs.CustomDynamicLibraries.Value);
+		}
+
+		if (cppCompileArgs.CustomLibraryDirectories.IsSet)
+		{
+			option.CustomLibraryDirectories.AddRange(
+				cppCompileArgs.CustomLibraryDirectories.Value.Select(p=>p.ToNPath()));
+		}
+
+		if (cppCompileArgs.CustomArchiveFlags.IsSet)
+		{
+			option.CustomArchiveFlags.AddRange(cppCompileArgs.CustomArchiveFlags.Value);
+		}
 		
 		return option;
 	}
