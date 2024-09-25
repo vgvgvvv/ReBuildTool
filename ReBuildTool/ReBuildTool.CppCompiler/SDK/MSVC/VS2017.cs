@@ -9,58 +9,72 @@ internal class Msvc15 : MsvcSDK
 		return new Msvc15(version, path);
 	}
 
+	protected Msvc15(Version version, NPath path) : base(version, path)
+	{
+	}
+	
 	public override IEnumerable<NPath> GetSdkIncludeDirectories()
 	{
-		throw new NotImplementedException();
+		foreach (var includeDirectory in CurrentWindowsKit.GetIncludeDirectories())
+		{
+			foreach (var dir in includeDirectory.Directories())
+			{
+				yield return dir;
+			}
+		}
 	}
 
 	public override IEnumerable<NPath> GetSdkLibraryDirectories()
 	{
-		throw new NotImplementedException();
+		foreach (var libraryDirectory in CurrentWindowsKit.GetLibraryDirectories())
+		{
+			foreach (var directory in libraryDirectory.Directories())
+			{
+				yield return directory.Combine(MSVC.GetArchFolderName(CurrentArchitecture));
+			}
+		}
 	}
 
 	public override IEnumerable<NPath> GetVcIncludeDirectories()
 	{
-		throw new NotImplementedException();
+		yield return CurrentVCPaths.GetIncludePath(CurrentArchitecture);
 	}
 
 	public override IEnumerable<NPath> GetVcLibraryDirectories()
 	{
-		throw new NotImplementedException();
+		yield return CurrentVCPaths.GetLibPath(CurrentArchitecture);
 	}
 
 	public override NPath GetVcToolRootPath()
 	{
-		throw new NotImplementedException();
+		return InstallPath.Combine("VC/Tools/MSVC");
 	}
 
-	public override NPath CompilerPath
-	{
-		get;
-	}
-
-	public override NPath LinkerPath
-	{
-		get;
-	}
-
-	public override NPath ArchiverPath
-	{
-		get;
-	}
+	public override NPath CompilerPath => CurrentVCPaths.GetBinPath(CurrentArchitecture).Combine("cl.exe");
+	public override NPath LinkerPath => CurrentVCPaths.GetBinPath(CurrentArchitecture).Combine("link.exe");
+	public override NPath ArchiverPath => CurrentVCPaths.GetBinPath(CurrentArchitecture).Combine("lib.exe");
 
 	public override NPath AsmCompilerPath
 	{
-		get;
+		get
+		{
+			if(CurrentArchitecture is x86Architecture)
+			{
+				return CurrentVCPaths.GetBinPath(CurrentArchitecture).Combine("ml.exe");
+			}
+			else
+			{
+				return CurrentVCPaths.GetBinPath(CurrentArchitecture).Combine("ml64.exe");
+			}
+		}
 	}
 
 	public override IEnumerable<string> PathEnvironmentVariable
 	{
-		get;
-	}
-
-	protected Msvc15(Version version, NPath path) : base(version, path)
-	{
+		get
+		{
+			yield return CurrentVCPaths.GetBinPath(CurrentArchitecture);
+		}
 	}
 	
 
