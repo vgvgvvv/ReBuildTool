@@ -1,5 +1,6 @@
 using System.Reflection;
 using NiceIO;
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;
 using ReBuildTool.Service.Global;
@@ -28,6 +29,7 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 	{
 		Name = workDirectory.FileName;
 		ProjectRoot = workDirectory;
+		InitAllCompilePlugin();
 	}
 
 	private void ParseRules()
@@ -184,24 +186,33 @@ public:
 	
 	public void Build(string? targetName, IBuildConfigProvider? configProvider = null)
 	{
+
 		InitAllRule();
+		var builder = new CppBuilder(configProvider);
 		
-		CppBuilder builder = new CppBuilder(configProvider);
-
-		// do build & build hooks	
-		if (targetName == null)
+		try
 		{
-			BuildAll(builder);
-			return;
-		}
+			PreCompile(builder);
+			
+			// do build & build hooks	
+			if (targetName == null)
+			{
+				BuildAll(builder);
+				return;
+			}
 
-		if (!TargetRules.TryGetValue(targetName, out var targetRule))
-		{
-			BuildAll(builder);
-			return;
-		}
+			if (!TargetRules.TryGetValue(targetName, out var targetRule))
+			{
+				BuildAll(builder);
+				return;
+			}
 		
-		Build(builder, targetRule);
+			Build(builder, targetRule);
+		}
+		finally
+		{
+			PostCompile(builder);
+		}
 		
 	}
 
@@ -336,8 +347,53 @@ public:
 
 #endregion
 
+#region Compile Plugin
+
+	private void InitAllCompilePlugin()
+	{
+		var compilerArgs = CppCompilerArgs.Get();
+		if (!compilerArgs.CppCompilePlugins.IsSet)
+		{
+			return;
+		}
+		var pluginTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(asm => asm.GetTypes()
+			.Where(t => t.IsSubclassOf(typeof(BaseCppCompilePlugin)) 
+			            && !t.IsAbstract 
+			            && compilerArgs.CppCompilePlugins.Value.Contains(t.Name)))
+			.ToList();
+		foreach (var pluginType in pluginTypes)
+		{
+			var plugin = Activator.CreateInstance(pluginType) as BaseCppCompilePlugin;
+			if (plugin == null)
+			{
+				Log.Error($"create plugin {pluginType.FullName} failed");
+				continue;
+			}
+			CppCompilePlugins.Add(plugin);
+		}
+	}
+
+	private void PreCompile(CppBuilder builder)
+	{
+		foreach (var plugin in CppCompilePlugins)
+		{
+			plugin.PreCompile(builder);
+		}
+	}
+	
+	private void PostCompile(CppBuilder builder)
+	{
+		foreach (var plugin in CppCompilePlugins)
+		{
+			plugin.PostCompile(builder);
+		}
+	}
+
+#endregion
+
 	public string Name { get; }
 	public NPath ProjectRoot { get; }
+	public NPath OutputRoot => ProjectRoot.Combine("Binary");
 
 	public NPath IntermediaFolder => ProjectRoot.Combine("Intermedia");
 	public NPath SourceFolder => ProjectRoot.Combine("Source");
@@ -353,5 +409,7 @@ public:
 	private NPath CppProjectOutput => IntermediaFolder.Combine("CppProject");
 	private NPath CppBuildRuleBinaryOutput => IntermediaFolder.Combine("CppBuildRule/Binary");
 	private NPath CppBuildRuleDllPath => CppBuildRuleBinaryOutput.Combine($"{BuildRuleCompileUnit.FileName}.dll");
+	
+	private List<BaseCppCompilePlugin> CppCompilePlugins { get; } = new();
 
 }

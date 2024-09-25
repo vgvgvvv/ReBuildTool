@@ -43,6 +43,8 @@ public class Git
             args.Add("pull");
             
             Log.Info("Run Git: ", "git", args.Join(" "));
+            SimpleExec.Command.Run("git", "submodule init", targetPath);
+            SimpleExec.Command.Run("git", "submodule update", targetPath);
             SimpleExec.Command.Run("git", "reset --hard", gitRepoTargetPath);
             SimpleExec.Command.Run("git", args.Join(" "), gitRepoTargetPath);
         }
@@ -71,6 +73,7 @@ public class Git
     public static void Pull(string targetPath)
     {
         SimpleExec.Command.Run("git", "reset --hard", targetPath);
+        SimpleExec.Command.Run("git", "submodule update", targetPath);
         SimpleExec.Command.Run("git", "pull", targetPath);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using NiceIO;
+using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain.SDK.XCodeClang;
 
@@ -120,15 +121,17 @@ public class XCodeSDK : ClangSDK
 	{
 		if (XCodeLocation.DirectoryExists())
 		{
+			Log.Info($"use clang : {XCodeClangLocation}");
 			return XCodeClangLocation;
 		}
-		else if (DefaultArToolLocation.Exists())
+		else if (DefaultClangLocation.Exists())
 		{
-			return DefaultArToolLocation;
+			Log.Info($"use clang : {DefaultClangLocation}");
+			return DefaultClangLocation;
 		}
 		else
 		{
-			throw new Exception("Clang not found");
+			throw new Exception($"Clang not found: check path: {XCodeClangLocation} & {DefaultClangLocation}");
 		}
 	}
 
@@ -140,7 +143,7 @@ public class XCodeSDK : ClangSDK
 		}
 		else
 		{
-			throw new Exception("Clang not found");
+			throw new Exception($"Ar not found: check path: {DefaultArToolLocation}");
 		}
 	}
 
