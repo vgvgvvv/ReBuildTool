@@ -352,7 +352,7 @@ public:
 	private void InitAllCompilePlugin()
 	{
 		var compilerArgs = CppCompilerArgs.Get();
-		if (compilerArgs.CppCompilePlugins == null)
+		if (!compilerArgs.CppCompilePlugins.IsSet)
 		{
 			return;
 		}
