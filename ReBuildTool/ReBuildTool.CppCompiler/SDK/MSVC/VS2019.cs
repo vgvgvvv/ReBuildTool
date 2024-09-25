@@ -61,7 +61,7 @@ internal class Msvc16 : MsvcSDK
 			if(CurrentArchitecture is x86Architecture)
 			{
 				return CurrentVCPaths.GetBinPath(CurrentArchitecture).Combine("ml.exe");
-			}S
+			}
 			else
 			{
 				return CurrentVCPaths.GetBinPath(CurrentArchitecture).Combine("ml64.exe");
