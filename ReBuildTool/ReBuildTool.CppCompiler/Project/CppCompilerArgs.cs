@@ -57,6 +57,9 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 	
 	[CmdLine("custom archive flags")]
 	public CmdLineArg<List<string>> CustomArchiveFlags { get; set; }
+	
+	[CmdLine("cpp compile plugins")]
+	public CmdLineArg<List<string>> CppCompilePlugins { get; set; }
 }
 
 public class AndroidCompilerArgs : CommandLineArgGroup<AndroidCompilerArgs>

@@ -33,7 +33,7 @@ public partial class CppBuilder
 
 		private NPath ArchiveResultPath()
 		{
-			return Source.ProjectRoot.Combine("Binary")
+			return Source.OutputRoot
 				.Combine(IPlatformSupport.CurrentTargetPlatform.ToString())
 				.Combine(Options.Configuration.ToString())
 				.Combine(Options.Architecture.Name)
