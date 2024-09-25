@@ -43,7 +43,7 @@ public partial class CppBuilder
 		CurrentToolChain = CurrentPlatformSupport.MakeCppToolChain(arch, configuration);
 	}
 
-	public CppBuilder SetSource(ICppSourceProvider sourceProvider)
+	public CppBuilder SetSource(ICppSourceProviderInterface sourceProvider)
 	{
 		CurrentSource = sourceProvider;
 		return this;
@@ -150,5 +150,5 @@ public partial class CppBuilder
 	
 	public IPlatformSupport CurrentPlatformSupport { get; } 
 	
-	public ICppSourceProvider CurrentSource { get; private set; }
+	public ICppSourceProviderInterface CurrentSource { get; private set; }
 }

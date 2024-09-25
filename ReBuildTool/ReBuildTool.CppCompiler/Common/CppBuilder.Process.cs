@@ -274,7 +274,7 @@ public partial class CppBuilder
 
 		private BuildOptions Options => Owner.CurrentBuildOption;
 
-		private ICppSourceProvider Source => Owner.CurrentSource;
+		private ICppSourceProviderInterface Source => Owner.CurrentSource;
 	}
 
 	

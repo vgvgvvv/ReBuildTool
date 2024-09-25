@@ -248,23 +248,24 @@ public class CMakeLists : ICMakeLists
 		FullPath = output.Combine("CMakeLists.txt");
 	}
 	
-	public CMakeLists(IModuleInterface rule, NPath output)
+	public CMakeLists(ICppSourceProviderInterface source, IModuleInterface rule, NPath output)
 	{
 		Name = rule.TargetName;
 		FullPath = output.Combine("CMakeLists.txt");
-		InitWithRule(rule);
+		InitWithRule(source, rule);
 	}
 
-	private void InitWithRule(IModuleInterface rule)
+	private void InitWithRule(ICppSourceProviderInterface source, IModuleInterface rule)
 	{
-		Targets.Add(TargetFromRule(rule));
+		Targets.Add(TargetFromRule(source, rule));
 	}
 
-	private CMakeTarget TargetFromRule(IModuleInterface rule)
+	private CMakeTarget TargetFromRule(ICppSourceProviderInterface source, IModuleInterface rule)
 	{
 		var target = new CMakeTarget();
 
 		var cppBuilder = new CppBuilder();
+		cppBuilder.SetSource(source);
 		rule = cppBuilder.CompleteModuleInfo(rule);
 		
 		target.TargetName = rule.TargetName;
@@ -363,12 +364,13 @@ public class CMakeGenerator : ICMakeGenerator
 	public string OutputPath { get; private set; }
 	public ICMakeLists GenerateCMakeProject(ICppSourceProviderInterface source, NPath output)
 	{
+		Source = source;
 		Root.Version = "3.17";
 		Root.ProjectName = Name;
 		foreach ((string? key, var rule) in source.ModuleRules)
 		{
 			var moduleDirectory = output.Combine (rule.TargetName);
-			var cmake = new CMakeLists(rule, moduleDirectory);
+			var cmake = new CMakeLists(source, rule, moduleDirectory);
 			ModuleCMakeLists.Add(cmake);
 			Root.SubDirectories.Add(moduleDirectory);
 		}
@@ -388,5 +390,6 @@ public class CMakeGenerator : ICMakeGenerator
 	}
 
 	private CMakeLists Root;
+	private ICppSourceProviderInterface Source;
 	private List<CMakeLists> ModuleCMakeLists = new List<CMakeLists>();
 }
