@@ -153,6 +153,7 @@ public class UnityNativePluginSupport : BaseCppCompilePlugin
 		foreach (var file in copyFiles)
 		{
 			var toFile = toPath.Combine(file.FileName);
+			File.SetAttributes(toFile, FileAttributes.Normal);
 			Log.Info($"copy {file} to {toFile}");
 			file.Copy(toFile);
 		}
