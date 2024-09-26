@@ -43,3 +43,8 @@ public class AndroidRuntimePlatform : RuntimePlatform
 {
     public override string Name => "Android";
 }
+
+public class WebRuntimePlatform : RuntimePlatform
+{
+    public override string Name => "Wasm";
+}

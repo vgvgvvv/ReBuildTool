@@ -10,7 +10,8 @@ public enum PlatformSupportType
 	iOS,
 	Linux,
 	MacOSX,
-	Android
+	Android,
+	Wasm
 }
 
 public abstract class IPlatformSupport
@@ -21,7 +22,8 @@ public abstract class IPlatformSupport
 		{ PlatformSupportType.iOS, new iOSPlatformSupport() },
 		{ PlatformSupportType.Linux, new LinuxPlatformSupport() },
 		{ PlatformSupportType.MacOSX, new MacOSXPlatformSupport() },
-		{ PlatformSupportType.Android, new AndroidPlatformSupport() }
+		{ PlatformSupportType.Android, new AndroidPlatformSupport() },
+		{ PlatformSupportType.Wasm, new WasmPlatformSupport() }
 	};
 
 	public static PlatformSupportType CurrentTargetPlatform
