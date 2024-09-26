@@ -43,6 +43,8 @@ public partial class AndroidClangToolchain
         {
             yield return "-static";
         }
+
+        yield return "-static-libstdc++"; // use static libstdc++
         
         foreach (var staticLibrary in ToolChainStaticLibraries())
         {

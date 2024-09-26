@@ -5,6 +5,9 @@ using ReBuildTool.Service.Global;
 
 namespace ReBuildTool.ToolChain.SDK;
 
+// read this first when modify this file 
+// https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
+
 public abstract class NDKTargetArchSetting
 {
 	public abstract string Version { get; }
@@ -114,7 +117,9 @@ public class NDKClangCppLibrary : ICppLibrary
 	public NDKClangSDK Owner { get; }
 	public Architecture Arch { get; }
 
-	public bool UseStaticCppLibrary { get; set; } = false;
+	// https://developer.android.com/ndk/guides/cpp-support?hl=zh-cn
+	// if you want to use shared stl lib, must include c++_shared in your apk then set this to false
+	public bool UseStaticCppLibrary { get; set; } = true;
 	
 	public NDKClangCppLibrary(NDKClangSDK owner, Architecture arch)
 	{
@@ -141,8 +146,7 @@ public class NDKClangCppLibrary : ICppLibrary
 	{
 		if(UseStaticCppLibrary)
 		{
-			yield return "c++";
-			yield return "c++abi";
+			yield return "c++_static";
 		}
 	}
 	
@@ -150,10 +154,10 @@ public class NDKClangCppLibrary : ICppLibrary
 	{
 		if (!UseStaticCppLibrary)
 		{
-			yield return "c++";
+			yield return "c++_shared";
 		}
+		yield return "android";
 		yield return "log";
-
 	}
 
 	private string GetArchFolderName(Architecture arch)
