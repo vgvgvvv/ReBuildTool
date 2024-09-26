@@ -40,7 +40,7 @@ public partial class WasmToolchain : IToolChain
 
 
 
-	public override string ObjectExtension => ".o";
+	public override string ObjectExtension => ".bc";
 
 	public override string ExecutableExtension => ".html";
 
