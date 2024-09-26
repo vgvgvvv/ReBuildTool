@@ -21,6 +21,10 @@ public class AndroidPlatformSupport : IPlatformSupport
 		{
 			ndkHome = Environment.GetEnvironmentVariable("NDK_ROOT");
 		}
+		if (string.IsNullOrEmpty(ndkHome))
+		{
+			ndkHome = Environment.GetEnvironmentVariable("ANDROID_NDK_HOME");
+		}
 		if (!string.IsNullOrEmpty(androidArgs.NDKRoot))
 		{
 			ndkHome = androidArgs.NDKRoot;

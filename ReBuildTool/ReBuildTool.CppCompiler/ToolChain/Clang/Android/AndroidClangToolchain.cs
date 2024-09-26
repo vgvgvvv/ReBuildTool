@@ -24,6 +24,7 @@ public partial class AndroidClangToolchain : ClangToolChain
 	public override string ExecutableExtension => "";
 	public override string StaticLibraryExtension => ".a";
 	public override string DynamicLibraryExtension => ".so";
+	public override string LibraryPrefix => "lib";
 
 	protected override ClangSDK ClangSdk { get; }
 	

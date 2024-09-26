@@ -77,11 +77,14 @@ public partial class CppBuilder
 			var ex = Module.TargetBuildType == BuildType.Executable 
 				? ToolChain.ExecutableExtension 
 				: ToolChain.DynamicLibraryExtension;
+			var prefix = Module.TargetBuildType == BuildType.Executable 
+				? string.Empty
+				: ToolChain.LibraryPrefix;
 			return Source.OutputRoot
 				.Combine(IPlatformSupport.CurrentTargetPlatform.ToString())
 				.Combine(Options.Configuration.ToString())
 				.Combine(Options.Architecture.Name)
-				.Combine(Module.TargetName + ex);
+				.Combine(prefix + Module.TargetName + ex);
 		}
 		
 		#region LinkUnitInfo

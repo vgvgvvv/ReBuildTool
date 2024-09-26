@@ -29,5 +29,6 @@ public partial class MacOSXClangToolchain : ClangToolChain
 	public override string ExecutableExtension => string.Empty;
 	public override string StaticLibraryExtension => ".a";
 	public override string DynamicLibraryExtension => ".dylib";
+	public override string LibraryPrefix => "lib";
 	
 }

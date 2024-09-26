@@ -25,4 +25,5 @@ public partial class LinuxClangToolchain : ClangToolChain
 	public override string ExecutableExtension => string.Empty;
 	public override string StaticLibraryExtension => ".a";
 	public override string DynamicLibraryExtension => ".so";
+	public override string LibraryPrefix => "lib";
 }
