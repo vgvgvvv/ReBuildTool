@@ -43,6 +43,16 @@ public partial class CppBuilder
 			{
 				yield return publicDef;
 			}
+			
+			var platformName = IPlatformSupport.SupprtedPlatforms
+				.First(kvp => kvp.Value.GetType() == Owner.CurrentPlatformSupport.GetType()).Key.ToString().ToUpper();
+			yield return $"PLATFORM_{platformName}";
+
+			var archName = Owner.CurrentBuildOption.Architecture.Name.ToUpper();
+			yield return $"ARCH_{archName}";
+			
+			var configurationName = Owner.CurrentBuildOption.Configuration.ToString().ToUpper();
+			yield return $"CONFIGURATION_{configurationName}";
 
 			var targetNameUpper = module.TargetName.ToUpper();
 			if (module.TargetBuildType == BuildType.StaticLibrary)
