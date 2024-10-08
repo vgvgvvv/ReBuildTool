@@ -37,6 +37,8 @@ public interface ICppBuildContext
 	public IPlatformSupport CurrentPlatformSupport { get; } 
 	
 	public ICppSourceProviderInterface CurrentSource { get; }
+	
+	public NPath OutputRoot { get; }
 }
 
 public partial class CppBuilder : ICppBuildContext
