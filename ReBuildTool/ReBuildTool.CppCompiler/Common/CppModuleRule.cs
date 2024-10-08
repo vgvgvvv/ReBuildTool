@@ -79,7 +79,7 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
     
     public ICppBuildContext BuildContext { get; private set; }
     
-    public void Setup(ICppBuildContext buildContext)
+    public virtual void Setup(ICppBuildContext buildContext)
     {
         BuildContext = buildContext;
     }
