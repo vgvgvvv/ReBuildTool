@@ -10,6 +10,11 @@ public enum BuildType
 	Executable
 }
 
+public interface IPostBuildModule
+{
+	public void PostBuild();
+}
+
 public interface IModuleInterface
 {
 	public BuildType TargetBuildType { get; }
@@ -54,6 +59,11 @@ public interface IModuleInterface
     
 	public string ModuleDirectory { get; }
 	
+}
+
+public interface IPostBuildTarget
+{
+	public void PostBuild();
 }
 
 public interface ITargetInterface

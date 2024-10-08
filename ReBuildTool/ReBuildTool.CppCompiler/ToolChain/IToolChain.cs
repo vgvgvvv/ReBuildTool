@@ -40,6 +40,8 @@ public abstract class IToolChain
 	public abstract string StaticLibraryExtension { get; }
 	
 	public abstract string DynamicLibraryExtension { get; }
+	
+	public virtual string LibraryPrefix => string.Empty;
 
 	public abstract NPath CompilerExecutableFor(NPath sourceFile);
 	

@@ -43,6 +43,8 @@ public partial class AndroidClangToolchain
         {
             yield return "-static";
         }
+
+        yield return "-static-libstdc++"; // use static libstdc++
         
         foreach (var staticLibrary in ToolChainStaticLibraries())
         {
@@ -62,6 +64,11 @@ public partial class AndroidClangToolchain
         foreach (var dynamicLibrary in cppLinkUnit.DynamicLibraries)
         {
             yield return "-l" + dynamicLibrary.ToNPath().InQuotes();
+        }
+        
+        foreach (var libraryPath in cppLinkUnit.LibraryPaths)
+        {
+            yield return "-L" + libraryPath.InQuotes();
         }
 
         foreach (var libpath in ToolChainLibraryPaths())

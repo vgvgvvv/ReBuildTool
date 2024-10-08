@@ -33,6 +33,10 @@ public partial class CppBuilder
 	
 	public IModuleInterface CompleteModuleInfo(IModuleInterface targetRule)
 	{
+		if (targetRule is CppModuleRule cppModuleRule)
+		{
+			cppModuleRule.Setup(this);
+		}
 		var exportInfo = new ExportModuleInfo();
 		CompileProcess process = CompileProcess.Create(targetRule, this);
 		exportInfo.TargetBuildType = targetRule.TargetBuildType;

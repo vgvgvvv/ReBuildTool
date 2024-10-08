@@ -69,6 +69,11 @@ public partial class GccToolChain
         {
             yield return "-l" + dynamicLibrary.ToNPath().InQuotes();
         }
+        
+        foreach (var libraryPath in cppLinkUnit.LibraryPaths)
+        {
+            yield return "-L" + libraryPath.InQuotes();
+        }
 
         foreach (var libpath in ToolChainLibraryPaths())
         {

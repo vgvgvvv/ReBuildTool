@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using NiceIO;
+using ReBuildTool.Service.CompileService;
 using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
@@ -37,7 +38,7 @@ public partial class CppBuilder
 				.Combine(IPlatformSupport.CurrentTargetPlatform.ToString())
 				.Combine(Options.Configuration.ToString())
 				.Combine(Options.Architecture.Name)
-				.Combine(Module.TargetName + ToolChain.StaticLibraryExtension);
+				.Combine(ToolChain.LibraryPrefix + Module.TargetName + ToolChain.StaticLibraryExtension);
 		}
 		
 		private bool PrepareArchiveUnit()
@@ -53,7 +54,7 @@ public partial class CppBuilder
 			ArchiveUnit.ResponseFile.EnsureParentDirectoryExists();
 			File.WriteAllText(ArchiveUnit.ResponseFile, rspContent, Encoding.UTF8);
 			ArchiveUnit.ArchiveArgsBuilder = ToolChain.MakeArchiveArgsBuilder();
-			if(Module is ModuleRule moduleRule)
+			if(Module is CppModuleRule moduleRule)
 			{
 				moduleRule.AdditionArchiveArgs(ArchiveUnit.ArchiveArgsBuilder);
 			}

@@ -1,4 +1,5 @@
-﻿using ReBuildTool.CppCompiler;
+﻿using NiceIO;
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Global;
 using ReBuildTool.ToolChain.Project;
@@ -27,7 +28,20 @@ internal class BuildConfigArgsProvider : IBuildConfigProvider
 	}
 }
 
-public partial class CppBuilder
+public interface ICppBuildContext
+{
+	public IToolChain CurrentToolChain { get; }
+	
+	public BuildOptions CurrentBuildOption { get; }
+	
+	public IPlatformSupport CurrentPlatformSupport { get; } 
+	
+	public ICppSourceProviderInterface CurrentSource { get; }
+	
+	public NPath OutputRoot { get; }
+}
+
+public partial class CppBuilder : ICppBuildContext
 {
 
 	public static IBuildConfigProvider DefaultBuildConfigProvider { get; } = new BuildConfigArgsProvider();
@@ -76,6 +90,10 @@ public partial class CppBuilder
 	
 	private void PendingModule(IModuleInterface module)
 	{
+		if (module is CppModuleRule cppModuleRule)
+		{
+			cppModuleRule.Setup(this);
+		}
 		foreach (var dep in module.Dependencies)
 		{
 			if(!CurrentSource.ModuleRules.TryGetValue(dep, out var depModule))
@@ -131,6 +149,11 @@ public partial class CppBuilder
 				return false;
 			}
 		}
+
+		if (module is IPostBuildModule postBuildModule)
+		{
+			postBuildModule.PostBuild();
+		}
 		
 		return true;
 	}
@@ -151,4 +174,9 @@ public partial class CppBuilder
 	public IPlatformSupport CurrentPlatformSupport { get; } 
 	
 	public ICppSourceProviderInterface CurrentSource { get; private set; }
+	
+	public NPath OutputRoot => CurrentSource.OutputRoot
+		.Combine(IPlatformSupport.CurrentTargetPlatform.ToString())
+		.Combine(CurrentBuildOption.Configuration.ToString())
+		.Combine(CurrentBuildOption.Architecture.Name);
 }

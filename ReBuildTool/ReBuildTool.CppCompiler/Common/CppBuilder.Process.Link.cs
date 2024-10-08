@@ -46,7 +46,7 @@ public partial class CppBuilder
 			var rspContent = string.Join(Environment.NewLine, normalized);
 			LinkUnit.ResponseFile.EnsureParentDirectoryExists();
 			File.WriteAllText(LinkUnit.ResponseFile, rspContent, new UTF8Encoding(false));
-			if (Module is ModuleRule moduleRule)
+			if (Module is CppModuleRule moduleRule)
 			{
 				LinkUnit.LinkArgsBuilder = ToolChain.MakeLinkArgsBuilder();
 				moduleRule.AdditionLinkArgs(LinkUnit.LinkArgsBuilder);
@@ -77,11 +77,14 @@ public partial class CppBuilder
 			var ex = Module.TargetBuildType == BuildType.Executable 
 				? ToolChain.ExecutableExtension 
 				: ToolChain.DynamicLibraryExtension;
+			var prefix = Module.TargetBuildType == BuildType.Executable 
+				? string.Empty
+				: ToolChain.LibraryPrefix;
 			return Source.OutputRoot
 				.Combine(IPlatformSupport.CurrentTargetPlatform.ToString())
 				.Combine(Options.Configuration.ToString())
 				.Combine(Options.Architecture.Name)
-				.Combine(Module.TargetName + ex);
+				.Combine(prefix + Module.TargetName + ex);
 		}
 		
 		#region LinkUnitInfo
@@ -123,6 +126,11 @@ public partial class CppBuilder
 			{
 				yield return dynamicLibrary;
 			}
+			
+			foreach (var dependency in Module.Dependencies)
+            {
+            	yield return dependency;
+            }
 		}
 
 		private IEnumerable<NPath> GetLibrarySearchPathForLinkUnit(CppLinkUnit unit)
@@ -136,6 +144,8 @@ public partial class CppBuilder
 			{
 				yield return libraryDir;
 			}
+
+			yield return Owner.OutputRoot;
 		}
 		
 		#endregion

@@ -72,7 +72,8 @@ public partial class AndroidClangToolchain
 
         yield return "--sysroot=" + NdkClangSdk.SysRoot.InQuotes();
             
-        yield return "-stdlib=libc++";
+        // is
+        // yield return "-stdlib=libc++";
     }
 
     public override IEnumerable<string> ToolChainDefines()
