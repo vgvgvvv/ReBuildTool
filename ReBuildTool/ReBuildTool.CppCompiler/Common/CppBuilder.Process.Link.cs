@@ -126,6 +126,11 @@ public partial class CppBuilder
 			{
 				yield return dynamicLibrary;
 			}
+			
+			foreach (var dependency in Module.Dependencies)
+            {
+            	yield return dependency;
+            }
 		}
 
 		private IEnumerable<NPath> GetLibrarySearchPathForLinkUnit(CppLinkUnit unit)
@@ -139,6 +144,8 @@ public partial class CppBuilder
 			{
 				yield return libraryDir;
 			}
+
+			yield return Owner.OutputRoot;
 		}
 		
 		#endregion

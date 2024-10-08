@@ -90,6 +90,10 @@ public partial class CppBuilder : ICppBuildContext
 	
 	private void PendingModule(IModuleInterface module)
 	{
+		if (module is CppModuleRule cppModuleRule)
+		{
+			cppModuleRule.Setup(this);
+		}
 		foreach (var dep in module.Dependencies)
 		{
 			if(!CurrentSource.ModuleRules.TryGetValue(dep, out var depModule))
@@ -105,10 +109,6 @@ public partial class CppBuilder : ICppBuildContext
         	return;
         }
 		
-		if (module is CppModuleRule cppModuleRule)
-		{
-			cppModuleRule.Setup(this);
-		}
 		PendingModulesQueue.Enqueue(module);
 	}
 
