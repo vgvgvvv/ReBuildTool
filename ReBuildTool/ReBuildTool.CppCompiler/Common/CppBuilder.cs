@@ -1,4 +1,5 @@
-﻿using ReBuildTool.CppCompiler;
+﻿using NiceIO;
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Global;
 using ReBuildTool.ToolChain.Project;
@@ -171,4 +172,9 @@ public partial class CppBuilder : ICppBuildContext
 	public IPlatformSupport CurrentPlatformSupport { get; } 
 	
 	public ICppSourceProviderInterface CurrentSource { get; private set; }
+	
+	public NPath OutputRoot => CurrentSource.OutputRoot
+		.Combine(IPlatformSupport.CurrentTargetPlatform.ToString())
+		.Combine(CurrentBuildOption.Configuration.ToString())
+		.Combine(CurrentBuildOption.Architecture.Name);
 }
