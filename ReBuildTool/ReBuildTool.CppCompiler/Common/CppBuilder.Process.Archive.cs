@@ -54,7 +54,7 @@ public partial class CppBuilder
 			ArchiveUnit.ResponseFile.EnsureParentDirectoryExists();
 			File.WriteAllText(ArchiveUnit.ResponseFile, rspContent, Encoding.UTF8);
 			ArchiveUnit.ArchiveArgsBuilder = ToolChain.MakeArchiveArgsBuilder();
-			if(Module is ModuleRule moduleRule)
+			if(Module is CppModuleRule moduleRule)
 			{
 				moduleRule.AdditionArchiveArgs(ArchiveUnit.ArchiveArgsBuilder);
 			}

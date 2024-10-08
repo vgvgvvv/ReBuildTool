@@ -27,7 +27,18 @@ internal class BuildConfigArgsProvider : IBuildConfigProvider
 	}
 }
 
-public partial class CppBuilder
+public interface ICppBuildContext
+{
+	public IToolChain CurrentToolChain { get; }
+	
+	public BuildOptions CurrentBuildOption { get; }
+	
+	public IPlatformSupport CurrentPlatformSupport { get; } 
+	
+	public ICppSourceProviderInterface CurrentSource { get; }
+}
+
+public partial class CppBuilder : ICppBuildContext
 {
 
 	public static IBuildConfigProvider DefaultBuildConfigProvider { get; } = new BuildConfigArgsProvider();
@@ -91,6 +102,10 @@ public partial class CppBuilder
         	return;
         }
 		
+		if (module is CppModuleRule cppModuleRule)
+		{
+			cppModuleRule.Setup(this);
+		}
 		PendingModulesQueue.Enqueue(module);
 	}
 
@@ -130,6 +145,11 @@ public partial class CppBuilder
 				Log.Error($"archive {module} failed !!");
 				return false;
 			}
+		}
+
+		if (module is IPostBuildModule postBuildModule)
+		{
+			postBuildModule.PostBuild();
 		}
 		
 		return true;

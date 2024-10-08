@@ -46,7 +46,7 @@ public partial class CppBuilder
 			var rspContent = string.Join(Environment.NewLine, normalized);
 			LinkUnit.ResponseFile.EnsureParentDirectoryExists();
 			File.WriteAllText(LinkUnit.ResponseFile, rspContent, new UTF8Encoding(false));
-			if (Module is ModuleRule moduleRule)
+			if (Module is CppModuleRule moduleRule)
 			{
 				LinkUnit.LinkArgsBuilder = ToolChain.MakeLinkArgsBuilder();
 				moduleRule.AdditionLinkArgs(LinkUnit.LinkArgsBuilder);

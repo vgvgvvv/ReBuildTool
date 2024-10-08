@@ -3,7 +3,7 @@
 namespace ReBuildTool.ToolChain;
 
 
-public abstract partial class ModuleRule : IModuleInterface
+public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
 {
     public virtual BuildType TargetBuildType { get; set; } = BuildType.DynamicLibrary;
     
@@ -46,7 +46,7 @@ public abstract partial class ModuleRule : IModuleInterface
     public List<string> Dependencies { get; } = new();
     
     public string ModuleDirectory { get; internal set; }
-
+    
     public virtual IEnumerable<string> CompileFlagsFor(CppCompilationUnit compilationUnit)
     {
         return Enumerable.Empty<string>();
@@ -75,6 +75,17 @@ public abstract partial class ModuleRule : IModuleInterface
     public virtual void AdditionArchiveArgs(IArchiveArgsBuilder builder)
     {
         
+    }
+    
+    public ICppBuildContext BuildContext { get; private set; }
+    
+    public void Setup(ICppBuildContext buildContext)
+    {
+        BuildContext = buildContext;
+    }
+    
+    public virtual void PostBuild()
+    {
     }
 
 }

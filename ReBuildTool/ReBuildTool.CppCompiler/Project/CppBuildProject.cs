@@ -275,8 +275,8 @@ public:
 		var compileRuleAssembly = Assembly.LoadFile(CppBuildRuleDllPath);
 
 		var targetRules = compileRuleAssembly.GetTypes()
-			.Where(t => t.IsSubclassOf(typeof(TargetRule)) && !t.IsGenericType && !t.IsAbstract)
-			.Select(t => Activator.CreateInstance(t) as TargetRule)
+			.Where(t => t.IsSubclassOf(typeof(CppTargetRule)) && !t.IsGenericType && !t.IsAbstract)
+			.Select(t => Activator.CreateInstance(t) as CppTargetRule)
 			.ToList();
 		foreach (var rule in targetRules)
 		{
@@ -293,8 +293,8 @@ public:
 		}
 		
 		var moduleRules = compileRuleAssembly.GetTypes()
-			.Where(t => t.IsSubclassOf(typeof(ModuleRule)) && !t.IsGenericType && !t.IsAbstract)
-			.Select(t => Activator.CreateInstance(t) as ModuleRule)
+			.Where(t => t.IsSubclassOf(typeof(CppModuleRule)) && !t.IsGenericType && !t.IsAbstract)
+			.Select(t => Activator.CreateInstance(t) as CppModuleRule)
 			.ToList();
 		
 		foreach (var rule in moduleRules)
@@ -324,7 +324,7 @@ public:
 
 	private void GenerateModuleCodes(IModuleInterface module)
 	{
-		ModuleRule.GenerateCode(module, IntermediaFolder);
+		CppModuleRule.GenerateCode(module, IntermediaFolder);
 	}
 
 #endregion
@@ -333,8 +333,22 @@ public:
 
 	private void Build(CppBuilder builder, ITargetInterface targetRule)
 	{
-		builder.SetSource(this)
-			.BuildTarget(targetRule);
+		builder.SetSource(this);
+		if (targetRule is CppTargetRule cppTargetRule)
+		{
+			cppTargetRule.Setup(builder);
+			builder.BuildTarget(targetRule);
+		}
+		else
+		{
+			builder.BuildTarget(targetRule);
+		}
+
+		if (targetRule is IPostBuildTarget postBuildTarget)
+		{
+			postBuildTarget.PostBuild();
+		}
+		
 	}
 	
 	private void BuildAll(CppBuilder builder)

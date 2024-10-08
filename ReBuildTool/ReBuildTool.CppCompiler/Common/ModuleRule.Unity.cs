@@ -2,7 +2,7 @@ using ReBuildTool.Service.CompileService;
 
 namespace ReBuildTool.ToolChain;
 
-public abstract class UnityModuleRule : ModuleRule
+public abstract class UnityModuleRule : CppModuleRule
 {
     public override BuildType TargetBuildType
     {

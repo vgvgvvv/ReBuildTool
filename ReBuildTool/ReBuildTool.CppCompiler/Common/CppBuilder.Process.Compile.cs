@@ -60,7 +60,7 @@ public partial class CppBuilder
 					compileUnit.IncludePaths = GetIncludePathsForCompileUnit(compileUnit);
 					compileUnit.OutputFile = ObjectCachePath(sourceFile);
 					compileUnit.CompileArgsBuilder = ToolChain.MakeCompileArgsBuilder();
-					if (Module is ModuleRule moduleRule)
+					if (Module is CppModuleRule moduleRule)
 					{
 						moduleRule.AdditionCompileArgs(compileUnit.CompileArgsBuilder);
 					}
@@ -118,7 +118,7 @@ public partial class CppBuilder
 				yield return define;
 			}
 
-			if (Module is ModuleRule moduleRule)
+			if (Module is CppModuleRule moduleRule)
 			{
 				foreach (var define in moduleRule.DefinesFor(unit))
 				{
@@ -134,7 +134,7 @@ public partial class CppBuilder
 				yield return compileFlag;
 			}
 
-			if (Module is ModuleRule moduleRule)
+			if (Module is CppModuleRule moduleRule)
 			{
 				foreach (var compileFlag in moduleRule.CompileFlagsFor(unit))
 				{
@@ -150,7 +150,7 @@ public partial class CppBuilder
 				yield return includePath.ToNPath();
 			}
 
-			if (Module is ModuleRule moduleRule)
+			if (Module is CppModuleRule moduleRule)
 			{
 				foreach (var includePath in moduleRule.IncludePathsFor(unit))
 				{

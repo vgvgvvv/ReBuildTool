@@ -4,7 +4,7 @@ using ReBuildTool.Service.Global;
 
 namespace ReBuildTool.ToolChain;
 
-public abstract partial class ModuleRule
+public abstract partial class CppModuleRule
 {
     internal static void GenerateCode(IModuleInterface module, NPath outputDirectory)
     {
