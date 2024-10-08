@@ -101,6 +101,11 @@ public partial class WindowsClangToolchain
 		    yield return dynamicLibrary.ToNPath().ChangeExtension(".lib").InQuotes();
 	    }
 	    
+	     foreach (var libraryPath in cppLinkUnit.LibraryPaths)
+        {
+            yield return "/LIBPATH:" + libraryPath.InQuotes();
+        }
+	    
 	    foreach (var libpath in ToolChainLibraryPaths()
 		             .InQuotes().Select(path => "/LIBPATH:" + path))
 		    yield return libpath;
