@@ -75,16 +75,16 @@ public abstract partial class ClangToolChain : IToolChain
 	
 	public override ICompileArgsBuilder MakeCompileArgsBuilder()
 	{
-		return new ClangCompileArgsBuilder();
+		return new GccLikeClangCompileArgsBuilder();
 	}
-
+	
 	public override ILinkArgsBuilder MakeLinkArgsBuilder()
 	{
-		return new ClangLinkArgsBuilder();
+		return new GccLikeClangLinkArgsBuilder();
 	}
-
+	
 	public override IArchiveArgsBuilder MakeArchiveArgsBuilder()
 	{
-		return new ClangArchiveArgsBuilder();
+		return new GccLikeClangArchiveArgsBuilder();
 	}
 }

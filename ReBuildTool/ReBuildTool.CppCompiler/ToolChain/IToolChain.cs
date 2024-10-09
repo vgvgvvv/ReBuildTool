@@ -5,6 +5,15 @@ using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
 
+public enum CppVersion
+{
+	Cpp11,
+	Cpp14,
+	Cpp17,
+	Cpp20,
+	Latest
+}
+
 
 public abstract class IToolChain
 {
@@ -139,6 +148,20 @@ public abstract class ICompileArgsBuilder : IArgsBuilder
 	public abstract void SetWarnAsError(bool enable);
 	
 	public abstract void SetLto(bool enable);
+
+	public CppVersion CppStandard { get; private set; } = CppVersion.Cpp17;
+	
+	public abstract string CppStandardFlag { get; }
+
+	public override IEnumerable<string> GetAllArguments()
+	{
+		foreach (var argument in base.GetAllArguments())
+		{
+			yield return argument;
+		}
+
+		yield return CppStandardFlag;
+	}
 }
 
 public abstract class ILinkArgsBuilder : IArgsBuilder

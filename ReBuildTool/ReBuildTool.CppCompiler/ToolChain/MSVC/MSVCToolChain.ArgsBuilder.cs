@@ -21,6 +21,28 @@ internal class MSVCCompileArgsBuilder : ICompileArgsBuilder
 	{
 		Append("/GL"); // Whole program optimization
 	}
+
+	public override string CppStandardFlag
+	{
+		get
+		{
+			switch (CppStandard)
+			{
+				case CppVersion.Cpp11:
+					return $"/std:C++11";
+				case CppVersion.Cpp14:
+					return $"/std:C++14";
+				case CppVersion.Cpp17:
+					return $"/std:C++17";
+				case CppVersion.Cpp20:
+					return $"/std:C++20";
+				case CppVersion.Latest:
+					return $"/std:C++latest";
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+	}
 }
 
 internal class MSVCLinkArgsBuilder : ILinkArgsBuilder
