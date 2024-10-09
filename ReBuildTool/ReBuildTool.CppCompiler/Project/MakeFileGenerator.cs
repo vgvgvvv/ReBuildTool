@@ -1,6 +1,8 @@
 ﻿using NiceIO;
 using ReBuildTool.Service.Global;
 
+using ResetCore.Common;
+
 namespace ReBuildTool.ToolChain;
 
 public class MakeFileGenerator
@@ -37,6 +39,12 @@ public class MakeFileGenerator
         foreach (var target in subTargets)
         {
             FlushTarget(codeBuilder, target);
+        }
+
+        if (output.ReadAllText() == codeBuilder.ToString())
+        {
+            Log.Info("Makefile is not changed, skip writing");
+            return;
         }
 
         output.WriteAllText(codeBuilder.ToString());
