@@ -261,6 +261,7 @@ public:
 		}, compiler.Value.DefaultEnvironment);
 	}
 
+	private static int RetryCompileRuleTimes = 0;
 	private void InitAllRule()
 	{
 		if (NeedReBuildRuleAssembly())
@@ -272,8 +273,36 @@ public:
 		{
 			return;
 		}
+		Assembly compileRuleAssembly = null;
+		bool loadAssemblySucc = true;
+		try
+		{
+			compileRuleAssembly = Assembly.LoadFile(CppBuildRuleDllPath);
+		} 
+		catch (Exception e)
+		{
+			loadAssemblySucc = false;
+		} 
+		finally
+		{
+			if (compileRuleAssembly == null)
+			{
+				loadAssemblySucc = false;
+			}
+		}
 		
-		var compileRuleAssembly = Assembly.LoadFile(CppBuildRuleDllPath);
+		if (!loadAssemblySucc)
+		{
+			RetryCompileRuleTimes++;
+			if (RetryCompileRuleTimes > 3)
+			{
+				throw new Exception("Compile Rule Assembly Failed");
+			}
+			BuildRuleAssembly();
+			InitAllRule();
+			return;
+		}
+		RetryCompileRuleTimes = 0;
 
 		var targetRules = compileRuleAssembly.GetTypes()
 			.Where(t => t.IsSubclassOf(typeof(CppTargetRule)) && !t.IsGenericType && !t.IsAbstract)

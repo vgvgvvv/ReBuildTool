@@ -9,7 +9,7 @@ public partial class CppBuilder
     public partial class CompileProcess
     {
 
-        public void GenerateMakeFile()
+        public NPath GenerateMakeFile()
         {
             var makeFile = new MakeFileGenerator();
             CollectCompileTarget(makeFile);
@@ -21,7 +21,9 @@ public partial class CppBuilder
             {
                 CollectArchiveTarget(makeFile);
             }
-            makeFile.FlushToFile(MakeFileCachePath());
+            var resultPath = MakeFileCachePath();
+            makeFile.FlushToFile(resultPath);
+            return resultPath;
         }
 
         private void CollectCompileTarget(MakeFileGenerator generator)

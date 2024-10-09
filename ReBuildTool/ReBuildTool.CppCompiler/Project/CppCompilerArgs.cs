@@ -60,6 +60,10 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 	
 	[CmdLine("cpp compile plugins")]
 	public CmdLineArg<List<string>> CppCompilePlugins { get; set; }
+
+	[CmdLine("use makefile to bulid")]
+	public CmdLineArg<bool> UseMakeFileBuild { get; set; } = CmdLineArg<bool>.FromObject(nameof (UseMakeFileBuild), true);
+
 }
 
 public class AndroidCompilerArgs : CommandLineArgGroup<AndroidCompilerArgs>

@@ -3,6 +3,8 @@ using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Global;
 using ReBuildTool.ToolChain.Project;
+using ReBuildTool.ToolChain.SDK.MakeFile;
+
 using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
@@ -119,15 +121,27 @@ public partial class CppBuilder : ICppBuildContext
 	private void BuildPendingModules()
 	{
 		bool succ = true;
+		bool useMakeFile = CppCompilerArgs.Get().UseMakeFileBuild.Value;
 		while(PendingModulesQueue.Count > 0)
 		{
 			var module = PendingModulesQueue.Dequeue();
 			Log.Info($"Build {module.TargetName} Begin...");
-			BuildMakeFile(module);
-			if (!BuildModule(module))
+			if (useMakeFile)
 			{
-				succ = false;
+				BuildMakeFile(module, out var makeFilePath);
+				if (!MakeFile.RunMakeFile(makeFilePath))
+				{
+					succ = false;
+				}
 			}
+			else
+			{
+				if (!BuildModule(module))
+				{
+					succ = false;
+				}
+			}
+			
 			Log.Info($"Build {module.TargetName} Done...");
 		}
 
@@ -171,11 +185,11 @@ public partial class CppBuilder : ICppBuildContext
 		return true;
 	}
 
-	private bool BuildMakeFile(IModuleInterface module)
+	private bool BuildMakeFile(IModuleInterface module, out NPath makeFilePath)
 	{
 		CompileProcess process = CompileProcess.Create(module, this);
-		process.GenerateMakeFile();
-		return true;
+		makeFilePath = process.GenerateMakeFile();
+		return !string.IsNullOrEmpty(File.ReadAllText(makeFilePath));
 	}
 	
 	private Queue<IModuleInterface> PendingModulesQueue { get; } = new();

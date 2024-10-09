@@ -123,7 +123,7 @@ public class Shell : IDisposable
         Process.StartInfo = startInfo;
         Process.OutputDataReceived += (sender, args) =>
         {
-	        if (args.Data != null)
+	        if (!string.IsNullOrEmpty(args.Data))
 	        {
 		        Log.Info(args.Data);
 	        }
@@ -131,7 +131,7 @@ public class Shell : IDisposable
         
         Process.ErrorDataReceived += (sender, args) =>
         {
-	        if (args.Data != null)
+	        if (!string.IsNullOrEmpty(args.Data))
 	        {
 		        Log.Error(args.Data);
 	        }
