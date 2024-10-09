@@ -83,7 +83,15 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
     
     public virtual void Setup(ICppBuildContext buildContext)
     {
+    }
+    
+    public void SetupInternal(ICppBuildContext buildContext)
+    {
         BuildContext = buildContext;
+        if (IsSupport)
+        {
+            Setup(BuildContext);
+        }
     }
     
     public virtual void PostBuild()

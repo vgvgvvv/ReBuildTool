@@ -35,7 +35,7 @@ public partial class CppBuilder
 	{
 		if (targetRule is CppModuleRule cppModuleRule)
 		{
-			cppModuleRule.Setup(this);
+			cppModuleRule.SetupInternal(this);
 		}
 		var exportInfo = new ExportModuleInfo();
 		CompileProcess process = CompileProcess.Create(targetRule, this);

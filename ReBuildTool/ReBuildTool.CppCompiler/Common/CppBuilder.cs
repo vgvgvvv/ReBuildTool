@@ -96,7 +96,7 @@ public partial class CppBuilder : ICppBuildContext
 		}
 		if (module is CppModuleRule cppModuleRule)
 		{
-			cppModuleRule.Setup(this);
+			cppModuleRule.SetupInternal(this);
 		}
 		foreach (var dep in module.Dependencies)
 		{
