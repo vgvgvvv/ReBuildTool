@@ -43,6 +43,38 @@ internal class MSVCCompileArgsBuilder : ICompileArgsBuilder
 			}
 		}
 	}
+	
+	public override string RTTIFlag
+	{
+		get
+		{
+			if (EnableRTTI)
+			{
+				return "/GR";
+			}
+			else
+			{
+				return "/GR-";
+			}
+		}
+	}
+
+	public override IEnumerable<string> ExceptionFlags
+	{
+		get
+		{
+			if (EnableException)
+			{
+				yield return "/EHa";
+				yield return "/D_HAS_EXCEPTIONS=1";
+			}
+			else
+			{
+				yield return "/EHa-";
+				yield return "/D_HAS_EXCEPTIONS=0";
+			}
+		}
+	}
 }
 
 internal class MSVCLinkArgsBuilder : ILinkArgsBuilder

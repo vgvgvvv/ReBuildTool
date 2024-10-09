@@ -43,6 +43,36 @@ internal class WasmCompileArgsBuilder : ICompileArgsBuilder
 			}
 		}
 	}
+	
+	public override string RTTIFlag
+	{
+		get
+		{
+			if (EnableRTTI)
+			{
+				return "-frtti";
+			}
+			else
+			{
+				return "-fno-rtti";
+			}
+		}
+	}
+	
+	public override IEnumerable<string> ExceptionFlags
+	{
+		get
+		{
+			if (EnableException)
+			{
+				yield return "-fexceptions";
+			}
+			else
+			{
+				yield return "-fno-exceptions";
+			}
+		}
+	}
 }
 
 internal class WasmLinkArgsBuilder : ILinkArgsBuilder

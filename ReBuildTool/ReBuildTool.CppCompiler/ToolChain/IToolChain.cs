@@ -152,6 +152,13 @@ public abstract class ICompileArgsBuilder : IArgsBuilder
 	public CppVersion CppStandard { get; private set; } = CppVersion.Cpp17;
 	
 	public abstract string CppStandardFlag { get; }
+	
+	public bool EnableRTTI { get; private set; } = false;
+	
+	public abstract string RTTIFlag { get; }
+
+	public bool EnableException { get; private set; } = false;
+	public abstract IEnumerable<string> ExceptionFlags { get; }
 
 	public override IEnumerable<string> GetAllArguments()
 	{
@@ -161,6 +168,11 @@ public abstract class ICompileArgsBuilder : IArgsBuilder
 		}
 
 		yield return CppStandardFlag;
+		yield return RTTIFlag;
+		foreach (var exceptionFlag in ExceptionFlags)
+		{
+			yield return exceptionFlag;
+		}
 	}
 }
 
