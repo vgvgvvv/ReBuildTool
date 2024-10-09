@@ -31,12 +31,18 @@ public partial class CppBuilder
 		public bool IsSupport { get; set; } = true;
 	}
 	
-	public IModuleInterface CompleteModuleInfo(IModuleInterface targetRule)
+	public IModuleInterface? CompleteModuleInfo(IModuleInterface targetRule)
 	{
 		if (targetRule is CppModuleRule cppModuleRule)
 		{
 			cppModuleRule.SetupInternal(this);
 		}
+
+		if (!targetRule.IsSupport)
+		{
+			return null;
+		}
+		
 		var exportInfo = new ExportModuleInfo();
 		CompileProcess process = CompileProcess.Create(targetRule, this);
 		exportInfo.TargetBuildType = targetRule.TargetBuildType;

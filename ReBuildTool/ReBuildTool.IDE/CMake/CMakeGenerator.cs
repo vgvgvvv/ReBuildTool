@@ -257,20 +257,24 @@ public class CMakeLists : ICMakeLists
 
 	private void InitWithRule(ICppSourceProviderInterface source, IModuleInterface rule)
 	{
-		if (!rule.IsSupport)
+		var target = TargetFromRule(source, rule);
+		if (target != null)
 		{
-			return;
+			Targets.Add(target);
 		}
-		Targets.Add(TargetFromRule(source, rule));
 	}
 
-	private CMakeTarget TargetFromRule(ICppSourceProviderInterface source, IModuleInterface rule)
+	private CMakeTarget? TargetFromRule(ICppSourceProviderInterface source, IModuleInterface rule)
 	{
 		var target = new CMakeTarget();
 
 		var cppBuilder = new CppBuilder();
 		cppBuilder.SetSource(source);
 		rule = cppBuilder.CompleteModuleInfo(rule);
+		if (rule == null)
+		{
+			return null;
+		}
 		
 		target.TargetName = rule.TargetName;
 		target.TargetBuildType = rule.TargetBuildType;
@@ -373,10 +377,6 @@ public class CMakeGenerator : ICMakeGenerator
 		Root.ProjectName = Name;
 		foreach ((string? key, var rule) in source.ModuleRules)
 		{
-			if (!rule.IsSupport)
-			{
-				continue;
-			}
 			var moduleDirectory = output.Combine (rule.TargetName);
 			var cmake = new CMakeLists(source, rule, moduleDirectory);
 			ModuleCMakeLists.Add(cmake);

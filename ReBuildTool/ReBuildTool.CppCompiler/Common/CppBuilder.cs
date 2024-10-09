@@ -90,13 +90,13 @@ public partial class CppBuilder : ICppBuildContext
 	
 	private void PendingModule(IModuleInterface module)
 	{
-		if (module.IsSupport)
-		{
-			return;
-		}
 		if (module is CppModuleRule cppModuleRule)
 		{
 			cppModuleRule.SetupInternal(this);
+		}
+		if (!module.IsSupport)
+		{
+			return;
 		}
 		foreach (var dep in module.Dependencies)
 		{
