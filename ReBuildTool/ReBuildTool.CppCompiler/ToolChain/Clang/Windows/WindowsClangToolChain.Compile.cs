@@ -66,6 +66,8 @@ public partial class WindowsClangToolchain
         // "fatal error LNK1322: cannot avoid potential ARM hazard (QSD8960 P1 processor bug) in section 4; please consider using compiler option /Gy if it was not used"
         // See case 766755
         yield return "/Gy";
+        
+        yield return "/MP"; // Multi-processor compilation
 		
         yield return "/utf-8";
 		

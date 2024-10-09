@@ -33,12 +33,23 @@ public class MakeFile
 			Log.Error("cannot find makefile executable");
 			return false;
 		}
+		var jCount = Math.Min(Environment.ProcessorCount * 2, 16);
 		var shell = Shell.Create()
 			.WithProgram(exe)
 			.WithArguments(new List<string>() {
-				makeFile.InQuotes()
-			})
-			.Execute()
+				makeFile.InQuotes(),
+			});
+
+		if (PlatformHelper.IsWindows())
+		{
+			shell.AppendArgument("/NOLOGO");
+		}
+		else
+		{
+			shell.AppendArgument($"-j{jCount}");
+		}
+		
+		shell.Execute()
 			.WaitForEnd();
 		if(shell.Process.ExitCode != 0)
 		{
