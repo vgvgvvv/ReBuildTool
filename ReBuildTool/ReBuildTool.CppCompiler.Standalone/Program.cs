@@ -24,6 +24,7 @@ try
 catch (Exception e)
 {
 	Log.Error($"unhandled exception raised: {e}");
+	Environment.ExitCode = 1;
 }
 finally
 {

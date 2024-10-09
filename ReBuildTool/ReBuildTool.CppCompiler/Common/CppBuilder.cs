@@ -118,13 +118,22 @@ public partial class CppBuilder : ICppBuildContext
 
 	private void BuildPendingModules()
 	{
+		bool succ = true;
 		while(PendingModulesQueue.Count > 0)
 		{
 			var module = PendingModulesQueue.Dequeue();
 			Log.Info($"Build {module.TargetName} Begin...");
 			BuildMakeFile(module);
-			BuildModule(module);
+			if (!BuildModule(module))
+			{
+				succ = false;
+			}
 			Log.Info($"Build {module.TargetName} Done...");
+		}
+
+		if (succ == false)
+		{
+			throw new Exception("build modules failed !!");
 		}
 	}
 	
