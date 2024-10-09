@@ -18,7 +18,7 @@ public abstract class NDKTargetArchSetting
 public class ARM32NDKTargetArchSetting : NDKTargetArchSetting
 {
 	public override string Version => AndroidCompilerArgs.Get().NDKTargetVersion.Value.ToString();
-	public override string TargetPlatformName => "arm-linux-androideabi";
+	public override string TargetPlatformName => "armv7a-linux-androideabi";
 }
 
 public class ARM64NDKTargetArchSetting : NDKTargetArchSetting
