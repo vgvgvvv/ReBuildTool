@@ -90,6 +90,10 @@ public partial class CppBuilder : ICppBuildContext
 	
 	private void PendingModule(IModuleInterface module)
 	{
+		if (module.IsSupport)
+		{
+			return;
+		}
 		if (module is CppModuleRule cppModuleRule)
 		{
 			cppModuleRule.Setup(this);

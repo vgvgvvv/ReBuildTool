@@ -257,6 +257,10 @@ public class CMakeLists : ICMakeLists
 
 	private void InitWithRule(ICppSourceProviderInterface source, IModuleInterface rule)
 	{
+		if (!rule.IsSupport)
+		{
+			return;
+		}
 		Targets.Add(TargetFromRule(source, rule));
 	}
 
@@ -369,6 +373,10 @@ public class CMakeGenerator : ICMakeGenerator
 		Root.ProjectName = Name;
 		foreach ((string? key, var rule) in source.ModuleRules)
 		{
+			if (!rule.IsSupport)
+			{
+				continue;
+			}
 			var moduleDirectory = output.Combine (rule.TargetName);
 			var cmake = new CMakeLists(source, rule, moduleDirectory);
 			ModuleCMakeLists.Add(cmake);

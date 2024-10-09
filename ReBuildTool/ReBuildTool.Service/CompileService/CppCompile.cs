@@ -59,6 +59,8 @@ public interface IModuleInterface
     
 	public string ModuleDirectory { get; }
 	
+	public bool IsSupport { get; }
+	
 }
 
 public interface IPostBuildTarget

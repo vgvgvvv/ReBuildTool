@@ -28,7 +28,7 @@ public partial class CppBuilder
 		public List<string> SourceDirectories { get; } = new();
 		public List<string> Dependencies { get; } = new();
 		public string ModuleDirectory { get; set; }
-
+		public bool IsSupport { get; set; } = true;
 	}
 	
 	public IModuleInterface CompleteModuleInfo(IModuleInterface targetRule)
@@ -74,6 +74,7 @@ public partial class CppBuilder
 		exportInfo.SourceDirectories.AddRange(targetRule.SourceDirectories);
 		exportInfo.Dependencies.AddRange(targetRule.Dependencies);
 		exportInfo.ModuleDirectory = targetRule.ModuleDirectory;
+		exportInfo.IsSupport = targetRule.IsSupport;
 		return exportInfo;
 	}
 }

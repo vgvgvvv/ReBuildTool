@@ -46,7 +46,9 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
     public List<string> Dependencies { get; } = new();
     
     public string ModuleDirectory { get; internal set; }
-    
+
+    public virtual bool IsSupport { get; } = true;
+
     public virtual IEnumerable<string> CompileFlagsFor(CppCompilationUnit compilationUnit)
     {
         return Enumerable.Empty<string>();
