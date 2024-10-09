@@ -29,15 +29,15 @@ internal class MSVCCompileArgsBuilder : ICompileArgsBuilder
 			switch (CppStandard)
 			{
 				case CppVersion.Cpp11:
-					return $"/std:C++11";
+					return $"/std:c++11";
 				case CppVersion.Cpp14:
-					return $"/std:C++14";
+					return $"/std:c++14";
 				case CppVersion.Cpp17:
-					return $"/std:C++17";
+					return $"/std:c++17";
 				case CppVersion.Cpp20:
-					return $"/std:C++20";
+					return $"/std:c++20";
 				case CppVersion.Latest:
-					return $"/std:C++latest";
+					return $"/std:c++latest";
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
