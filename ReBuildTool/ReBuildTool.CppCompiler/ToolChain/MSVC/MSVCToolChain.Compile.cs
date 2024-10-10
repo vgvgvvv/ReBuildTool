@@ -77,7 +77,7 @@ public partial class MSVCToolChain
 		if (Configuration == BuildConfiguration.Debug)
 		{
 			yield return "/Od";
-			yield return "/MDd";
+			yield return "/MTd"; // default link static CRT
 			// '/RTC1' and '/clr' command-line options are incompatible
 			// if (!hasClrFlag && !DontLinkCrt)
 			// 	yield return "/RTC1"; // runtime errror check
@@ -101,7 +101,7 @@ public partial class MSVCToolChain
 			// Generate enhanced debugging information for optimized code in non-debug builds.
 			yield return "/Zo"; // Enhance Optimized Debugging
 			
-			yield return "/MD";
+			yield return "/MT"; // default link static CRT
 		}
 		
 		foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
