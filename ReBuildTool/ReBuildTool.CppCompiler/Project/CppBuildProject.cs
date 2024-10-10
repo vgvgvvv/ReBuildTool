@@ -235,7 +235,7 @@ public:
 		if (timeStampFile.Exists())
 		{
 			var dateTime = DateTime.Parse(timeStampFile.ReadAllText());
-			if (dateTime < dllNewestTime)
+			if (dllNewestTime - dateTime > TimeSpan.FromSeconds(1))
 			{
 				Log.Warning($"build tool has been updated({dateTime} -> {dllNewestTime}), clean all");
 				Clean();
