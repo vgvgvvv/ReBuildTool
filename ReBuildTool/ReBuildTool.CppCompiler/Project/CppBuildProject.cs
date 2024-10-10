@@ -237,7 +237,7 @@ public:
 			var dateTime = DateTime.Parse(timeStampFile.ReadAllText());
 			if (dateTime < dllNewestTime)
 			{
-				Log.Warning("build tool has been updated, clean all");
+				Log.Warning($"build tool has been updated({dateTime} -> {dllNewestTime}), clean all");
 				Clean();
 				timeStampFile.EnsureParentDirectoryExists();
 				timeStampFile.WriteAllText(dllNewestTime.ToLongTimeString());
