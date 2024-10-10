@@ -187,7 +187,8 @@ public:
 	
 	public void Build(string? targetName, IBuildConfigProvider? configProvider = null)
 	{
-
+		CleanIfNeed();
+		
 		InitAllRule();
 		var builder = new CppBuilder(configProvider);
 		
@@ -219,7 +220,30 @@ public:
 
 	public void Clean()
 	{
+		OutputRoot.DeleteIfExists(DeleteMode.Normal);
 		IntermediaFolder.DeleteIfExists(DeleteMode.Normal);
+	}
+
+	private void CleanIfNeed()
+	{
+		var dllNewestTime = Assembly.GetEntryAssembly().Location
+			.ToNPath().Parent.Files()
+			.Select(file => File.GetLastWriteTimeUtc(file))
+			.Max();
+
+		var timeStampFile = IntermediaFolder.Combine("LastBuildToolTimeStamp");
+		if (timeStampFile.Exists())
+		{
+			var dateTime = DateTime.Parse(timeStampFile.ReadAllText());
+			if (dateTime < dllNewestTime)
+			{
+				Log.Warning("build tool has been updated, clean all");
+				Clean();
+			}
+		}
+
+		timeStampFile.EnsureParentDirectoryExists();
+		timeStampFile.WriteAllText(dllNewestTime.ToLongTimeString());
 	}
 
 	public void ReBuild(string? targetName = null)
