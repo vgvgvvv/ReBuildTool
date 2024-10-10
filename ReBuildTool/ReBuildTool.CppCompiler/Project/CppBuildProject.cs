@@ -239,11 +239,10 @@ public:
 			{
 				Log.Warning("build tool has been updated, clean all");
 				Clean();
+				timeStampFile.EnsureParentDirectoryExists();
+				timeStampFile.WriteAllText(dllNewestTime.ToLongTimeString());
 			}
 		}
-
-		timeStampFile.EnsureParentDirectoryExists();
-		timeStampFile.WriteAllText(dllNewestTime.ToLongTimeString());
 	}
 
 	public void ReBuild(string? targetName = null)
