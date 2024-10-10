@@ -142,6 +142,11 @@ public partial class CppBuilder : ICppBuildContext
 				}
 			}
 			
+			if (module is IPostBuildModule postBuildModule)
+			{
+				postBuildModule.PostBuild();
+			}
+			
 			Log.Info($"Build {module.TargetName} Done...");
 		}
 
@@ -175,11 +180,6 @@ public partial class CppBuilder : ICppBuildContext
 				Log.Error($"archive {module} failed !!");
 				return false;
 			}
-		}
-
-		if (module is IPostBuildModule postBuildModule)
-		{
-			postBuildModule.PostBuild();
 		}
 		
 		return true;
