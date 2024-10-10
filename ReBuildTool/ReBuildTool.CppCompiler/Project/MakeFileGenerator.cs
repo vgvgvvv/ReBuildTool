@@ -41,7 +41,7 @@ public class MakeFileGenerator
             FlushTarget(codeBuilder, target);
         }
 
-        if (output.ReadAllText() == codeBuilder.ToString())
+        if (output.Exists() && output.ReadAllText() == codeBuilder.ToString())
         {
             Log.Info("Makefile is not changed, skip writing");
             return;
