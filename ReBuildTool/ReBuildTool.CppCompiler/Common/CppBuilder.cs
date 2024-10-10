@@ -129,7 +129,7 @@ public partial class CppBuilder : ICppBuildContext
 			if (useMakeFile)
 			{
 				BuildMakeFile(module, out var makeFilePath);
-				if (!MakeFile.RunMakeFile(makeFilePath))
+				if (!MakeFile.RunMakeFile(CurrentBuildOption, makeFilePath))
 				{
 					succ = false;
 				}

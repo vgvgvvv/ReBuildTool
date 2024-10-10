@@ -8,12 +8,12 @@ namespace ReBuildTool.ToolChain.SDK.MakeFile;
 
 public class MakeFile
 {
-	public static NPath GetMakeFileExecutable()
+	public static NPath GetMakeFileExecutable(BuildOptions buildOptions)
 	{
 		if (PlatformHelper.IsWindows())
 		{
 			var msvcSdk = MsvcSDK.FindLatestSDK()
-				.SetArch(new x64Architecture())
+				.SetArch(buildOptions.Architecture)
 				.UseLastestVCPaths()
 				.UseLatestWindowsKit();
 			var makeFile = msvcSdk.CurrentVCPaths.GetBinPath(new x64Architecture());
@@ -25,9 +25,9 @@ public class MakeFile
 		}
 	}
 
-	public static bool RunMakeFile(NPath makeFile)
+	public static bool RunMakeFile(BuildOptions buildOptions, NPath makeFile)
 	{
-		var exe = GetMakeFileExecutable();
+		var exe = GetMakeFileExecutable(buildOptions);
 		if (!exe.Exists())
 		{
 			Log.Error("cannot find makefile executable");
