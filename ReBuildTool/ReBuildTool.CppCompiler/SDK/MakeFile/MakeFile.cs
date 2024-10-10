@@ -34,18 +34,18 @@ public class MakeFile
 			return false;
 		}
 		var jCount = Math.Min(Environment.ProcessorCount * 2, 16);
-		var shell = Shell.Create()
-			.WithProgram(exe)
-			.WithArguments(new List<string>() {
-				makeFile.InQuotes(),
-			});
+		var shell = Shell.Create().WithProgram(exe);
 
 		if (PlatformHelper.IsWindows())
 		{
+			shell.WithArguments(new List<string>() {
+					makeFile.InQuotes(),
+				});
 			shell.AppendArgument("/NOLOGO");
 		}
 		else
 		{
+			shell.WithWorkspace(makeFile.Parent);
 			shell.AppendArgument($"-j{jCount}");
 		}
 		

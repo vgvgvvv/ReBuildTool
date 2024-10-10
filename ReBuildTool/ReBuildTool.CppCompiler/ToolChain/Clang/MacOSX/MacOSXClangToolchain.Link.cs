@@ -1,4 +1,5 @@
 ﻿using NiceIO;
+using ReBuildTool.Service.CompileService;
 
 namespace ReBuildTool.ToolChain;
 
@@ -54,6 +55,17 @@ public partial class MacOSXClangToolchain
             yield return "-static";
         }
         
+        if (cppLinkUnit.OwnerModule is IObjectiveCModule ocModule)
+        {
+            if (ocModule.Frameworks.Count > 0)
+            {
+                foreach (var framework in ocModule.Frameworks)
+                {
+                    yield return "-framework";
+                    yield return framework;
+                }
+            }
+        }
         
         foreach (var staticLibrary in ToolChainStaticLibraries())
         {

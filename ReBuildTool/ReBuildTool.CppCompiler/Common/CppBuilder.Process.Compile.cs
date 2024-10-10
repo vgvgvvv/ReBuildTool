@@ -1,5 +1,6 @@
 ﻿using NiceIO;
 using ReBuildTool.CppCompiler;
+using ReBuildTool.Service.CompileService;
 using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
@@ -53,7 +54,7 @@ public partial class CppBuilder
 					.ToList();
 				foreach (var sourceFile in files)
 				{
-					var compileUnit = new CppCompilationUnit();
+					var compileUnit = new CppCompilationUnit(Module);
 					compileUnit.SourceFile = sourceFile;
 					compileUnit.CompileFlags = GetCompileFlagsForCompileUnit(compileUnit);
 					compileUnit.Defines = GetDefinesForCompileUnit(compileUnit);

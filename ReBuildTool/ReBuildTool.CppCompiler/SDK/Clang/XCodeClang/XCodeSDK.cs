@@ -121,12 +121,10 @@ public class XCodeSDK : ClangSDK
 	{
 		if (XCodeLocation.DirectoryExists())
 		{
-			Log.Info($"use clang : {XCodeClangLocation}");
 			return XCodeClangLocation;
 		}
 		else if (DefaultClangLocation.Exists())
 		{
-			Log.Info($"use clang : {DefaultClangLocation}");
 			return DefaultClangLocation;
 		}
 		else

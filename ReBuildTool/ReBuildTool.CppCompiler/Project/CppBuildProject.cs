@@ -80,7 +80,7 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		{
 			var defaultTargetContent = @"using ReBuildTool.ToolChain;
 
-public class ${targetName}Target : TargetRule
+public class ${targetName}Target : CppTargetRule
 {
     public ${targetName}Target()
     {
@@ -99,7 +99,7 @@ public class ${targetName}Target : TargetRule
 		{
 			var defaultTargetContent = @"using ReBuildTool.ToolChain;
 
-public class ${targetName}Module : ModuleRule
+public class ${targetName}Module : CppModuleRule
 {
     public ${targetName}Module()
     {

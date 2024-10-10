@@ -1,14 +1,16 @@
 ﻿using NiceIO;
+using ReBuildTool.Service.CompileService;
 
 namespace ReBuildTool.ToolChain;
 
 public class CppCompilationUnit
 {
-    public CppCompilationUnit()
+    public CppCompilationUnit(IModuleInterface module)
     {
         Defines = Enumerable.Empty<string>();
         IncludePaths = Enumerable.Empty<NPath>();
         CompileFlags = Enumerable.Empty<string>();
+        OwnerModule = module;
     }
     
     public NPath SourceFile { get; set; }
@@ -19,17 +21,19 @@ public class CppCompilationUnit
     public bool OutputAssembly { get; set; } = false;
     
     public ICompileArgsBuilder CompileArgsBuilder { get; set; }
+    public IModuleInterface OwnerModule { get; set; }
 }
 
 public class CppLinkUnit
 {
-    public CppLinkUnit()
+    public CppLinkUnit(IModuleInterface module)
     {
         ObjectFiles = Enumerable.Empty<NPath>();
         LinkFlags = Enumerable.Empty<string>();
         LibraryPaths = Enumerable.Empty<NPath>();
         StaticLibraries = Enumerable.Empty<string>();
         DynamicLibraries = Enumerable.Empty<string>();
+        OwnerModule = module;
     }
     
     public NPath OutputPath { get; set; }
@@ -40,6 +44,7 @@ public class CppLinkUnit
     public IEnumerable<string> StaticLibraries { get; set; }
     public IEnumerable<string> DynamicLibraries { get; set; }
     public ILinkArgsBuilder LinkArgsBuilder { get; set; }
+    public IModuleInterface OwnerModule { get; set; }
 }
 
 public class CppArchiveUnit

@@ -299,9 +299,7 @@ public class CMakeLists : ICMakeLists
 		{
 			return dir.ToNPath().Files(true).Where(f => 
 			{
-				var ex = f.ExtensionWithDot;
-				// TODO: replace with toolchain source file selection?
-				if (ex == ".cpp" || ex == ".cxx" || ex == ".cc" || ex == ".c" || ex == ".inl")
+				if (cppBuilder.CurrentToolChain.CanBeCompiled(f))
 				{
 					return true;
 				}

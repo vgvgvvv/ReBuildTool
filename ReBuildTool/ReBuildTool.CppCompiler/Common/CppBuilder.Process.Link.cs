@@ -34,7 +34,7 @@ public partial class CppBuilder
 
 		private bool PrepareLinkUnit()
 		{
-			LinkUnit = new CppLinkUnit();
+			LinkUnit = new CppLinkUnit(Module);
 			LinkUnit.ObjectFiles = CompileUnits.Select(cu => cu.OutputFile).ToList();
 			LinkUnit.LinkFlags = GetLinkFlagsForLinkUnit(LinkUnit);
 			LinkUnit.DynamicLibraries = GetDynamicLibrariesForLinkUnit(LinkUnit);

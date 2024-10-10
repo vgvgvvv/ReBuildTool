@@ -32,6 +32,16 @@ public class Shell : IDisposable
 		Program = program;
 		return this;
 	}
+
+	public Shell WithWorkspace(NPath workspace)
+	{
+		if (CurrentStatus != Status.Waiting)
+		{
+			throw new Exception("Shell is already running or finished.");
+		}
+		Workspace = workspace;
+		return this;
+	}
 	
 	public Shell WithProgram(string program)
 	{
@@ -109,6 +119,10 @@ public class Shell : IDisposable
 		
 		ProcessStartInfo startInfo = new ProcessStartInfo();
 		startInfo.FileName = Program.ToString();
+		if (Workspace != null && Workspace.Exists())
+		{
+			startInfo.WorkingDirectory = Workspace.ToString();
+		}
 		startInfo.UseShellExecute = false; 
 		startInfo.RedirectStandardOutput = true;
 		startInfo.RedirectStandardError = true;
@@ -203,6 +217,7 @@ public class Shell : IDisposable
 	}
 	
 	public string Program { get; private set; }
+	public NPath? Workspace { get; private set; }
 	public List<string> Arguments { get; private set; } = new List<string>();
 	public Process? Process { get; private set; }
 	public Status CurrentStatus { get; private set; }

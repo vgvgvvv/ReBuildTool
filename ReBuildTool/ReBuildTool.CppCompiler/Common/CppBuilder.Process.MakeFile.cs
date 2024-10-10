@@ -42,11 +42,11 @@ public partial class CppBuilder
             {
                 var unit = invocation.Unit;
                 var depFiles = GetAllCompileUnitDep(unit);
-                var target = new MakeFileGenerator.Target(unit.OutputFile.InQuotes(), MakeFileGenerator.TargetType.SubTarget);
-                target.Dependencies.Add(unit.SourceFile.InQuotes());
+                var target = new MakeFileGenerator.Target(unit.OutputFile.FileName, MakeFileGenerator.TargetType.SubTarget);
+                target.Dependencies.Add(MakeSureValidPath(unit.SourceFile));
                 foreach (var depFile in depFiles)
                 {
-                    target.Dependencies.Add(depFile.InQuotes());
+                    target.Dependencies.Add(MakeSureValidPath(depFile));
                 }
                 target.Invocations.Add(invocation.ToString());
                 generator.Targets.Add(target);
@@ -70,7 +70,7 @@ public partial class CppBuilder
             var target = new MakeFileGenerator.Target(unit.OutputPath.InQuotes(), MakeFileGenerator.TargetType.MainTarget);
             foreach (var objFile in unit.ObjectFiles)
             {
-                target.Dependencies.Add(objFile);
+                target.Dependencies.Add(objFile.FileName);
             }
             foreach (var libraryPath in unit.LibraryPaths)
             {
@@ -79,7 +79,7 @@ public partial class CppBuilder
                     var libPath = libraryPath.Combine(library);
                     if (libPath.Exists())
                     {
-                        target.Dependencies.Add(libPath.InQuotes());
+                        target.Dependencies.Add(MakeSureValidPath(libPath));
                     }
                 }
                 foreach (var library in unit.StaticLibraries)
@@ -87,7 +87,7 @@ public partial class CppBuilder
                     var libPath = libraryPath.Combine(library);
                     if (libPath.Exists())
                     {
-                        target.Dependencies.Add(libPath.InQuotes());
+                        target.Dependencies.Add(MakeSureValidPath(libPath));
                     }
                 }
             }
@@ -111,7 +111,7 @@ public partial class CppBuilder
             var target = new MakeFileGenerator.Target(unit.OutputPath.InQuotes(), MakeFileGenerator.TargetType.MainTarget);
             foreach (var objFile in unit.ObjectFiles)
             {
-                target.Dependencies.Add(objFile);
+                target.Dependencies.Add(MakeSureValidPath(objFile));
             }
             foreach (var libraryPath in unit.LibraryPaths)
             {
@@ -120,7 +120,7 @@ public partial class CppBuilder
                     var libPath = libraryPath.Combine(library);
                     if (libPath.Exists())
                     {
-                        target.Dependencies.Add(libPath.InQuotes());
+                        target.Dependencies.Add(MakeSureValidPath(libPath));
                     }
                 }
             }
@@ -135,7 +135,7 @@ public partial class CppBuilder
                 .Combine("Intermedia", IPlatformSupport.CurrentTargetPlatform.ToString())
                 .Combine(Options.Configuration.ToString())
                 .Combine(Options.Architecture.Name)
-                .Combine("MakeFileCache", Module.TargetName, "makefile");
+                .Combine("MakeFileCache", Module.TargetName, "Makefile");
             result.EnsureParentDirectoryExists();
             return result;
         }
@@ -171,6 +171,11 @@ public partial class CppBuilder
             }
 
             return result;
+        }
+
+        private string MakeSureValidPath(NPath path)
+        {
+            return path.ToString().Replace(" ", "\\ ");
         }
     }
 }

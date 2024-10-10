@@ -15,6 +15,11 @@ public interface IPostBuildModule
 	public void PostBuild();
 }
 
+public interface IObjectiveCModule
+{
+	public List<string> Frameworks { get; }
+}
+
 public interface IModuleInterface
 {
 	public BuildType TargetBuildType { get; }

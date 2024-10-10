@@ -1,12 +1,25 @@
-﻿namespace ReBuildTool.ToolChain;
+﻿using NiceIO;
+using ReBuildTool.Service.CompileService;
+
+namespace ReBuildTool.ToolChain;
 
 public partial class MacOSXClangToolchain
 {
     public override IEnumerable<string> CompileArgsFor(CppCompilationUnit compileUnit)
     {
-        foreach (var arg in CompileArgsForCpp(compileUnit))
+        if (!IsObjectiveC(compileUnit.SourceFile))
         {
-            yield return arg;
+            foreach (var arg in CompileArgsForObjectiveC(compileUnit))
+            {
+                yield return arg;
+            }
+        }
+        else
+        {
+            foreach (var arg in CompileArgsForCpp(compileUnit))
+            {
+                yield return arg;
+            }
         }
     }
     
@@ -56,6 +69,28 @@ public partial class MacOSXClangToolchain
         
         yield return compileUnit.SourceFile.InQuotes();
     }
+
+    private IEnumerable<string> CompileArgsForObjectiveC(CppCompilationUnit compilationUnit)
+    {
+        yield return "-fobjc-arc";
+        
+        if (compilationUnit.OwnerModule is IObjectiveCModule ocModule)
+        {
+            if (ocModule.Frameworks.Count > 0)
+            {
+                foreach (var framework in ocModule.Frameworks)
+                {
+                    yield return "-framework";
+                    yield return framework;
+                }
+            }
+        }
+        
+        foreach (var arg in CompileArgsForCpp(compilationUnit))
+        {
+            yield return arg;
+        }
+    }
     
     private IEnumerable<string> DefaultCompileFlags(CppCompilationUnit unit)
     {
@@ -75,12 +110,15 @@ public partial class MacOSXClangToolchain
             yield return "-Oz";
         }
         
-        foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
+        if (!IsObjectiveC(unit.SourceFile))
         {
-            yield return argument;
+            foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
+            {
+                yield return argument;
+            }
+            
+            yield return "-stdlib=libc++";
         }
-        
-        yield return "-stdlib=libc++";
     }
 
     public override IEnumerable<string> ToolChainDefines()
@@ -90,5 +128,15 @@ public partial class MacOSXClangToolchain
             yield return toolChainDefine;
         }
     }
-    
+
+    public override bool CanBeCompiled(NPath sourceFile)
+    {
+        return base.CanBeCompiled(sourceFile) || IsObjectiveC(sourceFile);
+    }
+
+    private bool IsObjectiveC(NPath sourceFile)
+    {
+        var extension = sourceFile.ExtensionWithDot;
+        return extension == ".mm" || extension == ".m";
+    }
 }
