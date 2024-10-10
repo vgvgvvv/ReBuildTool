@@ -101,7 +101,7 @@ public partial class MSVCToolChain
 			// Generate enhanced debugging information for optimized code in non-debug builds.
 			yield return "/Zo"; // Enhance Optimized Debugging
 			
-			yield return "/MDd";
+			yield return "/MD";
 		}
 		
 		foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
