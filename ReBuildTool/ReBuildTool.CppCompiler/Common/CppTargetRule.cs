@@ -10,6 +10,8 @@ public abstract class CppTargetRule : ITargetInterface, IPostBuildTarget
 
     public ICppBuildContext BuildContext { get; private set; }
     
+    public List<BaseCppTargetCompilePlugin> Plugins { get; } = new();
+    
     public virtual void Setup(ICppBuildContext buildContext)
     {
         BuildContext = buildContext;

@@ -12,3 +12,14 @@ public abstract class BaseCppCompilePlugin
     {
     }
 }
+
+public abstract class BaseCppTargetCompilePlugin
+{
+    public virtual void PreCompile(CppTargetRule targetRule, CppBuilder builder)
+    {
+    }
+
+    public virtual void PostCompile(CppTargetRule targetRule,CppBuilder builder)
+    {
+    }
+}

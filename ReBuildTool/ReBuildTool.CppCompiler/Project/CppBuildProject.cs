@@ -390,7 +390,15 @@ public:
 		if (targetRule is CppTargetRule cppTargetRule)
 		{
 			cppTargetRule.Setup(builder);
+			foreach (var compilePlugin in cppTargetRule.Plugins)
+			{
+				compilePlugin.PreCompile(cppTargetRule, builder);
+			}
 			builder.BuildTarget(targetRule);
+			foreach (var compilePlugin in cppTargetRule.Plugins)
+			{
+				compilePlugin.PostCompile(cppTargetRule, builder);
+			}
 		}
 		else
 		{
