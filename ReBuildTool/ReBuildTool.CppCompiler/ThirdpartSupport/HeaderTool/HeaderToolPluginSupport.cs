@@ -16,7 +16,16 @@ public class HeaderToolArgs : CommandLineArgGroup<HeaderToolArgs>
 	public CmdLineArg<bool> NeedBuildHeaderTool { get; set; } = CmdLineArg<bool>.FromObject(nameof(NeedBuildHeaderTool), false);
 }
 
-public class HeaderToolPluginSupport : BaseCppTargetCompilePlugin
+public interface IHeaderToolTarget
+{
+	List<string> PluginDlls { get; }
+	
+	List<string> PluginNames { get; }
+	
+	List<string> ExtraArgs { get; }
+}
+
+public partial class HeaderToolPluginSupport : BaseCppTargetCompilePlugin
 {
 	private NPath _headerTooRoot;
 	public NPath HeaderToolRoot
@@ -65,96 +74,17 @@ public class HeaderToolPluginSupport : BaseCppTargetCompilePlugin
 	public override void PreCompile(CppTargetRule targetRule, CppBuilder builder)
 	{
 		base.PreCompile(targetRule, builder);
-		var shell = Shell.Create()
-			.WithProgram(HeaderToolExePath)
-			.WithArguments(GetCmdArgs(targetRule, builder))
-			.Execute()
-			.WaitForEnd();
-
-		if (shell.Process.ExitCode != 0)
+		var headerToolTarget = targetRule as IHeaderToolTarget;
+		if (headerToolTarget == null)
 		{
-			throw new Exception("run header tool failed");
+			throw new Exception("targetRule is not IHeaderToolTarget");
 		}
-		
+		RunHeaderTool(targetRule, builder);
 	}
 	
 	public override void PostCompile(CppTargetRule targetRule, CppBuilder builder)
 	{
 		base.PostCompile(targetRule, builder);
-	}
-
-	public IEnumerable<string> GetCmdArgs(CppTargetRule targetRule, CppBuilder builder)
-	{
-		var projectArgs = CppCompilerArgs.Get();
-
-		yield return $"projectPath={projectArgs.ProjectRoot}";
-		if (builder.CurrentBuildOption.Configuration == BuildConfiguration.Debug)
-		{
-			yield return "debug=true";
-		}
-
-		if (builder.CurrentPlatformSupport is WindowsPlatformSupport)
-		{
-			yield return "targetplatform=Win64";
-		}
-		else if(builder.CurrentPlatformSupport is MacOSXPlatformSupport)
-		{
-			yield return "targetplatform=Mac";
-		}
-		else if(builder.CurrentPlatformSupport is LinuxPlatformSupport)
-		{
-			yield return "targetplatform=Linux";
-		}
-		else if(builder.CurrentPlatformSupport is iOSPlatformSupport)
-		{
-			yield return "targetplatform=IOS";
-		}
-		else if (builder.CurrentPlatformSupport is AndroidPlatformSupport)
-		{
-			yield return "targetplatform=Android";
-		}
-		else
-		{
-			throw new Exception("not support platform");
-		}
-		
-		// pluginDlls=
-		// plugins
-		yield return "projectType=Custom";
-		// customProject
-	}
-
-	private void BuildHeaderTool()
-	{
-		bool needBuild = false;
-		var headerToolArgs = HeaderToolArgs.Get();
-		var installPath = HeaderToolRoot.Combine("ResetHeaderTool");
-		if (installPath.Combine(".git").Exists())
-		{
-			if (headerToolArgs.NeedBuildHeaderTool)
-			{
-				Git.Pull(installPath);
-				needBuild = true;
-			}
-		}
-		else
-		{
-			HeaderToolRoot.EnsureDirectoryExists();
-			Git.GetFromGit("git@github.com:vgvgvvv/ResetHeaderTool.git", "ResetHeaderTool", HeaderToolRoot);
-			needBuild = true;
-		}
-
-		if (!needBuild)
-		{
-			return;
-		}
-
-		var buildScript = installPath.Combine("Scripts/BuildAll.bat");
-		if (!PlatformHelper.IsWindows())
-		{
-			buildScript.ChangeExtension(".sh");
-		}
-		Cmd.RunCmd(buildScript, "", HeaderToolRoot);
 	}
 
 	private ICppSourceProviderInterface CodeSource;
