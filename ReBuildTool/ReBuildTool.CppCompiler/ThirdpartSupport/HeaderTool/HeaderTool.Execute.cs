@@ -1,4 +1,6 @@
-﻿using ReBuildTool.CppCompiler;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.Global;
 using ReBuildTool.ToolChain;
 
@@ -21,11 +23,12 @@ public partial class HeaderToolPluginSupport
         }
     }
     
-    public IEnumerable<string> GetCmdArgs(CppTargetRule targetRule, CppBuilder builder)
+    private IEnumerable<string> GetCmdArgs(CppTargetRule targetRule, CppBuilder builder)
     {
         var projectArgs = CppCompilerArgs.Get();
 
         yield return $"projectPath={projectArgs.ProjectRoot}";
+        yield return "projectType=ReBuildTool";
         if (builder.CurrentBuildOption.Configuration == BuildConfiguration.Debug)
         {
             yield return "debug=true";
@@ -68,6 +71,20 @@ public partial class HeaderToolPluginSupport
         }
         
         // customProject
+    }
+
+  
+    private void GenerateProjectInfoForHeaderTool(CppTargetRule targetRule, CppBuilder builder)
+    {
+        var projectRoot = HeaderToolRoot.Combine("ProjectInfo").EnsureDirectoryExists();
+        foreach (var (key, module) in CodeSource.ModuleRules)
+        {
+            var moduleFolder = projectRoot.Combine(module.TargetName).EnsureDirectoryExists();
+            var moduleInfo = moduleFolder.Combine("ModuleInfo.json");
+
+            moduleInfo.WriteAllText(JsonConvert.SerializeObject(module, Formatting.Indented));
+        }
+
     }
 
 }

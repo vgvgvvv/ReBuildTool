@@ -400,6 +400,7 @@ public:
 			{
 				if (compilePlugin is BaseCppTargetCompilePlugin cppTargetPlugin)
 				{
+					cppTargetPlugin.Setup(this);
 					cppTargetPlugin.PreCompile(cppTargetRule, builder);
 				}
 			}

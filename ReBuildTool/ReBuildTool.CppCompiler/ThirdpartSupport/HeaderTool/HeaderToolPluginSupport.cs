@@ -61,7 +61,7 @@ public partial class HeaderToolPluginSupport : BaseCppTargetCompilePlugin
 		{
 			var platformFolderName = PlatformHelper.Pick("Win64", "MacArm64", "Linux");
 			var ex = PlatformHelper.IsWindows() ? ".exe" : "";
-			return HeaderToolInstallPath.Combine("Binary").Combine(platformFolderName).Combine($"ResetHeaderTool{ex}");
+			return HeaderToolInstallPath.Combine("Binary").Combine(platformFolderName).Combine($"HeaderTool/ResetHeaderTool{ex}");
 		}
 	}
 	
@@ -79,6 +79,9 @@ public partial class HeaderToolPluginSupport : BaseCppTargetCompilePlugin
 		{
 			throw new Exception("targetRule is not IHeaderToolTarget");
 		}
+
+		CodeSource = builder.CurrentSource;
+		GenerateProjectInfoForHeaderTool(targetRule, builder);
 		RunHeaderTool(targetRule, builder);
 	}
 	
