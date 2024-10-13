@@ -377,7 +377,7 @@ public:
 		var plugins = TargetRules.SelectMany(rule => rule.Value.Plugins).ToList();
 		foreach (var targetPlugin in plugins)
 		{
-			targetPlugin.Setup();
+			targetPlugin.Setup(this);
 		}
 	}
 

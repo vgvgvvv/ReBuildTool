@@ -16,7 +16,7 @@ public abstract class BaseCppCompilePlugin
 public abstract class BaseCppTargetCompilePlugin : ITargetCompilePlugin
 {
 
-    public virtual void Setup()
+    public virtual void Setup(ICppSourceProviderInterface sourceProvider)
     {
     }
     

@@ -76,7 +76,7 @@ public interface IPostBuildTarget
 public interface ITargetCompilePlugin
 {
 
-	public void Setup();
+	public void Setup(ICppSourceProviderInterface sourceProvider);
 
 }
 
