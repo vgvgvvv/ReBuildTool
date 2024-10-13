@@ -73,11 +73,20 @@ public interface IPostBuildTarget
 	public void PostBuild();
 }
 
+public interface ITargetCompilePlugin
+{
+
+	public void Setup();
+
+}
+
 public interface ITargetInterface
 {
 	public List<string> UsedModules { get; }
     
 	public string TargetDirectory { get; }
+	
+	public List<ITargetCompilePlugin> Plugins { get; }
 }
 
 public interface ICppSourceProviderInterface
@@ -97,3 +106,4 @@ public interface ICppProject : IProjectInterface
 	public const string ModuleDefineExtension = ".module.cs";
 	public const string ExtensionDefineExtension = ".extension.cs";
 }
+

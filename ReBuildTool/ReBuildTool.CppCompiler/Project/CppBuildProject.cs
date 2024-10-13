@@ -373,6 +373,12 @@ public:
 			}
 			ModuleRules.Add(ruleName, rule);
 		}
+
+		var plugins = TargetRules.SelectMany(rule => rule.Value.Plugins).ToList();
+		foreach (var targetPlugin in plugins)
+		{
+			targetPlugin.Setup();
+		}
 	}
 
 	private void GenerateModuleCodes(IModuleInterface module)
@@ -392,12 +398,18 @@ public:
 			cppTargetRule.Setup(builder);
 			foreach (var compilePlugin in cppTargetRule.Plugins)
 			{
-				compilePlugin.PreCompile(cppTargetRule, builder);
+				if (compilePlugin is BaseCppTargetCompilePlugin cppTargetPlugin)
+				{
+					cppTargetPlugin.PreCompile(cppTargetRule, builder);
+				}
 			}
 			builder.BuildTarget(targetRule);
 			foreach (var compilePlugin in cppTargetRule.Plugins)
 			{
-				compilePlugin.PostCompile(cppTargetRule, builder);
+				if (compilePlugin is BaseCppTargetCompilePlugin cppTargetPlugin)
+				{
+					cppTargetPlugin.PostCompile(cppTargetRule, builder);
+				}
 			}
 		}
 		else

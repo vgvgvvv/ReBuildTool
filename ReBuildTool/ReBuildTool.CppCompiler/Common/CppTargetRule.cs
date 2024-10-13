@@ -8,9 +8,9 @@ public abstract class CppTargetRule : ITargetInterface, IPostBuildTarget
     
     public string TargetDirectory { get; internal set; }
 
+    public List<ITargetCompilePlugin> Plugins { get; } = new();
+
     public ICppBuildContext BuildContext { get; private set; }
-    
-    public List<BaseCppTargetCompilePlugin> Plugins { get; } = new();
     
     public virtual void Setup(ICppBuildContext buildContext)
     {
