@@ -87,6 +87,8 @@ public interface ITargetInterface
 	public string TargetDirectory { get; }
 	
 	public List<ITargetCompilePlugin> Plugins { get; }
+	
+	public Dictionary<string, string> CustomInfo { get; }
 }
 
 public interface ICppSourceProviderInterface

@@ -43,6 +43,18 @@ public class HeaderToolPluginSupport : BaseCppTargetCompilePlugin
 			return _headerTooRoot;
 		}
 	}
+
+	public NPath HeaderToolInstallPath => HeaderToolRoot.Combine("ResetHeaderTool");
+
+	public NPath HeaderToolExePath
+	{
+		get
+		{
+			var platformFolderName = PlatformHelper.Pick("Win64", "MacArm64", "Linux");
+			var ex = PlatformHelper.IsWindows() ? ".exe" : "";
+			return HeaderToolInstallPath.Combine("Binary").Combine(platformFolderName).Combine($"ResetHeaderTool{ex}");
+		}
+	}
 	
 	public override void Setup(ICppSourceProviderInterface sourceProvider)
 	{
@@ -53,11 +65,63 @@ public class HeaderToolPluginSupport : BaseCppTargetCompilePlugin
 	public override void PreCompile(CppTargetRule targetRule, CppBuilder builder)
 	{
 		base.PreCompile(targetRule, builder);
+		var shell = Shell.Create()
+			.WithProgram(HeaderToolExePath)
+			.WithArguments(GetCmdArgs(targetRule, builder))
+			.Execute()
+			.WaitForEnd();
+
+		if (shell.Process.ExitCode != 0)
+		{
+			throw new Exception("run header tool failed");
+		}
+		
 	}
 	
 	public override void PostCompile(CppTargetRule targetRule, CppBuilder builder)
 	{
 		base.PostCompile(targetRule, builder);
+	}
+
+	public IEnumerable<string> GetCmdArgs(CppTargetRule targetRule, CppBuilder builder)
+	{
+		var projectArgs = CppCompilerArgs.Get();
+
+		yield return $"projectPath={projectArgs.ProjectRoot}";
+		if (builder.CurrentBuildOption.Configuration == BuildConfiguration.Debug)
+		{
+			yield return "debug=true";
+		}
+
+		if (builder.CurrentPlatformSupport is WindowsPlatformSupport)
+		{
+			yield return "targetplatform=Win64";
+		}
+		else if(builder.CurrentPlatformSupport is MacOSXPlatformSupport)
+		{
+			yield return "targetplatform=Mac";
+		}
+		else if(builder.CurrentPlatformSupport is LinuxPlatformSupport)
+		{
+			yield return "targetplatform=Linux";
+		}
+		else if(builder.CurrentPlatformSupport is iOSPlatformSupport)
+		{
+			yield return "targetplatform=IOS";
+		}
+		else if (builder.CurrentPlatformSupport is AndroidPlatformSupport)
+		{
+			yield return "targetplatform=Android";
+		}
+		else
+		{
+			throw new Exception("not support platform");
+		}
+		
+		// pluginDlls=
+		// plugins
+		yield return "projectType=Custom";
+		// customProject
 	}
 
 	private void BuildHeaderTool()

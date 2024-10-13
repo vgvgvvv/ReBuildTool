@@ -10,6 +10,8 @@ public abstract class CppTargetRule : ITargetInterface, IPostBuildTarget
 
     public virtual List<ITargetCompilePlugin> Plugins { get; } = new();
 
+    public virtual Dictionary<string, string> CustomInfo { get; } = new();
+
     public ICppBuildContext BuildContext { get; private set; }
     
     public virtual void Setup(ICppBuildContext buildContext)
