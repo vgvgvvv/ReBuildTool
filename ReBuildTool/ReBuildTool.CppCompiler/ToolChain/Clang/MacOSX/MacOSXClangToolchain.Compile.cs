@@ -9,7 +9,7 @@ public partial class MacOSXClangToolchain
 {
     public override IEnumerable<string> CompileArgsFor(CppCompilationUnit compileUnit)
     {
-        if (!IsObjectiveC(compileUnit.SourceFile))
+        if (IsObjectiveC(compileUnit.SourceFile))
         {
             foreach (var arg in CompileArgsForObjectiveC(compileUnit))
             {
