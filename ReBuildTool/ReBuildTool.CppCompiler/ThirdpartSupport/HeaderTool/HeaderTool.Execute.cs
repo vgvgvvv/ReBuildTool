@@ -61,9 +61,16 @@ public partial class HeaderToolPluginSupport
 
         var headerToolTarget = targetRule as IHeaderToolTarget;
 
-        yield return $"pluginDlls={string.Join('|', headerToolTarget.PluginDlls)}";
-        yield return $"plugins={string.Join('|', headerToolTarget.PluginNames)}";
-        yield return "projectType=Custom";
+        if (headerToolTarget.PluginDlls != null && headerToolTarget.PluginDlls.Count > 0)
+        {
+            yield return $"pluginDlls={string.Join('|', headerToolTarget.PluginDlls)}";
+            if (headerToolTarget.PluginNames != null && headerToolTarget.PluginNames.Count > 0)
+            {
+                yield return $"plugins={string.Join('|', headerToolTarget.PluginNames)}";
+
+            }
+        }
+        yield return "projectType=ReBuildTool";
         
         foreach (var extraArg in headerToolTarget.ExtraArgs)
         {
