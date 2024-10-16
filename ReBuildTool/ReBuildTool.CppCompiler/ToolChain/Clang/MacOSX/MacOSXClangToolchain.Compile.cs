@@ -29,20 +29,6 @@ public partial class MacOSXClangToolchain
     {
         yield return "-c";
 
-        yield return "-arch";
-        if (Arch is x64Architecture)
-        {
-            yield return "x86_64";
-        }
-        else if (Arch is ARM64Architecture)
-        {
-            yield return "arm64";
-        }
-        else
-        {
-            throw new NotSupportedException($"Unsupported architecture {Arch.Name}");
-        }
-        
         foreach (var targetPlatformArg in TargetPlatformArgs())
         {
             yield return targetPlatformArg;
@@ -80,11 +66,6 @@ public partial class MacOSXClangToolchain
     private IEnumerable<string> CompileArgsForObjectiveC(CppCompilationUnit compilationUnit)
     {
         yield return "-fobjc-arc";
-        
-        foreach (var targetPlatformArg in TargetPlatformArgs())
-        {
-            yield return targetPlatformArg;
-        }
         
         if (compilationUnit.OwnerModule is IObjectiveCModule ocModule)
         {
