@@ -1,4 +1,6 @@
-﻿using NiceIO;
+﻿using System.Collections;
+using NiceIO;
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.CompileService;
 
 namespace ReBuildTool.ToolChain;
@@ -74,6 +76,11 @@ public partial class MacOSXClangToolchain
     {
         yield return "-fobjc-arc";
         
+        foreach (var targetPlatformArg in TargetPlatformArgs())
+        {
+            yield return targetPlatformArg;
+        }
+        
         if (compilationUnit.OwnerModule is IObjectiveCModule ocModule)
         {
             if (ocModule.Frameworks.Count > 0)
@@ -119,6 +126,27 @@ public partial class MacOSXClangToolchain
             
             yield return "-stdlib=libc++";
         }
+    }
+    
+    public virtual IEnumerable<string> TargetPlatformArgs()
+    {
+        yield return "-target";
+        string archName;
+        if (Arch is x64Architecture)
+        {
+            archName = "x86_64";
+        }
+        else if (Arch is ARM64Architecture)
+        {
+            archName = "arm64";
+        }
+        else
+        {
+            throw new Exception("Unsupported architecture");
+        }
+        
+        var targetVersion = MacOSXCompileArgs.Get().MacOSXTargetVersion;
+        yield return $"{archName}-apple-macosx{targetVersion.Value}";
     }
 
     public override IEnumerable<string> ToolChainDefines()
