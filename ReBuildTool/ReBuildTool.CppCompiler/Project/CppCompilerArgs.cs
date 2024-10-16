@@ -63,6 +63,9 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 
 	[CmdLine("use makefile to bulid")]
 	public CmdLineArg<bool> UseMakeFileBuild { get; set; } = CmdLineArg<bool>.FromObject(nameof (UseMakeFileBuild), true);
+	
+	[CmdLine("debug tool chain cmdline")]
+	public CmdLineArg<bool> DebugToolchainCmd { get; set; } = CmdLineArg<bool>.FromObject(nameof (DebugToolchainCmd), false);
 
 }
 

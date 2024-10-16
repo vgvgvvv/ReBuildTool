@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using NiceIO;
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.CompileService;
 using ResetCore.Common;
 
@@ -69,6 +70,10 @@ public partial class CppBuilder
 
 		private bool RunArchiveInvocation()
 		{
+			if (CppCompilerArgs.Get().DebugToolchainCmd)
+			{
+				Log.Info($"Cmd: {ArchiveInvocation}");
+			}
 			if (!ArchiveInvocation.Run())
 			{
 				Log.Error($"{ArchiveInvocation.ProgramName} {ArchiveInvocation.Arguments.Join(" ")}");
