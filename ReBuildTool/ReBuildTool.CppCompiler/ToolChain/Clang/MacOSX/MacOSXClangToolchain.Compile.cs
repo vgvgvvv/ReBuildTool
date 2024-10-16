@@ -43,6 +43,11 @@ public partial class MacOSXClangToolchain
             throw new NotSupportedException($"Unsupported architecture {Arch.Name}");
         }
         
+        foreach (var targetPlatformArg in TargetPlatformArgs())
+        {
+            yield return targetPlatformArg;
+        }
+        
         yield return "-isysroot";
         yield return XCodeSdk.PlatformSDK.SDKPath;
         
