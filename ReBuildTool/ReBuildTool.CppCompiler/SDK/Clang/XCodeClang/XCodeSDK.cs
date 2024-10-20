@@ -167,9 +167,10 @@ public class XCodeSDK : ClangSDK
 
 		public IEnumerable<NPath> LibraryPaths()
 		{
-			yield return "/usr/lib".ToNPath();
-			yield return Owner.XCodeToolchainLibLocation;
-			yield return Owner.PlatformSDK.SDKPath.Combine("usr/lib");
+			// yield return "/usr/lib".ToNPath();
+			// yield return Owner.XCodeToolchainLibLocation;
+			// yield return Owner.PlatformSDK.SDKPath.Combine("usr/lib");
+			yield break;
 		}
 
 		public IEnumerable<string> StaticLibraries()

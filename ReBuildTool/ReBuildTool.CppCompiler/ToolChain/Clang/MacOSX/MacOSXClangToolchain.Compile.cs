@@ -1,4 +1,6 @@
-﻿using NiceIO;
+﻿using System.Collections;
+using NiceIO;
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.CompileService;
 
 namespace ReBuildTool.ToolChain;
@@ -7,7 +9,7 @@ public partial class MacOSXClangToolchain
 {
     public override IEnumerable<string> CompileArgsFor(CppCompilationUnit compileUnit)
     {
-        if (!IsObjectiveC(compileUnit.SourceFile))
+        if (IsObjectiveC(compileUnit.SourceFile))
         {
             foreach (var arg in CompileArgsForObjectiveC(compileUnit))
             {
@@ -27,18 +29,9 @@ public partial class MacOSXClangToolchain
     {
         yield return "-c";
 
-        yield return "-arch";
-        if (Arch is x64Architecture)
+        foreach (var targetPlatformArg in TargetPlatformArgs())
         {
-            yield return "x86_64";
-        }
-        else if (Arch is ARM64Architecture)
-        {
-            yield return "arm64";
-        }
-        else
-        {
-            throw new NotSupportedException($"Unsupported architecture {Arch.Name}");
+            yield return targetPlatformArg;
         }
         
         yield return "-isysroot";
@@ -119,6 +112,27 @@ public partial class MacOSXClangToolchain
             
             yield return "-stdlib=libc++";
         }
+    }
+    
+    public virtual IEnumerable<string> TargetPlatformArgs()
+    {
+        yield return "-target";
+        string archName;
+        if (Arch is x64Architecture)
+        {
+            archName = "x86_64";
+        }
+        else if (Arch is ARM64Architecture)
+        {
+            archName = "arm64";
+        }
+        else
+        {
+            throw new Exception("Unsupported architecture");
+        }
+        
+        var targetVersion = MacOSXCompileArgs.Get().MacOSXTargetVersion;
+        yield return $"{archName}-apple-macosx{targetVersion.Value}";
     }
 
     public override IEnumerable<string> ToolChainDefines()

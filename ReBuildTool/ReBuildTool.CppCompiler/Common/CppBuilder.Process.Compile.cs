@@ -98,6 +98,10 @@ public partial class CppBuilder
 				else
 				{
 					Log.Info($"Compile:[{index}/{maxCount}]");
+					if (CppCompilerArgs.Get().DebugToolchainCmd)
+					{
+						Log.Info($"Cmd: {invocation}");
+					}
 					if (!invocation.Run())
 					{
 						Log.Error($"Compile failed: {invocation.ProgramName} {string.Join(' ', invocation.Arguments)}");

@@ -63,6 +63,9 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 
 	[CmdLine("use makefile to bulid")]
 	public CmdLineArg<bool> UseMakeFileBuild { get; set; } = CmdLineArg<bool>.FromObject(nameof (UseMakeFileBuild), true);
+	
+	[CmdLine("debug tool chain cmdline")]
+	public CmdLineArg<bool> DebugToolchainCmd { get; set; } = CmdLineArg<bool>.FromObject(nameof (DebugToolchainCmd), false);
 
 }
 
@@ -76,4 +79,14 @@ public class AndroidCompilerArgs : CommandLineArgGroup<AndroidCompilerArgs>
 	
 	[CmdLine("ndk toolchain version to use")]
 	public CmdLineArg<int> NDKTargetVersion { get; set; } = CmdLineArg<int>.FromObject(nameof(NDKTargetVersion), 25);
+}
+
+public class IOSCompileArgs : CommandLineArgGroup<IOSCompileArgs>
+{
+	public CmdLineArg<string> IOSTargetVersion { get; set; } = CmdLineArg<string>.FromObject(nameof(IOSTargetVersion), "15.0");
+}
+
+public class MacOSXCompileArgs : CommandLineArgGroup<MacOSXCompileArgs>
+{
+	public CmdLineArg<string> MacOSXTargetVersion { get; set; } = CmdLineArg<string>.FromObject(nameof(MacOSXTargetVersion), "11.5");
 }

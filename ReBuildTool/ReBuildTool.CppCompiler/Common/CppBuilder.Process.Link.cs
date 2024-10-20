@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using NiceIO;
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.CompileService;
 using ResetCore.Common;
 
@@ -62,6 +63,10 @@ public partial class CppBuilder
 
 		private bool RunLinkInvocations()
 		{
+			if (CppCompilerArgs.Get().DebugToolchainCmd)
+			{
+				Log.Info($"Cmd: {LinkInvocation}");
+			}
 			if (!LinkInvocation.Run())
 			{
 				Log.Error($"{LinkInvocation.ProgramName} {LinkInvocation.Arguments.Join(" ")}");
