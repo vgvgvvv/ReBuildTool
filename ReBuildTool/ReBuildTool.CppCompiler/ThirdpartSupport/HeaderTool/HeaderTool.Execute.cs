@@ -61,6 +61,7 @@ public partial class HeaderToolPluginSupport
 
         var headerToolTarget = targetRule as IHeaderToolTarget;
 
+        yield return $"dllSearchPath={HeaderToolArgs.Get().HeaderToolRoot}";
         if (headerToolTarget.PluginDlls != null && headerToolTarget.PluginDlls.Count > 0)
         {
             yield return $"pluginDlls={string.Join('|', headerToolTarget.PluginDlls)}";

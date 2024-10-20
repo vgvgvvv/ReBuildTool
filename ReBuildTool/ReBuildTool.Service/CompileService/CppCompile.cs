@@ -80,6 +80,13 @@ public interface ITargetCompilePlugin
 
 }
 
+public class GitLibrary
+{
+	public string Name { get; set; }
+	public string Url { get; set; }
+	public string Branch { get; set; }
+}
+
 public interface ITargetInterface
 {
 	public List<string> UsedModules { get; }
@@ -89,6 +96,8 @@ public interface ITargetInterface
 	public List<ITargetCompilePlugin> Plugins { get; }
 	
 	public Dictionary<string, string> CustomInfo { get; }
+	
+	public List<GitLibrary> GitLibraries { get; }
 }
 
 public interface ICppSourceProviderInterface
