@@ -8,6 +8,7 @@ using ReBuildTool.Service.IDEService;
 using ReBuildTool.Service.IDEService.CMake;
 using ReBuildTool.Service.IDEService.VisualStudio;
 using ResetCore.Common;
+using ResetCore.Common.Parser.Ini;
 
 namespace ReBuildTool.ToolChain.Project;
 
