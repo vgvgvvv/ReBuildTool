@@ -9,6 +9,8 @@ namespace ReBuildTool.IDE.VisualStudio;
 
 public partial class VCProject
 {
+	// VS doesn't auto-detect the installed MSVC toolset here - bump this if it doesn't match.
+	private const string PlatformToolsetVersion = "v143";
 
 	private void GenerateProject()
 	{
@@ -19,16 +21,22 @@ public partial class VCProject
 			       new Tuple<string, string>("ToolsVersion", "17.0"),
 			       new Tuple<string, string>("xmlns", "http://schemas.microsoft.com/developer/msbuild/2003")))
 		{
+			GenerateProjectConfigurationList();
 			GenerateGlobalProperty();
-			GenerateImports();
-			GenerateProjectConfigurations();
+			GenerateImportDefaultProps();
+			// ConfigurationType must be declared before Microsoft.Cpp.props is imported, otherwise
+			// VS evaluates it as a normal (non-Makefile) project and ignores all NMake* settings.
+			GenerateConfigurationTypePropertyGroups();
+			GenerateImportCppProps();
+			GenerateNMakePropertyGroups();
 			GenerateSourceFile();
+			GenerateImportCppTargets();
 		}
 	}
 
-	private void GenerateProjectConfigurations()
+	private void GenerateProjectConfigurationList()
 	{
-		using(projectCodeBuilder.CreateXmlScope(Tags.ItemGroup, 
+		using(projectCodeBuilder.CreateXmlScope(Tags.ItemGroup,
 			      new Tuple<string, string>("Label", "ProjectConfigurations")))
 		{
 			foreach (var configuration in projectConfigs)
@@ -42,28 +50,74 @@ public partial class VCProject
 				}
 			}
 		}
-				
+	}
+
+	private void GenerateConfigurationTypePropertyGroups()
+	{
 		foreach (var configuration in projectConfigs)
 		{
-			GenerateProjectConfiguration(configuration);
+			using (projectCodeBuilder.CreateXmlScope(Tags.PropertyGroup,
+				       new Tuple<string, string>("Label", "Configuration"),
+				       new Tuple<string, string>("Condition",
+					       $"'$(Configuration)|$(Platform)'=='{configuration.ConfigurationName}|{configuration.PlatformName}'")))
+			{
+				projectCodeBuilder.WriteNode("ConfigurationType", "Makefile");
+				projectCodeBuilder.WriteNode("PlatformToolset", PlatformToolsetVersion);
+			}
 		}
 	}
 
-	private void GenerateProjectConfiguration(IProjectConfiguration configuration)
+	private void GenerateNMakePropertyGroups()
+	{
+		foreach (var configuration in projectConfigs)
+		{
+			GenerateNMakePropertyGroup(configuration);
+		}
+	}
+
+	private void GenerateNMakePropertyGroup(IProjectConfiguration configuration)
 	{
 		using (projectCodeBuilder.CreateXmlScope("PropertyGroup",
 			       new Tuple<string, string>("Condition",
 				       $"'$(Configuration)|$(Platform)'=='{configuration.ConfigurationName}|{configuration.PlatformName}'")))
 		{
-			// TODO: provide build command
-			projectCodeBuilder.WriteNode("NMakeBuildCommandLine", "");
-			projectCodeBuilder.WriteNode("NMakeReBuildCommandLine", "");
-			projectCodeBuilder.WriteNode("NMakeCleanCommandLine", "");
-			projectCodeBuilder.WriteNode("NMakeOutput", "");
-			projectCodeBuilder.WriteNode("AdditionalOptions", "");
+			// Always go through $RBT_HOME/rbt.bat so this stays correct regardless of which
+			// ReBuildTool build (dev checkout vs Booster-installed) generated this project.
+			var rbtExe = GlobalPaths.ReBuildToolHome.Combine("rbt.bat");
+			var commonArgs = $"{rbtExe.InQuotes()} --ProjectRoot {cppSource.ProjectRoot.InQuotes()} " +
+			                  $"--BuildConfig {configuration.ConfigurationName} --TargetArch {configuration.PlatformName}";
+
+			projectCodeBuilder.WriteNode("NMakeBuildCommandLine", $"{commonArgs} --Mode Build");
+			projectCodeBuilder.WriteNode("NMakeReBuildCommandLine", $"{commonArgs} --Mode ReBuild");
+			projectCodeBuilder.WriteNode("NMakeCleanCommandLine", $"{commonArgs} --Mode Clean");
+			projectCodeBuilder.WriteNode("NMakeOutput", GetNMakeOutput(configuration));
+			projectCodeBuilder.WriteNode("NMakePreprocessorDefinitions", string.Join(';', GetAllPreprocessorDefinitions()));
+			projectCodeBuilder.WriteNode("NMakeIncludeSearchPath", string.Join(';', GetAllIncludeSearchPaths()));
 		}
 	}
-	
+
+	private string GetNMakeOutput(IProjectConfiguration configuration)
+	{
+		var exeModule = FindExecutableModule();
+		if (exeModule == null)
+		{
+			return string.Empty;
+		}
+
+		var ext = generatorConfigProvider.ToolChain.ExecutableExtension;
+		var platformName = IPlatformSupport.CurrentTargetPlatform.ToString();
+		return cppSource.OutputRoot
+			.Combine(platformName)
+			.Combine(configuration.ConfigurationName)
+			.Combine(configuration.PlatformName)
+			.Combine(exeModule.TargetName + ext);
+	}
+
+	private IModuleInterface? FindExecutableModule()
+	{
+		return cppSource.ModuleRules.Values
+			.FirstOrDefault(module => module.TargetBuildType == BuildType.Executable);
+	}
 
 	private void GenerateGlobalProperty()
 	{
@@ -73,9 +127,18 @@ public partial class VCProject
 		}
 	}
 
-	private void GenerateImports()
+	private void GenerateImportDefaultProps()
+	{
+		projectCodeBuilder.WriteNodeWithoutValue(Tags.Import, new Tuple<string, string>("Project", "$(VCTargetsPath)\\Microsoft.Cpp.Default.props"));
+	}
+
+	private void GenerateImportCppProps()
 	{
 		projectCodeBuilder.WriteNodeWithoutValue(Tags.Import, new Tuple<string, string>("Project", commonPropPath));
+	}
+
+	private void GenerateImportCppTargets()
+	{
 		projectCodeBuilder.WriteNodeWithoutValue(Tags.Import, new Tuple<string, string>("Project", "$(VCTargetsPath)\\Microsoft.Cpp.targets"));
 	}
 
@@ -224,6 +287,52 @@ public partial class VCProject
 		{
 			yield return path;
 		}
+	}
+
+	private IEnumerable<string> GetDefinesForModule(IModuleInterface module)
+	{
+		var depModules = new HashSet<IModuleInterface>();
+		GetDependencies(module, depModules);
+		foreach (var dep in depModules)
+		{
+			foreach (var define in dep.PublicDefines)
+			{
+				yield return define;
+			}
+		}
+
+		foreach (var define in module.PrivateDefines)
+		{
+			yield return define;
+		}
+
+		foreach (var define in module.PublicDefines)
+		{
+			yield return define;
+		}
+	}
+
+	// NMakePreprocessorDefinitions/NMakeIncludeSearchPath are project-level (not per-file) settings -
+	// they're what VS's IntelliSense actually reads for a Makefile project, so aggregate across every
+	// module in the project rather than per module like GetOptionsForModule/GetIncludeDirectoriesForModule.
+	private IEnumerable<string> GetAllPreprocessorDefinitions()
+	{
+		var result = new List<string>();
+		foreach (var module in cppSource.ModuleRules.Values)
+		{
+			result.AddRange(GetDefinesForModule(module));
+		}
+		return result.Distinct();
+	}
+
+	private IEnumerable<string> GetAllIncludeSearchPaths()
+	{
+		var result = new List<string>();
+		foreach (var module in cppSource.ModuleRules.Values)
+		{
+			result.AddRange(GetIncludeDirectoriesForModule(module).Select(path => path.ToString()));
+		}
+		return result.Distinct();
 	}
 
 }

@@ -2,7 +2,7 @@
 
 using ReBuildTool.ToolChain;
 
-public class MainModule : ModuleRule
+public class MainModule : CppModuleRule
 {
     public MainModule()
     {

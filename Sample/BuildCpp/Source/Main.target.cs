@@ -2,7 +2,7 @@
 
 using ReBuildTool.ToolChain;
 
-public class MainTarget : TargetRule
+public class MainTarget : CppTargetRule
 {
     public MainTarget()
     {
