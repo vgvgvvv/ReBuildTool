@@ -63,3 +63,23 @@ if [ $REBUILD_REBUILDTOOL == "Y" ]; then
 else
     cd ReBuildTool/BuildScript
 fi
+
+echo "============= Add RBT to PATH ================"
+EXPORT_LINE="export PATH=\"\$PATH:$RBT_HOME\""
+SHELL_CONFIGS=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile")
+for CONFIG in "${SHELL_CONFIGS[@]}"; do
+    if [ -f "$CONFIG" ]; then
+        if ! grep -qF "$RBT_HOME" "$CONFIG"; then
+            printf '\n# ReBuildTool\n%s\n' "$EXPORT_LINE" >> "$CONFIG"
+            echo "Added RBT to PATH in $CONFIG"
+        else
+            echo "RBT already in PATH in $CONFIG"
+        fi
+    fi
+done
+
+echo "============= Installation Complete ================"
+echo "Please restart your terminal or run:"
+echo "  source ~/.bashrc   (bash)"
+echo "  source ~/.zshrc    (zsh)"
+echo "Then you can use the 'rbt' command."
