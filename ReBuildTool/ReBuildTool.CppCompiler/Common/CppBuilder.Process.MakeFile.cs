@@ -42,7 +42,11 @@ public partial class CppBuilder
             {
                 var unit = invocation.Unit;
                 var depFiles = GetAllCompileUnitDep(unit);
-                var target = new MakeFileGenerator.Target(unit.OutputFile.FileName, MakeFileGenerator.TargetType.SubTarget);
+                // Must be the full path matching unit.OutputFile exactly (not just the file name) -
+                // otherwise make/nmake can never find the actual object file to check it's up to date
+                // against, since it doesn't live in whatever directory make happens to run from, and
+                // ends up recompiling every source file on every build.
+                var target = new MakeFileGenerator.Target(MakeSureValidPath(unit.OutputFile), MakeFileGenerator.TargetType.SubTarget);
                 target.Dependencies.Add(MakeSureValidPath(unit.SourceFile));
                 foreach (var depFile in depFiles)
                 {
@@ -70,7 +74,9 @@ public partial class CppBuilder
             var target = new MakeFileGenerator.Target(unit.OutputPath.InQuotes(), MakeFileGenerator.TargetType.MainTarget);
             foreach (var objFile in unit.ObjectFiles)
             {
-                target.Dependencies.Add(objFile.FileName);
+                // Same reasoning as CollectCompileTarget: needs to match the sub-target's full path,
+                // a bare file name can never resolve to the actual object file on disk.
+                target.Dependencies.Add(MakeSureValidPath(objFile));
             }
             foreach (var libraryPath in unit.LibraryPaths)
             {
