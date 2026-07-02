@@ -1,85 +1,106 @@
-CURRENT_MODE=$1
-TARGET_NAME=$2
-CURRENT_SCRIPT_FULL_PATH=$(realpath $0)
-CURRENT_DIR=$(cd $(dirname $0); pwd)
-echo "current dir is $CURRENT_DIR"
+#!/usr/bin/env bash
 
-CURRENT_HOME=$HOME
+set -Eeuo pipefail
 
-if [ -z "$RBT_HOME" ]; then
-    echo "RBT_HOME is not set"
-    RBT_HOME=$CURRENT_HOME/.rbt
-fi
+REPOSITORY_URL="https://github.com/vgvgvvv/ReBuildTool.git"
+RBT_HOME="${RBT_HOME:-"$HOME/.rbt"}"
+REPOSITORY_DIR="$RBT_HOME/ReBuildTool"
+export RBT_HOME
+
+assume_yes=false
+for argument in "$@"; do
+    case "$argument" in
+        -y|--yes)
+            assume_yes=true
+            ;;
+        *)
+            echo "Unknown argument: $argument" >&2
+            echo "Usage: bash Install.sh [-y|--yes]" >&2
+            exit 2
+            ;;
+    esac
+done
 
 echo "RBT_HOME is $RBT_HOME"
+mkdir -p "$RBT_HOME"
 
-case "$(uname -s)" in
-    Linux*)    OS="Linux";;
-    Darwin*)   OS="Mac";;
-    *)         OS="UNKNOWN: $(uname -s)"
-esac
-
-case "$(uname -m)" in
-    x86_64)   ARCH="64";;
-    arm64)    ARCH="Arm64";;
-    *)        ARCH="UNKNOWN: $(uname -m)"
-esac
-
-if [ ! -d $RBT_HOME ]; then
-    REBUILD_REBUILDTOOL="Y"
-    mkdir -p $RBT_HOME
-else
-    echo "need rebuild ReBuildTool?[Y/N]"
-    read REBUILD_REBUILDTOOL
-fi
-cd $RBT_HOME
-
-if [ $REBUILD_REBUILDTOOL == "Y" ]; then
-
-    echo "============= Get ReBuildTool From Git ================"
-    if [ ! -d "ReBuildTool" ];
-    then
-        echo "clone ReBuildTool"
-        git clone git@github.com:vgvgvvv/ReBuildTool.git
-        cd ReBuildTool
-        git submodule init
-        git submodule update
-        cd BuildScript/
+rebuild=true
+if [ -d "$REPOSITORY_DIR/.git" ]; then
+    if [ "$assume_yes" = true ]; then
+        rebuild=true
+    elif [ -t 1 ]; then
+        response=""
+        if read -r -p "ReBuildTool is already installed. Update and rebuild it? [y/N] " response </dev/tty; then
+            case "$response" in
+                y|Y|yes|YES|Yes)
+                    rebuild=true
+                    ;;
+                *)
+                    rebuild=false
+                    ;;
+            esac
+        else
+            echo
+            echo "Could not read from the terminal; skipping rebuild."
+            rebuild=false
+        fi
     else
-        echo "pull ReBuildTool"
-        cd ReBuildTool
-        git reset --hard
-        git pull
-        git submodule update
-        cd BuildScript
+        echo "No interactive terminal detected; updating the existing installation."
+        rebuild=true
+    fi
+elif [ -e "$REPOSITORY_DIR" ]; then
+    echo "Cannot install: $REPOSITORY_DIR exists but is not a Git repository." >&2
+    exit 1
+fi
+
+if [ "$rebuild" = true ]; then
+    echo "============= Get ReBuildTool From Git ================"
+    if [ ! -d "$REPOSITORY_DIR/.git" ]; then
+        git clone "$REPOSITORY_URL" "$REPOSITORY_DIR"
+    else
+        git -C "$REPOSITORY_DIR" remote set-url origin "$REPOSITORY_URL"
+        git -C "$REPOSITORY_DIR" pull --ff-only
     fi
 
-    chmod +x BuildAll.sh
-    chmod +x BuildUpdater.sh
+    git -C "$REPOSITORY_DIR" submodule sync --recursive
+    git -C "$REPOSITORY_DIR" submodule update --init --recursive
 
     echo "============= Build ReBuildTool ================"
-    ./BuildAll.sh
-    ./BuildUpdater.sh
-else
-    cd ReBuildTool/BuildScript
+    "$REPOSITORY_DIR/BuildScript/BuildAll.sh"
+    "$REPOSITORY_DIR/BuildScript/BuildUpdater.sh"
 fi
 
 echo "============= Add RBT to PATH ================"
-EXPORT_LINE="export PATH=\"\$PATH:$RBT_HOME\""
-SHELL_CONFIGS=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile")
-for CONFIG in "${SHELL_CONFIGS[@]}"; do
-    if [ -f "$CONFIG" ]; then
-        if ! grep -qF "$RBT_HOME" "$CONFIG"; then
-            printf '\n# ReBuildTool\n%s\n' "$EXPORT_LINE" >> "$CONFIG"
-            echo "Added RBT to PATH in $CONFIG"
+export_line="export PATH=\"\$PATH:$RBT_HOME\""
+shell_configs=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile")
+config_found=false
+
+for config in "${shell_configs[@]}"; do
+    if [ -f "$config" ]; then
+        config_found=true
+        if ! grep -qF "$RBT_HOME" "$config"; then
+            printf '\n# ReBuildTool\n%s\n' "$export_line" >>"$config"
+            echo "Added RBT to PATH in $config"
         else
-            echo "RBT already in PATH in $CONFIG"
+            echo "RBT already in PATH in $config"
         fi
     fi
 done
 
+if [ "$config_found" = false ]; then
+    case "${SHELL:-}" in
+        */zsh)
+            config="$HOME/.zshrc"
+            ;;
+        *)
+            config="$HOME/.profile"
+            ;;
+    esac
+    printf '# ReBuildTool\n%s\n' "$export_line" >>"$config"
+    echo "Added RBT to PATH in $config"
+fi
+
 echo "============= Installation Complete ================"
-echo "Please restart your terminal or run:"
-echo "  source ~/.bashrc   (bash)"
-echo "  source ~/.zshrc    (zsh)"
+echo "Please restart your terminal or add RBT to the current session with:"
+echo "  export PATH=\"\$PATH:$RBT_HOME\""
 echo "Then you can use the 'rbt' command."
