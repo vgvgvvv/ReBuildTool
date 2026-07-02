@@ -30,7 +30,7 @@ if "%REBUILD_REBUILDTOOL%"=="Y" (
 
     if not exist "%RBT_HOME%\ReBuildTool\" (
         echo "clone ReBuildTool in %cd%"
-        git clone git@github.com:vgvgvvv/ReBuildTool.git
+        git clone https://github.com/vgvgvvv/ReBuildTool.git
         cd ReBuildTool
         git submodule init
         git submodule update
@@ -39,7 +39,9 @@ if "%REBUILD_REBUILDTOOL%"=="Y" (
         echo "pull ReBuildTool"
         cd ReBuildTool
         git reset --hard
+        git remote set-url origin https://github.com/vgvgvvv/ReBuildTool.git
         git pull
+        git submodule sync --recursive
         git submodule update
         cd BuildScript
     )

@@ -8,7 +8,7 @@ yet another build system
 ### Linux / macOS
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/vgvgvvv/ReBuildTool/main/BuildScript/Install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/vgvgvvv/ReBuildTool/main/BuildScript/Install.sh | bash
 ```
 
 After installation, restart your terminal or run `source ~/.bashrc` (or `~/.zshrc`), then verify:
