@@ -66,11 +66,17 @@ public class ResetHeaderTool
         {
             $"projectPath={projectRoot}",
             $"projectType={projectType}",
-            $"pluginDlls={string.Join(",", plugins.Split(",").Select(n=>GetHeaderToolPluginDll(n.Trim())))}",
-            $"plugins={plugins}",
         };
-        executeArgs.AddRange(args.Split(" "));
-        
+
+        var pluginNames = plugins.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (pluginNames.Length > 0)
+        {
+            executeArgs.Add($"pluginDlls={string.Join('|', pluginNames.Select(GetHeaderToolPluginDll))}");
+            executeArgs.Add($"plugins={string.Join('|', pluginNames)}");
+        }
+
+        executeArgs.AddRange(args.Split(" ", StringSplitOptions.RemoveEmptyEntries));
+
         SimpleExec.Command.Run(GetCurrentHeaderToolExe(), executeArgs, projectRoot);
     }
 

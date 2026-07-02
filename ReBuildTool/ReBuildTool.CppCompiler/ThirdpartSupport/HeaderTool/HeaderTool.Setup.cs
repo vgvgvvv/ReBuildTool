@@ -33,7 +33,7 @@ public partial class HeaderToolPluginSupport
         var buildScript = installPath.Combine("Scripts/BuildAll.bat");
         if (!PlatformHelper.IsWindows())
         {
-            buildScript.ChangeExtension(".sh");
+            buildScript = buildScript.ChangeExtension(".sh");
         }
         Cmd.RunCmd(buildScript, "", HeaderToolRoot);
     }
