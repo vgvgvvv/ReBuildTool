@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore ReBuildTool/ReBuildTool.sln
+
+      - name: Build ReBuildTool
+        run: |
+          dotnet publish ReBuildTool/ReBuildTool/ReBuildTool.csproj -r win-x64   --self-contained -c Release -o Binary/Win64/ReBuildTool
+          dotnet publish ReBuildTool/ReBuildTool/ReBuildTool.csproj -r osx-x64   --self-contained -c Release -o Binary/Mac64/ReBuildTool
+          dotnet publish ReBuildTool/ReBuildTool/ReBuildTool.csproj -r osx-arm64 --self-contained -c Release -o Binary/MacArm64/ReBuildTool
+          dotnet publish ReBuildTool/ReBuildTool/ReBuildTool.csproj -r linux-x64 --self-contained -c Release -o Binary/Linux64/ReBuildTool
+
+      - name: Build ReBuildTool.Updater
+        run: |
+          dotnet publish ReBuildTool/ReBuildTool.Updater/ReBuildTool.Updater.csproj -r win-x64   --self-contained -c Release -o Binary/Win64/ReBuildTool.Updater
+          dotnet publish ReBuildTool/ReBuildTool.Updater/ReBuildTool.Updater.csproj -r osx-x64   --self-contained -c Release -o Binary/Mac64/ReBuildTool.Updater
+          dotnet publish ReBuildTool/ReBuildTool.Updater/ReBuildTool.Updater.csproj -r osx-arm64 --self-contained -c Release -o Binary/MacArm64/ReBuildTool.Updater
+          dotnet publish ReBuildTool/ReBuildTool.Updater/ReBuildTool.Updater.csproj -r linux-x64 --self-contained -c Release -o Binary/Linux64/ReBuildTool.Updater
+
+      - name: Package
+        run: |
+          cd Binary
+
+          # Win64
+          mkdir -p Package/Win64
+          cp -r Win64/ReBuildTool      Package/Win64/ReBuildTool
+          cp -r Win64/ReBuildTool.Updater Package/Win64/ReBuildTool.Updater
+          cd Package/Win64 && zip -r ../../ReBuildTool-Win64.zip ReBuildTool ReBuildTool.Updater && cd ../..
+
+          # Mac64
+          mkdir -p Package/Mac64
+          cp -r Mac64/ReBuildTool      Package/Mac64/ReBuildTool
+          cp -r Mac64/ReBuildTool.Updater Package/Mac64/ReBuildTool.Updater
+          cd Package/Mac64 && zip -r ../../ReBuildTool-Mac64.zip ReBuildTool ReBuildTool.Updater && cd ../..
+
+          # MacArm64
+          mkdir -p Package/MacArm64
+          cp -r MacArm64/ReBuildTool      Package/MacArm64/ReBuildTool
+          cp -r MacArm64/ReBuildTool.Updater Package/MacArm64/ReBuildTool.Updater
+          cd Package/MacArm64 && zip -r ../../ReBuildTool-MacArm64.zip ReBuildTool ReBuildTool.Updater && cd ../..
+
+          # Linux64
+          mkdir -p Package/Linux64
+          cp -r Linux64/ReBuildTool      Package/Linux64/ReBuildTool
+          cp -r Linux64/ReBuildTool.Updater Package/Linux64/ReBuildTool.Updater
+          cd Package/Linux64 && zip -r ../../ReBuildTool-Linux64.zip ReBuildTool ReBuildTool.Updater && cd ../..
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Binary/ReBuildTool-Win64.zip
+            Binary/ReBuildTool-Mac64.zip
+            Binary/ReBuildTool-MacArm64.zip
+            Binary/ReBuildTool-Linux64.zip
