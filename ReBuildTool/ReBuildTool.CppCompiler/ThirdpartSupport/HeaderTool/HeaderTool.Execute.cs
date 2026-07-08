@@ -61,7 +61,14 @@ public partial class HeaderToolPluginSupport
 
         var headerToolTarget = targetRule as IHeaderToolTarget;
 
-        yield return $"dllSearchPath={HeaderToolArgs.Get().HeaderToolRoot}";
+        // Use the resolved HeaderToolRoot property (which falls back to
+        // IntermediaFolder/ResetHeaderTool) rather than the raw CLI arg, so the
+        // search path is never empty when --headertoolroot is not passed.
+        var searchRoot = HeaderToolRoot.ToString();
+        if (!string.IsNullOrEmpty(searchRoot))
+        {
+            yield return $"dllSearchPath={searchRoot}";
+        }
         if (headerToolTarget.PluginDlls != null && headerToolTarget.PluginDlls.Count > 0)
         {
             yield return $"pluginDlls={string.Join('|', headerToolTarget.PluginDlls)}";
@@ -71,8 +78,7 @@ public partial class HeaderToolPluginSupport
 
             }
         }
-        yield return "projectType=ReBuildTool";
-        
+
         foreach (var extraArg in headerToolTarget.ExtraArgs)
         {
             yield return extraArg;
