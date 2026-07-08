@@ -71,8 +71,7 @@ public partial class HeaderToolPluginSupport
 
             }
         }
-        yield return "projectType=ReBuildTool";
-        
+
         foreach (var extraArg in headerToolTarget.ExtraArgs)
         {
             yield return extraArg;

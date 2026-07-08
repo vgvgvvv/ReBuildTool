@@ -34,18 +34,22 @@ public class MakeFile
 			return false;
 		}
 		var jCount = Math.Min(Environment.ProcessorCount * 2, 16);
-		var shell = Shell.Create().WithProgram(exe);
+		// All target/dependency paths in the generated Makefile are absolute, so the working
+		// directory doesn't affect correctness, but nmake/make still need a stable one to run in.
+		var shell = Shell.Create().WithProgram(exe).WithWorkspace(makeFile.Parent);
 
 		if (PlatformHelper.IsWindows())
 		{
+			// /F is required here - without it, nmake treats the makefile path as a target name
+			// instead of "the file to read", and since that path happens to exist on disk (it's
+			// the makefile itself), nmake considers it already satisfied and silently does nothing.
 			shell.WithArguments(new List<string>() {
-					makeFile.InQuotes(),
+					"/F", makeFile.InQuotes(),
 				});
 			shell.AppendArgument("/NOLOGO");
 		}
 		else
 		{
-			shell.WithWorkspace(makeFile.Parent);
 			shell.AppendArgument($"-j{jCount}");
 		}
 		

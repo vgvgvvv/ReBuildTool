@@ -16,8 +16,20 @@ public abstract partial class CppModuleRule
         module.SourceDirectories.Add(publicDirectory);
         module.SourceDirectories.Add(privateDirectory);
         var moduleInternalName = $"{module.GetType().Name}.internal";
-        File.WriteAllText(publicDirectory.Combine($"{moduleInternalName}.h"), GenerateHeader(module));
-        File.WriteAllText(privateDirectory.Combine($"{moduleInternalName}.cpp"), GenerateSource(module));
+        WriteIfChanged(publicDirectory.Combine($"{moduleInternalName}.h"), GenerateHeader(module));
+        WriteIfChanged(privateDirectory.Combine($"{moduleInternalName}.cpp"), GenerateSource(module));
+    }
+
+    // The Makefile-based incremental build keys compile decisions off these files' timestamps -
+    // rewriting them unconditionally on every build would bump the mtime even when nothing
+    // changed, forcing a spurious recompile (and relink) every single time.
+    private static void WriteIfChanged(NPath path, string content)
+    {
+        if (path.Exists() && path.ReadAllText() == content)
+        {
+            return;
+        }
+        File.WriteAllText(path, content);
     }
 
     private static string GenerateHeader(IModuleInterface module)
