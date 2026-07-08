@@ -44,33 +44,106 @@ public partial class CppBuilder
 		}
 
 		
-		private bool CollectCompileUnit()
-		{
-			CompileUnits.Clear();
-			foreach (var sourceDirectory in Module.SourceDirectories)
+			private bool CollectCompileUnit()
 			{
-				var files = sourceDirectory.ToNPath().Files(true)
-					.Where(f => ToolChain.CanBeCompiled(f))
+				CompileUnits.Clear();
+
+				// Pre-resolve ExcludeDirectories / ExcludeFiles to absolute NPaths
+				// (relative entries are resolved against the module dir) so the
+				// exclusion predicate can do fast membership tests.
+				var rule = Module as CppModuleRule;
+				var excludeDirs = (rule?.ExcludeDirectories ?? Enumerable.Empty<string>())
+					.Select(p => rule!.ResolveSourcePath(p).ToNPath())
+					.Where(d => d.Exists())
 					.ToList();
-				foreach (var sourceFile in files)
+				var excludeFiles = (rule?.ExcludeFiles ?? Enumerable.Empty<string>())
+					.Select(p => rule!.ResolveSourcePath(p).ToNPath())
+					.ToList();
+
+				foreach (var sourceDirectory in Module.SourceDirectories)
 				{
-					var compileUnit = new CppCompilationUnit(Module);
-					compileUnit.SourceFile = sourceFile;
-					compileUnit.CompileFlags = GetCompileFlagsForCompileUnit(compileUnit);
-					compileUnit.Defines = GetDefinesForCompileUnit(compileUnit);
-					compileUnit.IncludePaths = GetIncludePathsForCompileUnit(compileUnit);
-					compileUnit.OutputFile = ObjectCachePath(sourceFile);
-					compileUnit.CompileArgsBuilder = ToolChain.MakeCompileArgsBuilder();
-					if (Module is CppModuleRule moduleRule)
+					var files = sourceDirectory.ToNPath().Files(true)
+						.Where(f => ToolChain.CanBeCompiled(f))
+						.Where(f => !IsExcluded(f, excludeDirs, excludeFiles))
+						.ToList();
+					foreach (var sourceFile in files)
 					{
-						moduleRule.AdditionCompileArgs(compileUnit.CompileArgsBuilder);
+						AddCompileUnit(sourceFile);
 					}
-					CompileUnits.Add(compileUnit);
 				}
+
+				// Explicit per-file sources (on top of the directory globs).
+				if (rule != null)
+				{
+					foreach (var rel in rule.SourceFiles)
+					{
+						var sourceFile = rule.ResolveSourcePath(rel).ToNPath();
+						if (!sourceFile.Exists())
+						{
+							continue;
+						}
+						if (!ToolChain.CanBeCompiled(sourceFile))
+						{
+							continue;
+						}
+						if (IsExcluded(sourceFile, excludeDirs, excludeFiles))
+						{
+							continue;
+						}
+						// Skip if the directory glob already collected this file.
+						if (CompileUnits.Any(u => u.SourceFile == sourceFile))
+						{
+							continue;
+						}
+						AddCompileUnit(sourceFile);
+					}
+				}
+
+				return true;
 			}
 
-			return true;
-		}
+			private void AddCompileUnit(NPath sourceFile)
+			{
+				var compileUnit = new CppCompilationUnit(Module);
+				compileUnit.SourceFile = sourceFile;
+				compileUnit.CompileFlags = GetCompileFlagsForCompileUnit(compileUnit);
+				compileUnit.Defines = GetDefinesForCompileUnit(compileUnit);
+				compileUnit.IncludePaths = GetIncludePathsForCompileUnit(compileUnit);
+				compileUnit.OutputFile = ObjectCachePath(sourceFile);
+				compileUnit.CompileArgsBuilder = ToolChain.MakeCompileArgsBuilder();
+				if (Module is CppModuleRule moduleRule)
+				{
+					moduleRule.AdditionCompileArgs(compileUnit.CompileArgsBuilder);
+				}
+				CompileUnits.Add(compileUnit);
+			}
+
+			/// <summary>
+			/// True if <paramref name="file"/> is under one of the excluded
+			/// directories or matches one of the excluded files. Compares via
+			/// normalized string prefixes to cover subdirectory membership
+			/// regardless of NPath's own equality semantics.
+			/// </summary>
+			private static bool IsExcluded(NPath file, List<NPath> excludeDirs, List<NPath> excludeFiles)
+			{
+				var filePath = file.ToString();
+				foreach (var dir in excludeDirs)
+				{
+					var dirPath = dir.ToString();
+					if (filePath.StartsWith(dirPath))
+					{
+						return true;
+					}
+				}
+				foreach (var excluded in excludeFiles)
+				{
+					if (file == excluded || filePath == excluded.ToString())
+					{
+						return true;
+					}
+				}
+				return false;
+			}
 
 		private bool CollectCompileInvocations()
 		{

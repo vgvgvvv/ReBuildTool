@@ -43,9 +43,58 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
     
     public List<string> SourceDirectories { get; } = new();
 
+    /// <summary>
+    /// Explicit individual source files to compile, in addition to the
+    /// <see cref="SourceDirectories"/> globs. Entries are resolved relative to
+    /// <see cref="ModuleDirectory"/> when not absolute. Useful for libraries
+    /// whose build needs a precise file list that a directory glob can't
+    /// express — e.g. FreeType's aggregate .c (one per module that #includes
+    /// its siblings) or Assimp's per-format importer sources.
+    /// </summary>
+    public List<string> SourceFiles { get; } = new();
+
+    /// <summary>
+    /// Directories excluded from the recursive <see cref="SourceDirectories"/>
+    /// glob. A file is dropped if its path is under any of these dirs.
+    /// Entries are resolved relative to <see cref="ModuleDirectory"/> when not
+    /// absolute. Useful for keeping platform-specific subdirs (e.g. mimalloc's
+    /// src/prim/{windows,osx,unix,wasi}/) off the compile glob.
+    /// </summary>
+    public List<string> ExcludeDirectories { get; } = new();
+
+    /// <summary>
+    /// Specific files excluded from both the <see cref="SourceDirectories"/>
+    /// glob and <see cref="SourceFiles"/>. Entries are resolved relative to
+    /// <see cref="ModuleDirectory"/> when not absolute. Useful for per-platform
+    /// source filtering (e.g. skip glfw's cocoa_time.c / x11_*.c off-target).
+    /// </summary>
+    public List<string> ExcludeFiles { get; } = new();
+
     public List<string> Dependencies { get; } = new();
-    
+
     public string ModuleDirectory { get; internal set; }
+
+    /// <summary>
+    /// Resolve a path entry from <see cref="SourceFiles"/> /
+    /// <see cref="ExcludeDirectories"/> / <see cref="ExcludeFiles"/>: absolute
+    /// paths are kept as-is; relative paths are combined with
+    /// <see cref="ModuleDirectory"/>. Returns the input unchanged if
+    /// <see cref="ModuleDirectory"/> is not yet set.
+    /// </summary>
+    internal string ResolveSourcePath(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return path;
+        }
+        if (System.IO.Path.IsPathRooted(path))
+        {
+            return path;
+        }
+        return string.IsNullOrEmpty(ModuleDirectory)
+            ? path
+            : System.IO.Path.Combine(ModuleDirectory, path);
+    }
 
     public virtual bool IsSupport { get; } = true;
 
