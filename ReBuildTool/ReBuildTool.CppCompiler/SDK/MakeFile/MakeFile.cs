@@ -1,5 +1,6 @@
 ﻿using NiceIO;
 
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.Global;
 
 using ResetCore.Common;
@@ -33,7 +34,7 @@ public class MakeFile
 			Log.Error("cannot find makefile executable");
 			return false;
 		}
-		var jCount = Math.Min(Environment.ProcessorCount * 2, 16);
+		var jCount = Math.Max(1, CppCompilerArgs.Get().MaxJobs.Value);
 		// All target/dependency paths in the generated Makefile are absolute, so the working
 		// directory doesn't affect correctness, but nmake/make still need a stable one to run in.
 		var shell = Shell.Create().WithProgram(exe).WithWorkspace(makeFile.Parent);
