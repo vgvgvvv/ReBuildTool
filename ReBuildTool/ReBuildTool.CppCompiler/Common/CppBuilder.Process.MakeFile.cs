@@ -82,7 +82,9 @@ public partial class CppBuilder
             {
                 foreach (var library in unit.DynamicLibraries)
                 {
-                    var libPath = libraryPath.Combine(library);
+                    NPath libPath;
+                    try { libPath = libraryPath.Combine(library); }
+                    catch (ArgumentException) { continue; }
                     if (libPath.Exists())
                     {
                         target.Dependencies.Add(MakeSureValidPath(libPath));
@@ -90,7 +92,9 @@ public partial class CppBuilder
                 }
                 foreach (var library in unit.StaticLibraries)
                 {
-                    var libPath = libraryPath.Combine(library);
+                    NPath libPath;
+                    try { libPath = libraryPath.Combine(library); }
+                    catch (ArgumentException) { continue; }
                     if (libPath.Exists())
                     {
                         target.Dependencies.Add(MakeSureValidPath(libPath));
@@ -168,7 +172,20 @@ public partial class CppBuilder
             {
                 foreach (var includeInfo in includeInfos)
                 {
-                    var file = includePath.Combine(includeInfo);
+                    // includeInfo is a bare include target parsed from source
+                    // (#include "foo.h" -> foo.h). Most are relative and combine
+                    // fine, but malformed lines or absolute #include paths yield
+                    // a non-relative NPath that NPath.Combine rejects. Skip those
+                    // (they can't resolve against an include dir anyway).
+                    NPath file;
+                    try
+                    {
+                        file = includePath.Combine(includeInfo);
+                    }
+                    catch (ArgumentException)
+                    {
+                        continue;
+                    }
                     if (file.Exists())
                     {
                         result.Add(file);

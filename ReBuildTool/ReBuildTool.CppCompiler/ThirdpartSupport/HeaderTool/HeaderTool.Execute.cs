@@ -91,12 +91,21 @@ public partial class HeaderToolPluginSupport
     private void GenerateProjectInfoForHeaderTool(CppTargetRule targetRule, CppBuilder builder)
     {
         var projectRoot = HeaderToolRoot.Combine("ProjectInfo").EnsureDirectoryExists();
+        // Serialize only the fields HeaderTool actually reads (Public/Private
+        // IncludePaths, SourceDirectories, ModuleDirectory, Dependencies,
+        // TargetBuildType) — see ResetHeaderTool ReBuildToolModule.ParseModule.
+        // Full-object serialization trips on NPath properties (e.g. Parent on an
+        // empty path) and on framework-only fields like BuildContext.
+        var jsonSettings = new JsonSerializerSettings
+        {
+            Error = (_, args) => args.ErrorContext.Handled = true
+        };
         foreach (var (key, module) in CodeSource.ModuleRules)
         {
             var moduleFolder = projectRoot.Combine(module.TargetName).EnsureDirectoryExists();
             var moduleInfo = moduleFolder.Combine("ModuleInfo.json");
 
-            moduleInfo.WriteAllText(JsonConvert.SerializeObject(module, Formatting.Indented));
+            moduleInfo.WriteAllText(JsonConvert.SerializeObject(module, Formatting.Indented, jsonSettings));
         }
 
     }
