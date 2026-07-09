@@ -149,7 +149,18 @@ public abstract class ICompileArgsBuilder : IArgsBuilder
 	
 	public abstract void SetLto(bool enable);
 
-	public CppVersion CppStandard { get; private set; } = CppVersion.Cpp17;
+	public CppVersion CppStandard { get; private set; } = CppVersion.Latest;
+
+	/// <summary>
+	/// Override the C++ language standard for this toolchain (e.g. to Cpp20
+	/// or Latest). Modules call this via AdditionCompileArgs(builder) when they
+	/// need a newer standard than the default. Default here is Latest because
+	/// most modern engines target C++20/23.
+	/// </summary>
+	public void SetCppStandard(CppVersion version)
+	{
+		CppStandard = version;
+	}
 	
 	public abstract string CppStandardFlag { get; }
 	
