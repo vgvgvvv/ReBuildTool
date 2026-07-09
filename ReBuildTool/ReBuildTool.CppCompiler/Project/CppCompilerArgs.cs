@@ -63,7 +63,10 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 
 	[CmdLine("use makefile to bulid")]
 	public CmdLineArg<bool> UseMakeFileBuild { get; set; } = CmdLineArg<bool>.FromObject(nameof (UseMakeFileBuild), true);
-	
+
+	[CmdLine("max parallel compile jobs, default is processor count")]
+	public CmdLineArg<int> MaxJobs { get; set; } = CmdLineArg<int>.FromObject(nameof(MaxJobs), Environment.ProcessorCount);
+
 	[CmdLine("debug tool chain cmdline")]
 	public CmdLineArg<bool> DebugToolchainCmd { get; set; } = CmdLineArg<bool>.FromObject(nameof (DebugToolchainCmd), false);
 
