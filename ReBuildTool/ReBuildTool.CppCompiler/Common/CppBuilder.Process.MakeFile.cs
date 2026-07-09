@@ -1,6 +1,7 @@
 ﻿
 using NiceIO;
 using ReBuildTool.Service.CompileService;
+using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
 
@@ -84,7 +85,11 @@ public partial class CppBuilder
                 {
                     NPath libPath;
                     try { libPath = libraryPath.Combine(library); }
-                    catch (ArgumentException) { continue; }
+                    catch (ArgumentException e)
+                    {
+                        Log.Warning($"MakeFile link dep scan: skipping dynamic lib \"{library}\" under \"{libraryPath}\": {e.Message}");
+                        continue;
+                    }
                     if (libPath.Exists())
                     {
                         target.Dependencies.Add(MakeSureValidPath(libPath));
@@ -94,7 +99,11 @@ public partial class CppBuilder
                 {
                     NPath libPath;
                     try { libPath = libraryPath.Combine(library); }
-                    catch (ArgumentException) { continue; }
+                    catch (ArgumentException e)
+                    {
+                        Log.Warning($"MakeFile link dep scan: skipping static lib \"{library}\" under \"{libraryPath}\": {e.Message}");
+                        continue;
+                    }
                     if (libPath.Exists())
                     {
                         target.Dependencies.Add(MakeSureValidPath(libPath));
@@ -182,8 +191,9 @@ public partial class CppBuilder
                     {
                         file = includePath.Combine(includeInfo);
                     }
-                    catch (ArgumentException)
+                    catch (ArgumentException e)
                     {
+                        Log.Warning($"MakeFile dep scan: skipping unresolvable include \"{includeInfo}\" under \"{includePath}\": {e.Message}");
                         continue;
                     }
                     if (file.Exists())

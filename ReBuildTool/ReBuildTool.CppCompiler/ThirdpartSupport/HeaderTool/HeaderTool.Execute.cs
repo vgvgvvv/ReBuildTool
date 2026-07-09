@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.Global;
 using ReBuildTool.ToolChain;
+using ResetCore.Common;
 
 namespace ReBuildTool.Service.CompileService.HeaderTool;
 
@@ -98,7 +99,15 @@ public partial class HeaderToolPluginSupport
         // empty path) and on framework-only fields like BuildContext.
         var jsonSettings = new JsonSerializerSettings
         {
-            Error = (_, args) => args.ErrorContext.Handled = true
+            Error = (_, args) =>
+            {
+                // The member that failed (e.g. NPath.Parent on an empty path,
+                // or a framework-only field) is not one HeaderTool reads, so we
+                // skip it rather than abort. Log so the skip is diagnosable.
+                Log.Warning($"HeaderTool module-info serialization: skipping member " +
+                            $"\"{args.ErrorContext.Member}\" of module \"{args.CurrentObject}\": {args.ErrorContext.Error.Message}");
+                args.ErrorContext.Handled = true;
+            }
         };
         foreach (var (key, module) in CodeSource.ModuleRules)
         {
