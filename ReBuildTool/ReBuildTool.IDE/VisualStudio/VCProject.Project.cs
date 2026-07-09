@@ -86,7 +86,8 @@ public partial class VCProject
 			// ReBuildTool build (dev checkout vs Booster-installed) generated this project.
 			var rbtExe = GlobalPaths.ReBuildToolHome.Combine("rbt.bat");
 			var commonArgs = $"{rbtExe.InQuotes()} --ProjectRoot {cppSource.ProjectRoot.InQuotes()} " +
-			                  $"--BuildConfig {configuration.ConfigurationName} --TargetArch {configuration.PlatformName}";
+			                  $"--BuildConfig {configuration.ConfigurationName} --TargetArch {configuration.PlatformName} " +
+			                  $"--UseMakeFileBuild false";
 
 			projectCodeBuilder.WriteNode("NMakeBuildCommandLine", $"{commonArgs} --Mode Build");
 			projectCodeBuilder.WriteNode("NMakeReBuildCommandLine", $"{commonArgs} --Mode ReBuild");

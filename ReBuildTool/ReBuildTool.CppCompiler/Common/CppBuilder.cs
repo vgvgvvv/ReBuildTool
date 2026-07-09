@@ -121,7 +121,13 @@ public partial class CppBuilder : ICppBuildContext
 	private void BuildPendingModules()
 	{
 		bool succ = true;
-		bool useMakeFile = CppCompilerArgs.Get().UseMakeFileBuild.Value;
+		// Windows defaults to direct compile (parallel + incremental); other platforms
+		// default to Makefile mode (GNU make already provides -j parallelism).
+		// An explicit --UseMakeFileBuild on the command line always wins.
+		var useMakeFileArg = CppCompilerArgs.Get().UseMakeFileBuild;
+		bool useMakeFile = useMakeFileArg.IsSet
+			? useMakeFileArg.Value
+			: !PlatformHelper.IsWindows();
 		while(PendingModulesQueue.Count > 0)
 		{
 			var module = PendingModulesQueue.Dequeue();
