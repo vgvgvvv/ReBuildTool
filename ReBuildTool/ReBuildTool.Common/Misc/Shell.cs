@@ -6,13 +6,20 @@ namespace ReBuildTool.Service.Global;
 
 public class Shell : IDisposable
 {
+	// Serializes process output logging across concurrently running shells. The underlying
+	// Log/ILogger implementations (console + file) are not thread-safe, so when multiple
+	// compile processes run in parallel their redirected stdout/stderr callbacks would
+	// interleave lines or throw (e.g. FileLogger's StreamWriter in use). This lock is
+	// uncontended in serial builds, so it adds no overhead there.
+	private static readonly object OutputLock = new();
+
 	public enum Status
 	{
 		Waiting,
 		Running,
 		Finished
 	}
-	
+
 	public static Shell Create()
 	{
 		return new Shell();
@@ -139,15 +146,21 @@ public class Shell : IDisposable
         {
 	        if (!string.IsNullOrEmpty(args.Data))
 	        {
-		        Log.Info(args.Data);
+		        lock (OutputLock)
+		        {
+			        Log.Info(args.Data);
+		        }
 	        }
         };
-        
+
         Process.ErrorDataReceived += (sender, args) =>
         {
 	        if (!string.IsNullOrEmpty(args.Data))
 	        {
-		        Log.Error(args.Data);
+		        lock (OutputLock)
+		        {
+			        Log.Error(args.Data);
+		        }
 	        }
         };
         
