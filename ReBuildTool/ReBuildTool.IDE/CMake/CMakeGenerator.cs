@@ -1,6 +1,7 @@
 ﻿using System.Text;
 
 using NiceIO;
+using ReBuildTool.Common;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Global;
 using ReBuildTool.Service.IDEService.CMake;
@@ -295,17 +296,19 @@ public class CMakeLists : ICMakeLists
 		target.PublicLibrarySearchPaths.AddRange(rule.PublicLibraryDirectories.Select(p=>p.ToNPath()));
 		target.PrivateLibrarySearchPaths.AddRange(rule.PrivateLibraryDirectories.Select(p=>p.ToNPath()));
 		target.Dependencies.AddRange(rule.Dependencies);
-		target.PrivateSources.AddRange(rule.SourceDirectories.SelectMany(dir => 
-		{
-			return dir.ToNPath().Files(true).Where(f => 
-			{
-				if (cppBuilder.CurrentToolChain.CanBeCompiled(f))
+				target.PrivateSources.AddRange(rule.SourceDirectories.SelectMany(dir =>
 				{
-					return true;
-				}
-				return false;
-			});
-		}));
+					var sourceRoot = dir.ToNPath();
+					var currentPlatform = IPlatformSupport.CurrentTargetPlatform.ToString();
+					return sourceRoot.Files(true).Where(f =>
+					{
+						if (cppBuilder.CurrentToolChain.CanBeCompiled(f) && f.IsPlatformMatch(sourceRoot, currentPlatform))
+						{
+							return true;
+						}
+						return false;
+					});
+				}));
 		return target;
 	}
 

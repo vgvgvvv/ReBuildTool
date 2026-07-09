@@ -1,4 +1,5 @@
 ﻿using NiceIO;
+using ReBuildTool.Common;
 using ReBuildTool.Service.Global;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.IDEService.VisualStudio;
@@ -172,17 +173,17 @@ public partial class VCProject
 		
 	}
 
-	private void GenerateSourceFileFor(IModuleInterface moduleInterface)
-	{
-		foreach (var includeFile in moduleInterface.ModuleDirectory.ToNPath()
-			         .Files(true).Where(IsHeader))
+		private void GenerateSourceFileFor(IModuleInterface moduleInterface)
 		{
-			projectCodeBuilder.WriteNodeWithoutValue("ClInclude", 
-				new Tuple<string, string>("Include", includeFile.RelativeTo(outputFolder)));
-		}
-		
-		foreach (var includeFile in moduleInterface.ModuleDirectory.ToNPath()
-			         .Files(true).Where(IsSource))
+			var moduleDir = moduleInterface.ModuleDirectory.ToNPath();
+			var currentPlatform = IPlatformSupport.CurrentTargetPlatform.ToString();
+			foreach (var includeFile in moduleDir.Files(true).Where(IsHeader).Where(f => f.IsPlatformMatch(moduleDir, currentPlatform)))
+			{
+				projectCodeBuilder.WriteNodeWithoutValue("ClInclude",
+					new Tuple<string, string>("Include", includeFile.RelativeTo(outputFolder)));
+			}
+
+			foreach (var includeFile in moduleDir.Files(true).Where(IsSource).Where(f => f.IsPlatformMatch(moduleDir, currentPlatform)))
 		{
 			using (projectCodeBuilder.CreateXmlScope("ClCompile",
 				       new Tuple<string, string>("Include", includeFile.RelativeTo(outputFolder))))

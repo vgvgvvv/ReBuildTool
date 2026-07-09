@@ -1,5 +1,6 @@
 ﻿using NiceIO;
 using ReBuildTool.CppCompiler;
+using ReBuildTool.Common;
 using ReBuildTool.Service.CompileService;
 using ResetCore.Common;
 
@@ -60,10 +61,14 @@ public partial class CppBuilder
 					.Select(p => rule!.ResolveSourcePath(p).ToNPath())
 					.ToList();
 
+				var currentPlatform = IPlatformSupport.CurrentTargetPlatform.ToString();
+
 				foreach (var sourceDirectory in Module.SourceDirectories)
 				{
-					var files = sourceDirectory.ToNPath().Files(true)
+					var sourceRoot = sourceDirectory.ToNPath();
+					var files = sourceRoot.Files(true)
 						.Where(f => ToolChain.CanBeCompiled(f))
+						.Where(f => f.IsPlatformMatch(sourceRoot, currentPlatform))
 						.Where(f => !IsExcluded(f, excludeDirs, excludeFiles))
 						.ToList();
 					foreach (var sourceFile in files)
@@ -87,9 +92,13 @@ public partial class CppBuilder
 							continue;
 						}
 						if (IsExcluded(sourceFile, excludeDirs, excludeFiles))
-						{
-							continue;
-						}
+							{
+								continue;
+							}
+								if (!sourceFile.IsPlatformMatch(rule.ModuleDirectory.ToNPath(), currentPlatform))
+							{
+								continue;
+							}
 						// Skip if the directory glob already collected this file.
 						if (CompileUnits.Any(u => u.SourceFile == sourceFile))
 						{
