@@ -1,4 +1,5 @@
-﻿using NiceIO;
+﻿using System.Threading;
+using NiceIO;
 using ReBuildTool.CppCompiler;
 using ReBuildTool.Common;
 using ReBuildTool.Service.CompileService;
@@ -22,6 +23,11 @@ public partial class CppBuilder
 			{
 				return false;
 			}
+
+			// Skip invocations whose output .obj is already newer than its source and
+			// header dependencies. Only applies to the direct-compile path (here), not
+			// the Makefile path which delegates incremental logic to nmake/make.
+			FilterUpToDateInvocations();
 
 			if (!RunCompileInvocations())
 			{
@@ -166,16 +172,21 @@ public partial class CppBuilder
 
 		private bool RunCompileInvocations()
 		{
-			// TODO: use parallel
-			int index = 1;
+			int maxJobs = Math.Max(1, CppCompilerArgs.Get().MaxJobs.Value);
 			int maxCount = CompileInvocation.Count;
-			bool succ = true;
-			foreach (var invocation in CompileInvocation)
+			int completed = 0;
+			int failed = 0;
+			var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = maxJobs };
+
+			// Run compile invocations in parallel. Each invocation.Run() spawns its own
+			// Shell/Process internally, so they are independent. The completion counter and
+			// failure flag are updated with Interlocked to stay safe across worker threads.
+			Parallel.ForEach(CompileInvocation, parallelOptions, invocation =>
 			{
+				int index = Interlocked.Increment(ref completed);
 				if (CppCompilerArgs.Get().RunDry)
 				{
 					Log.Info($"Compile [{index}/{maxCount}]{invocation}");
-					index++;
 				}
 				else
 				{
@@ -187,15 +198,77 @@ public partial class CppBuilder
 					if (!invocation.Run())
 					{
 						Log.Error($"Compile failed: {invocation.ProgramName} {string.Join(' ', invocation.Arguments)}");
-						succ = false;
+						Interlocked.Exchange(ref failed, 1);
 					}
-					index++;
+				}
+			});
+
+			return failed == 0;
+		}
+
+		/// <summary>
+		/// Removes compile invocations whose output object file is already up to date
+		/// relative to its source file and header dependencies. The compile units
+		/// themselves are left untouched, so <see cref="Link"/>/<see cref="Archive"/>
+		/// still see every <c>OutputFile</c>.
+		/// Skipped entirely under <c>RunDry</c> so the dry-run shows the full set.
+		/// </summary>
+		private void FilterUpToDateInvocations()
+		{
+			if (CppCompilerArgs.Get().RunDry)
+			{
+				return;
+			}
+
+			int skipped = 0;
+			// Iterate in reverse so RemoveAt doesn't shift pending indices.
+			for (int i = CompileInvocation.Count - 1; i >= 0; i--)
+			{
+				if (IsCompileUnitUpToDate(CompileInvocation[i].Unit))
+				{
+					CompileInvocation.RemoveAt(i);
+					skipped++;
 				}
 			}
-			
-			return succ;
+
+			if (skipped > 0)
+			{
+				Log.Info($"Skip {skipped} up-to-date compile unit(s).");
+			}
 		}
-		
+
+		/// <summary>
+		/// True when the output .obj exists and is no older than both the source file
+		/// and every resolvable header dependency (scanned the same way as Makefile
+		/// mode via <see cref="GetAllCompileUnitDep"/>). Uses UTC timestamps to avoid
+		/// timezone ambiguity, matching the pattern in CppBuildProject.NeedReBuildRuleAssembly.
+		/// </summary>
+		private bool IsCompileUnitUpToDate(CppCompilationUnit unit)
+		{
+			var outputFile = unit.OutputFile;
+			if (!outputFile.Exists())
+			{
+				return false;
+			}
+
+			var objTime = File.GetLastWriteTimeUtc(outputFile);
+
+			if (File.GetLastWriteTimeUtc(unit.SourceFile) > objTime)
+			{
+				return false;
+			}
+
+			foreach (var dep in GetAllCompileUnitDep(unit))
+			{
+				if (File.GetLastWriteTimeUtc(dep) > objTime)
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		#region CompileUnitInfo
 
 		private IEnumerable<string> GetDefinesForCompileUnit(CppCompilationUnit unit)
