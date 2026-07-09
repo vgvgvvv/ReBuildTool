@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.Global;
 using ReBuildTool.ToolChain;
+using ResetCore.Common;
 
 namespace ReBuildTool.Service.CompileService.HeaderTool;
 
@@ -91,12 +92,29 @@ public partial class HeaderToolPluginSupport
     private void GenerateProjectInfoForHeaderTool(CppTargetRule targetRule, CppBuilder builder)
     {
         var projectRoot = HeaderToolRoot.Combine("ProjectInfo").EnsureDirectoryExists();
+        // Serialize only the fields HeaderTool actually reads (Public/Private
+        // IncludePaths, SourceDirectories, ModuleDirectory, Dependencies,
+        // TargetBuildType) — see ResetHeaderTool ReBuildToolModule.ParseModule.
+        // Full-object serialization trips on NPath properties (e.g. Parent on an
+        // empty path) and on framework-only fields like BuildContext.
+        var jsonSettings = new JsonSerializerSettings
+        {
+            Error = (_, args) =>
+            {
+                // The member that failed (e.g. NPath.Parent on an empty path,
+                // or a framework-only field) is not one HeaderTool reads, so we
+                // skip it rather than abort. Log so the skip is diagnosable.
+                Log.Warning($"HeaderTool module-info serialization: skipping member " +
+                            $"\"{args.ErrorContext.Member}\" of module \"{args.CurrentObject}\": {args.ErrorContext.Error.Message}");
+                args.ErrorContext.Handled = true;
+            }
+        };
         foreach (var (key, module) in CodeSource.ModuleRules)
         {
             var moduleFolder = projectRoot.Combine(module.TargetName).EnsureDirectoryExists();
             var moduleInfo = moduleFolder.Combine("ModuleInfo.json");
 
-            moduleInfo.WriteAllText(JsonConvert.SerializeObject(module, Formatting.Indented));
+            moduleInfo.WriteAllText(JsonConvert.SerializeObject(module, Formatting.Indented, jsonSettings));
         }
 
     }
