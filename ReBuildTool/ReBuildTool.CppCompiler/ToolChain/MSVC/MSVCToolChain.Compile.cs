@@ -122,7 +122,12 @@ public partial class MSVCToolChain
 	public override bool CanBeCompiled(NPath sourceFile)
 	{
 		var ex = sourceFile.ExtensionWithDot;
-		return ex == ".cpp" || ex == ".cc" || ex == ".c" || ex == ".asm" || ex == ".inl";
+		// .inl is intentionally excluded: it is an inline-implementation fragment
+		// meant to be #included into another TU, never compiled standalone (the
+		// Clang/Gcc toolchains already exclude it). Compiling it standalone
+		// produces a broken/empty object and leaves the link step looking for an
+		// obj that was never emitted (LNK1181).
+		return ex == ".cpp" || ex == ".cc" || ex == ".c" || ex == ".asm";
 	}
 	
 	public override NPath CompilerExecutableFor(NPath sourceFile)
