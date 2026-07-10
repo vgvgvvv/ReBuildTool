@@ -69,9 +69,11 @@ public partial class CppBuilder
 
 				var currentPlatform = IPlatformSupport.CurrentTargetPlatform.ToString();
 
-				foreach (var sourceDirectory in Module.SourceDirectories)
+				foreach (var sourceRoot in RulePathUtility.ExistingSourceDirectories(
+					Module,
+					Module.SourceDirectories,
+					"source directories"))
 				{
-					var sourceRoot = sourceDirectory.ToNPath();
 					var files = sourceRoot.Files(true)
 						.Where(f => ToolChain.CanBeCompiled(f))
 						.Where(f => f.IsPlatformMatch(sourceRoot, currentPlatform))
@@ -86,13 +88,11 @@ public partial class CppBuilder
 				// Explicit per-file sources (on top of the directory globs).
 				if (rule != null)
 				{
-					foreach (var rel in rule.SourceFiles)
+					foreach (var sourceFile in RulePathUtility.ExistingSourceFiles(
+						rule,
+						rule.SourceFiles,
+						"source files"))
 					{
-						var sourceFile = rule.ResolveSourcePath(rel).ToNPath();
-						if (!sourceFile.Exists())
-						{
-							continue;
-						}
 						if (!ToolChain.CanBeCompiled(sourceFile))
 						{
 							continue;
@@ -312,9 +312,12 @@ public partial class CppBuilder
 
 			if (Module is CppModuleRule moduleRule)
 			{
-				foreach (var includePath in moduleRule.IncludePathsFor(unit))
+				foreach (var includePath in RulePathUtility.ExistingIncludePaths(
+					moduleRule,
+					moduleRule.IncludePathsFor(unit),
+					"IncludePathsFor"))
 				{
-					yield return includePath.ToNPath();
+					yield return includePath;
 				}
 			}
 			

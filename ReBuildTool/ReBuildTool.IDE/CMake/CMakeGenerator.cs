@@ -279,8 +279,14 @@ public class CMakeLists : ICMakeLists
 		
 		target.TargetName = rule.TargetName;
 		target.TargetBuildType = rule.TargetBuildType;
-		target.PublicIncludePaths.AddRange(rule.PublicIncludePaths.Select(p => p.ToNPath()));
-		target.PrivateIncludePaths.AddRange(rule.PrivateIncludePaths.Select(p => p.ToNPath()));
+		target.PublicIncludePaths.AddRange(RulePathUtility.ExistingIncludePaths(
+			rule,
+			rule.PublicIncludePaths,
+			"public include paths"));
+		target.PrivateIncludePaths.AddRange(RulePathUtility.ExistingIncludePaths(
+			rule,
+			rule.PrivateIncludePaths,
+			"private include paths"));
 		target.PublicDefines.AddRange(rule.PublicDefines);
 		target.PrivateDefines.AddRange(rule.PrivateDefines);
 		target.PublicCompileFlags.AddRange(rule.PublicCompileFlags);
@@ -296,9 +302,11 @@ public class CMakeLists : ICMakeLists
 		target.PublicLibrarySearchPaths.AddRange(rule.PublicLibraryDirectories.Select(p=>p.ToNPath()));
 		target.PrivateLibrarySearchPaths.AddRange(rule.PrivateLibraryDirectories.Select(p=>p.ToNPath()));
 		target.Dependencies.AddRange(rule.Dependencies);
-				target.PrivateSources.AddRange(rule.SourceDirectories.SelectMany(dir =>
+				target.PrivateSources.AddRange(RulePathUtility.ExistingSourceDirectories(
+					rule,
+					rule.SourceDirectories,
+					"source directories").SelectMany(sourceRoot =>
 				{
-					var sourceRoot = dir.ToNPath();
 					var currentPlatform = IPlatformSupport.CurrentTargetPlatform.ToString();
 					return sourceRoot.Files(true).Where(f =>
 					{

@@ -153,23 +153,34 @@ public partial class CppBuilder
 			var depModules = ModuleDependencies(module);
 			foreach (var depModule in depModules)
 			{
-				foreach (var define in depModule.PublicIncludePaths)
+				foreach (var includePath in RulePathUtility.ExistingIncludePaths(
+					depModule,
+					depModule.PublicIncludePaths,
+					"dependency public include paths"))
 				{
-					yield return define;
+					yield return includePath;
 				}
 			}
 
-			foreach (var publicDef in module.PublicIncludePaths)
+			foreach (var includePath in RulePathUtility.ExistingIncludePaths(
+				module,
+				module.PublicIncludePaths,
+				"public include paths"))
 			{
-				yield return publicDef;
+				yield return includePath;
 			}
 
-			foreach (var publicDef in module.PrivateIncludePaths)
+			foreach (var includePath in RulePathUtility.ExistingIncludePaths(
+				module,
+				module.PrivateIncludePaths,
+				"private include paths"))
 			{
-				yield return publicDef;
+				yield return includePath;
 			}
 			
-			foreach (var includePath in Options.CustomIncludeDirectories)
+			foreach (var includePath in RulePathUtility.ExistingIncludePaths(
+				Options.CustomIncludeDirectories,
+				"custom include directories"))
 			{
 				yield return includePath;
 			}

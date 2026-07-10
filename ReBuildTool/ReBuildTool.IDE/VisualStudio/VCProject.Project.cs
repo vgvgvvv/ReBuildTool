@@ -267,22 +267,31 @@ public partial class VCProject
 		GetDependencies(module, depModules);
 		foreach (var dep in depModules)
 		{
-			foreach (var path in dep.PublicIncludePaths)
+			foreach (var path in RulePathUtility.ExistingIncludePaths(
+				dep,
+				dep.PublicIncludePaths,
+				"dependency public include paths"))
 			{
-				yield return path.ToNPath();
+				yield return path;
 			}
 		}
 		
 		// cannot approve module flag for each unit by virtual method
 		
-		foreach (var path in module.PrivateIncludePaths)
+		foreach (var path in RulePathUtility.ExistingIncludePaths(
+			module,
+			module.PrivateIncludePaths,
+			"private include paths"))
 		{
-			yield return path.ToNPath();
+			yield return path;
 		}
 		
-		foreach (var path in module.PublicIncludePaths)
+		foreach (var path in RulePathUtility.ExistingIncludePaths(
+			module,
+			module.PublicIncludePaths,
+			"public include paths"))
 		{
-			yield return path.ToNPath();
+			yield return path;
 		}
 		
 		foreach (var path in generatorConfigProvider.ToolChain.ToolChainIncludePaths())
