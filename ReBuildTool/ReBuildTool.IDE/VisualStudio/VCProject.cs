@@ -62,16 +62,28 @@ public partial class VCProject : ISlnSubProject
 	/// Runs Setup() for every module before any project XML is generated, so that
 	/// paths/defines/flags a module adds in its Setup() are visible to the per-file
 	/// readers (GetIncludeDirectoriesForModule, GetOptionsForModule, ...).
-	/// This mirrors what the CMake path does via CompleteModuleInfo, keeping the
-	/// two generators symmetric.
 	/// </summary>
+	/// <remarks>
+	/// Calls <see cref="CppModuleRule.Setup"/> directly instead of going through
+	/// <see cref="CppBuilder.CompleteModuleInfo"/>/<see cref="CppModuleRule.SetupInternal"/>.
+	/// The module instances live in the shared <see cref="cppSource.ModuleRules"/>
+	/// dictionary and are reused by the build flow (CppBuilder.PendingModule). Going
+	/// through SetupInternal would flip the module's <c>_hasSetup</c> flag here, so a
+	/// later SetupInternal during Build would invoke Cleanup and wipe the
+	/// SourceDirectories/IncludePaths that InitAllRule populated — leaving the build
+	/// with no sources to compile. Calling Setup directly populates the lists for the
+	/// IDE readers without arming the setup/cleanup lifecycle.
+	/// </remarks>
 	private void SetupAllModules()
 	{
 		var cppBuilder = new CppBuilder();
 		cppBuilder.SetSource(cppSource);
 		foreach (var (_, module) in cppSource.ModuleRules)
 		{
-			cppBuilder.CompleteModuleInfo(module);
+			if (module is CppModuleRule cppModuleRule)
+			{
+				cppModuleRule.Setup(cppBuilder);
+			}
 		}
 	}
 
