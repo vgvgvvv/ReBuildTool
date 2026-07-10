@@ -50,11 +50,29 @@ public partial class VCProject : ISlnSubProject
 		}
 
 		VCProject result = new VCProject(owner, source, output);
+		result.SetupAllModules();
 		result.GenerateProject();
 		result.GenerateFilter();
 		result.GenerateCommonProps();
 		owner.RegisterProj(result);
 		return result;
+	}
+
+	/// <summary>
+	/// Runs Setup() for every module before any project XML is generated, so that
+	/// paths/defines/flags a module adds in its Setup() are visible to the per-file
+	/// readers (GetIncludeDirectoriesForModule, GetOptionsForModule, ...).
+	/// This mirrors what the CMake path does via CompleteModuleInfo, keeping the
+	/// two generators symmetric.
+	/// </summary>
+	private void SetupAllModules()
+	{
+		var cppBuilder = new CppBuilder();
+		cppBuilder.SetSource(cppSource);
+		foreach (var (_, module) in cppSource.ModuleRules)
+		{
+			cppBuilder.CompleteModuleInfo(module);
+		}
 	}
 
 	private VCProject(SlnGenerator owner, ICppSourceProviderInterface source, NPath output)
