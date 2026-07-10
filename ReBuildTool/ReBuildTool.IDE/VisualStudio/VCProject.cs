@@ -80,10 +80,7 @@ public partial class VCProject : ISlnSubProject
 		cppBuilder.SetSource(cppSource);
 		foreach (var (_, module) in cppSource.ModuleRules)
 		{
-			if (module is CppModuleRule cppModuleRule)
-			{
-				cppModuleRule.Setup(cppBuilder);
-			}
+			cppBuilder.CompleteModuleInfo(module);
 		}
 	}
 

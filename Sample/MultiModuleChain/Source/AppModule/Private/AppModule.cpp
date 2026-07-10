@@ -16,8 +16,9 @@ void App::Run()
     printf("SquareThenAddOne(5) = %d\n", util.SquareThenAddOne(5));
 }
 
-void main()
+int main()
 {
     App app;
     app.Run();
+    return 0;
 }

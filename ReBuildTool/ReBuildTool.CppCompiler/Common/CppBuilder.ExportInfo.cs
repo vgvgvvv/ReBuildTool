@@ -35,7 +35,7 @@ public partial class CppBuilder
 	{
 		if (targetRule is CppModuleRule cppModuleRule)
 		{
-			cppModuleRule.SetupInternal(this);
+			cppModuleRule.Setup(this);
 		}
 
 		if (!targetRule.IsSupport)

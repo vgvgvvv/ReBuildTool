@@ -11,8 +11,9 @@ void App::Run()
     printf("2 * 3 = %d\n", core.Multiply(2, 3));
 }
 
-void main()
+int main()
 {
     App app;
     app.Run();
+    return 0;
 }

@@ -11,8 +11,9 @@ void App::Run()
     printf("1 + 2 = %d\n", greeter.Add(1, 2));
 }
 
-void main()
+int main()
 {
     App app;
     app.Run();
+    return 0;
 }

@@ -15,6 +15,10 @@ public class TestMsvcSDK
 	[Test]
 	public void TestVSInstallPaths()
 	{
+		if (!OperatingSystem.IsWindows())
+		{
+			Assert.Ignore("Visual Studio COM setup query is only supported on Windows.");
+		}
 		foreach (var (version, path) in GetVisualStudioInstallPaths())
 		{
 			Log.Info($"version :{version} path :{path}");

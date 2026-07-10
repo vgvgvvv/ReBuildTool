@@ -15,8 +15,9 @@ void MainModule::Run()
 	printf("hello world!");
 }
 
-void main()
+int main()
 {
 	MainModule entry;
 	entry.Run();
+	return 0;
 }
