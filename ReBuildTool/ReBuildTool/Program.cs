@@ -18,7 +18,11 @@ try
     var command = CmdParser.Get<ICommonCommandGroup>();
     BoosterSupport.SetupBooster();
 
-    
+    var logFile = GlobalPaths.IntermediaPath.Combine("Logs", "Build.log");
+    logFile.EnsureParentDirectoryExists();
+    logFile.DeleteIfExists();
+    Log.AppendLogger(new FileLogger(logFile).WithDate());
+
     var root = GlobalPaths.ProjectRoot;
     var iniProject = ServiceContext.Instance.Create<IIniProject>(root);
     var cppProject = ServiceContext.Instance.Create<ICppProject>(root);
