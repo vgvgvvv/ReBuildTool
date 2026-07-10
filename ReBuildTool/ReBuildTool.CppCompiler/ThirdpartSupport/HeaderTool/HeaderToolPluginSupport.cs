@@ -83,6 +83,64 @@ public partial class HeaderToolPluginSupport : BaseCppTargetCompilePlugin
 		CodeSource = builder.CurrentSource;
 		GenerateProjectInfoForHeaderTool(targetRule, builder);
 		RunHeaderTool(targetRule, builder);
+
+		// Wire each module's RHT-generated output into the compile flow now that
+		// the tool has run (so the dirs exist) but before BuildTarget collects
+		// compile units. Doing it here — after ModuleInfo serialization — keeps
+		// these paths out of the HeaderTool input, which would otherwise crash on
+		// the not-yet-existing HeaderToolGen dir. See InjectHeaderToolGenPaths.
+		InjectHeaderToolGenPaths(builder);
+	}
+
+	/// <summary>
+	/// After the HeaderTool has run, connect each module's generated
+	/// <c>HeaderToolGen</c> tree to the compile pipeline:
+	/// <list type="bullet">
+	/// <item><c>&lt;ModuleDir&gt;/HeaderToolGen</c> → <see cref="CppModuleRule.SourceDirectories"/>,
+	///   so the generated <c>.ext.gen.cpp</c> files are compiled.</item>
+	/// <item><c>&lt;ModuleDir&gt;/HeaderToolGen/Extension</c> → <see cref="CppModuleRule.PublicIncludePaths"/>,
+	///   so sources can <c>#include "Xxx.extension.h"</c> by bare name, and so
+	///   modules depending on this one see those headers transitively.</item>
+	/// </list>
+	/// Only injects when the directory actually exists — modules without
+	/// reflection annotations produce no <c>HeaderToolGen</c> output. Uses
+	/// <c>Contains</c> to avoid accumulating duplicates across repeated setups.
+	/// </summary>
+	private void InjectHeaderToolGenPaths(CppBuilder builder)
+	{
+		foreach (var (_, module) in builder.CurrentSource.ModuleRules)
+		{
+			if (module is not CppModuleRule rule)
+			{
+				continue;
+			}
+			if (string.IsNullOrEmpty(rule.ModuleDirectory))
+			{
+				continue;
+			}
+
+			var headerToolGen = rule.ModuleDirectory.ToNPath().Combine("HeaderToolGen");
+			if (!headerToolGen.Exists())
+			{
+				continue;
+			}
+
+			var genPath = headerToolGen.ToString();
+			if (!rule.SourceDirectories.Contains(genPath))
+			{
+				rule.SourceDirectories.Add(genPath);
+			}
+
+			var extension = headerToolGen.Combine("Extension");
+			if (extension.Exists())
+			{
+				var extPath = extension.ToString();
+				if (!rule.PublicIncludePaths.Contains(extPath))
+				{
+					rule.PublicIncludePaths.Add(extPath);
+				}
+			}
+		}
 	}
 	
 	public override void PostCompile(CppTargetRule targetRule, CppBuilder builder)

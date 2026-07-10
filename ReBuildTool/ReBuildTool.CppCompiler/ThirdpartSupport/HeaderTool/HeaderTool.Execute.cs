@@ -12,8 +12,16 @@ public partial class HeaderToolPluginSupport
 
     private void RunHeaderTool(CppTargetRule targetRule, CppBuilder builder)
     {
+        // Run ResetHeaderTool with its working directory set to the project root.
+        // RHT resolves plugin DLLs by searching Environment.CurrentDirectory first
+        // (then the dllSearchPath entries), and its Directory.GetFiles throws on a
+        // non-existent search dir. Setting the workspace to the project root makes
+        // project-relative PluginDlls (e.g. "Plugins/Foo.dll") resolve from cwd and
+        // avoids the crash when the caller's own cwd lacks those dirs.
+        var projectRoot = builder.CurrentSource.ProjectRoot;
         var shell = Shell.Create()
             .WithProgram(HeaderToolExePath)
+            .WithWorkspace(projectRoot)
             .WithArguments(GetCmdArgs(targetRule, builder))
             .Execute()
             .WaitForEnd();
@@ -26,9 +34,13 @@ public partial class HeaderToolPluginSupport
     
     private IEnumerable<string> GetCmdArgs(CppTargetRule targetRule, CppBuilder builder)
     {
-        var projectArgs = CppCompilerArgs.Get();
-
-        yield return $"projectPath={projectArgs.ProjectRoot}";
+        // Prefer the source provider's ProjectRoot (the actual project directory,
+        // e.g. the sample root) over the global --projectroot CLI arg (which
+        // defaults to Environment.CurrentDirectory and is wrong under the test
+        // harness, where cwd is the test bin output dir). ResetHeaderTool uses
+        // projectPath both to locate sources and as its own working context.
+        var projectRoot = builder.CurrentSource.ProjectRoot.ToString();
+        yield return $"projectPath={projectRoot}";
         yield return "projectType=ReBuildTool";
         if (builder.CurrentBuildOption.Configuration == BuildConfiguration.Debug)
         {
@@ -62,13 +74,25 @@ public partial class HeaderToolPluginSupport
 
         var headerToolTarget = targetRule as IHeaderToolTarget;
 
-        // Use the resolved HeaderToolRoot property (which falls back to
-        // IntermediaFolder/ResetHeaderTool) rather than the raw CLI arg, so the
-        // search path is never empty when --headertoolroot is not passed.
-        var searchRoot = HeaderToolRoot.ToString();
-        if (!string.IsNullOrEmpty(searchRoot))
+        // ResetHeaderTool resolves each plugin DLL (from pluginDlls=...) by
+        // recursively searching every dllSearchPath entry (plus its own cwd).
+        // Include both the HeaderToolRoot (where the tool + built-in plugins live)
+        // and the project root, so PluginDlls given as project-relative paths
+        // (e.g. "Plugins/MyExtension.dll") resolve regardless of the tool's cwd.
+        var searchRoots = new List<string>();
+        var headerToolRoot = HeaderToolRoot.ToString();
+        if (!string.IsNullOrEmpty(headerToolRoot))
         {
-            yield return $"dllSearchPath={searchRoot}";
+            searchRoots.Add(headerToolRoot);
+        }
+        if (!string.IsNullOrEmpty(projectRoot)
+            && !searchRoots.Contains(projectRoot))
+        {
+            searchRoots.Add(projectRoot);
+        }
+        if (searchRoots.Count > 0)
+        {
+            yield return $"dllSearchPath={string.Join('|', searchRoots)}";
         }
         if (headerToolTarget.PluginDlls != null && headerToolTarget.PluginDlls.Count > 0)
         {

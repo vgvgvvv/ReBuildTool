@@ -1,0 +1,8 @@
+HeaderToolTest.sln
+BuildRule.sln
+CompileRules.sln
+Binary/
+Intermedia/
+# HeaderTool (RHT) generated reflection glue — produced at build time under
+# each module's dir, must not be checked in.
+HeaderToolGen/
