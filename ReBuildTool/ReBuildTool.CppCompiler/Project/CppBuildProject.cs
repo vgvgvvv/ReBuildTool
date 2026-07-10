@@ -397,14 +397,25 @@ public:
 		if (targetRule is CppTargetRule cppTargetRule)
 		{
 			cppTargetRule.Setup(builder);
+			
+			builder.CalculateDepModules(targetRule);
+			
 			foreach (var compilePlugin in cppTargetRule.Plugins)
 			{
 				if (compilePlugin is BaseCppTargetCompilePlugin cppTargetPlugin)
 				{
 					cppTargetPlugin.Setup(this);
+				}
+			}
+			
+			foreach (var compilePlugin in cppTargetRule.Plugins)
+			{
+				if (compilePlugin is BaseCppTargetCompilePlugin cppTargetPlugin)
+				{
 					cppTargetPlugin.PreCompile(cppTargetRule, builder);
 				}
 			}
+			
 			builder.BuildTarget(targetRule);
 			foreach (var compilePlugin in cppTargetRule.Plugins)
 			{
@@ -416,6 +427,7 @@ public:
 		}
 		else
 		{
+			builder.CalculateDepModules(targetRule);
 			builder.BuildTarget(targetRule);
 		}
 

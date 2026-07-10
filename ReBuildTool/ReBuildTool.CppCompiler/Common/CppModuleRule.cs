@@ -98,6 +98,8 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
 
     public virtual bool IsSupport { get; } = true;
 
+    private bool _hasSetup = false;
+
     public virtual IEnumerable<string> CompileFlagsFor(CppCompilationUnit compilationUnit)
     {
         return Enumerable.Empty<string>();
@@ -128,19 +130,49 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
         
     }
     
-    public ICppBuildContext BuildContext { get; private set; }
+    public ICppBuildContext? BuildContext { get; private set; }
     
     public virtual void Setup(ICppBuildContext buildContext)
     {
     }
+
+    public virtual void Cleanup(ICppBuildContext buildContext)
+    {
+        PublicIncludePaths.Clear();
+        PrivateIncludePaths.Clear();
+        PublicDefines.Clear();
+        PrivateDefines.Clear();
+        PublicCompileFlags.Clear();
+        PrivateCompileFlags.Clear();
+        PublicLinkFlags.Clear();
+        PrivateLinkFlags.Clear();
+        PublicArchiveFlags.Clear();
+        PrivateArchiveFlags.Clear();
+        PublicStaticLibraries.Clear();
+        PrivateStaticLibraries.Clear();
+        PublicDynamicLibraries.Clear();
+        PrivateDynamicLibraries.Clear();
+        PublicLibraryDirectories.Clear();
+        PrivateLibraryDirectories.Clear();
+        SourceDirectories.Clear();
+        SourceFiles.Clear();
+        ExcludeDirectories.Clear();
+        ExcludeFiles.Clear();
+        Dependencies.Clear();
+    }
     
     public void SetupInternal(ICppBuildContext buildContext)
     {
+        if (_hasSetup && BuildContext != null)
+        {
+            Cleanup(BuildContext);
+        }
         BuildContext = buildContext;
         if (IsSupport)
         {
             Setup(BuildContext);
         }
+        _hasSetup = true;
     }
     
     public virtual void PostBuild()

@@ -65,10 +65,14 @@ public partial class CppBuilder : ICppBuildContext
 		return this;
 	}
 	
-	public void BuildTarget(ITargetInterface targetRule)
+	public void CalculateDepModules(ITargetInterface targetRule)
 	{
 		PendingTargetRule(targetRule);
-		BuildPendingModules();
+	}
+	
+	public void BuildTarget(ITargetInterface targetRule)
+	{
+		BuildPendingModules(targetRule);
 	}
 
 	private void PendingTargetRule(ITargetInterface targetRule)
@@ -92,6 +96,11 @@ public partial class CppBuilder : ICppBuildContext
 	
 	private void PendingModule(IModuleInterface module)
 	{
+		if (PendingModulesQueue.Contains(module))
+		{
+			return;
+		}
+		
 		if (module is CppModuleRule cppModuleRule)
 		{
 			cppModuleRule.SetupInternal(this);
@@ -110,15 +119,10 @@ public partial class CppBuilder : ICppBuildContext
 			PendingModule(depModule);
 		}
 		
-		if (PendingModulesQueue.Contains(module))
-        {
-        	return;
-        }
-		
 		PendingModulesQueue.Enqueue(module);
 	}
 
-	private void BuildPendingModules()
+	private void BuildPendingModules(ITargetInterface targetRule)
 	{
 		bool succ = true;
 		// Windows defaults to direct compile (parallel + incremental); other platforms
