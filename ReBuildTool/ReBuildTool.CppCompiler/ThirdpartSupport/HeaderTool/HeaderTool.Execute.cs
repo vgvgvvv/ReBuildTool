@@ -138,7 +138,40 @@ public partial class HeaderToolPluginSupport
             var moduleFolder = projectRoot.Combine(module.TargetName).EnsureDirectoryExists();
             var moduleInfo = moduleFolder.Combine("ModuleInfo.json");
 
-            moduleInfo.WriteAllText(JsonConvert.SerializeObject(module, Formatting.Indented, jsonSettings));
+            // Serialize only the fields ResetHeaderTool reads (ParseModule),
+            // with non-existent paths filtered out. ResetHeaderTool does
+            // Directory.GetFiles on every IncludePath/SourceDirectory — a
+            // non-existent path (e.g. HeaderToolGen/Extension which is generated
+            // later by HeaderTool itself) crashes it with DirectoryNotFoundException.
+            // This projection avoids that without modifying the rule's own lists.
+            var rule = module as CppModuleRule;
+            var dump = new
+            {
+                TargetBuildType = module.TargetBuildType,
+                TargetName = module.TargetName,
+                PublicIncludePaths = module.PublicIncludePaths.Where(p => System.IO.Directory.Exists(p)).ToList(),
+                PrivateIncludePaths = module.PrivateIncludePaths.Where(p => System.IO.Directory.Exists(p)).ToList(),
+                PublicDefines = module.PublicDefines,
+                PrivateDefines = module.PrivateDefines,
+                PublicCompileFlags = module.PublicCompileFlags,
+                PrivateCompileFlags = module.PrivateCompileFlags,
+                PublicLinkFlags = module.PublicLinkFlags,
+                PrivateLinkFlags = module.PrivateLinkFlags,
+                PublicStaticLibraries = module.PublicStaticLibraries,
+                PrivateStaticLibraries = module.PrivateStaticLibraries,
+                PublicDynamicLibraries = module.PublicDynamicLibraries,
+                PrivateDynamicLibraries = module.PrivateDynamicLibraries,
+                PublicLibraryDirectories = module.PublicLibraryDirectories,
+                PrivateLibraryDirectories = module.PrivateLibraryDirectories,
+                SourceDirectories = module.SourceDirectories.Where(p => System.IO.Directory.Exists(p)).ToList(),
+                SourceFiles = rule?.SourceFiles.Where(p => System.IO.File.Exists(p)).ToList() ?? new List<string>(),
+                ExcludeDirectories = rule?.ExcludeDirectories ?? new List<string>(),
+                ExcludeFiles = rule?.ExcludeFiles ?? new List<string>(),
+                Dependencies = module.Dependencies,
+                ModuleDirectory = module.ModuleDirectory,
+                IsSupport = module.IsSupport,
+            };
+            moduleInfo.WriteAllText(JsonConvert.SerializeObject(dump, Formatting.Indented, jsonSettings));
         }
 
     }
