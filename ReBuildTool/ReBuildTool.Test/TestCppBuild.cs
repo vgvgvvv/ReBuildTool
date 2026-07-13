@@ -90,6 +90,43 @@ public class Tests
         project.Setup();
     }
 
+    // Generates the IDE project for a sample containing an Executable module and verifies a
+    // companion launcher (.vcxproj + .vcxproj.user) is emitted alongside the host VCProject.
+    [Test]
+    public void TestLauncherProjectGenerate()
+    {
+        CmdParser.Parse<Tests>();
+        ServiceContext.Instance.Init();
+
+        var path = TestCaseGlobalVars.SampleDirectory.Combine("StaticLibraryLink");
+        var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
+        project.Parse();
+        project.Setup();
+
+        var vcProjectsDir = path.Combine("Intermedia/CppProject/VCProjects");
+        Assert.IsTrue(vcProjectsDir.Exists(), "VCProjects output dir should exist");
+
+        // Host Makefile project must still be generated.
+        Assert.IsTrue(vcProjectsDir.Combine("StaticLibraryLink.vcxproj").FileExists(),
+            "host vcxproj should be generated");
+
+        // Launcher for the AppModule executable module (name = {host}_{exe}).
+        var launcherVcxproj = vcProjectsDir.Combine("StaticLibraryLink_AppModule.vcxproj");
+        var launcherUser = vcProjectsDir.Combine("StaticLibraryLink_AppModule.vcxproj.user");
+        Assert.IsTrue(launcherVcxproj.FileExists(),
+            "launcher vcxproj should be generated for the executable module");
+        Assert.IsTrue(launcherUser.FileExists(),
+            "launcher .vcxproj.user should be generated for the executable module");
+
+        // The launcher's .vcxproj.user must point the debugger at the exe output.
+        var userContent = launcherUser.ReadAllLines();
+        Assert.IsTrue(userContent.Any(l => l.Contains("LocalDebuggerCommand")),
+            ".vcxproj.user must contain LocalDebuggerCommand");
+        Assert.IsTrue(userContent.Any(l => l.Contains("DebuggerFlavor")),
+            ".vcxproj.user must contain DebuggerFlavor");
+    }
+
+
     // End-to-end HeaderTool (RHT) codegen: a module with a RECLASS-annotated
     // header is built with the ResetEngineClassExtension plugin. Verifies the
     // full chain — HeaderTool runs, generates HeaderToolGen/, the framework
@@ -118,5 +155,26 @@ public class Tests
             Is.True, "HeaderTool should generate ReflectObject.ext.gen.cpp (the compiled source)");
         Assert.That(headerToolGenExt.Combine("ResetEngineExtension/ReflectObject.ext.gen.h").FileExists(),
             Is.True, "HeaderTool should generate ReflectObject.ext.gen.h");
+
+        // The remaining annotated headers exercise the wider RECLASS annotation
+        // family against the parser and (for the derived class) the
+        // DEFINE_DERIVED_CLASS codegen path. The plugin emits the same per-class
+        // HeaderToolGen/ shape for each, so every annotated header must produce
+        // its own .extension.h / .ext.gen.cpp / .ext.gen.h trio.
+        var annotatedHeaders = new[]
+        {
+            "ReflectCharacter", // RECLASS + REFIELD + REFUNCTION
+            "ReflectPlayer",    // RECLASS derived from ReflectCharacter (DEFINE_DERIVED_CLASS)
+            "ReflectEnum",      // REENUM
+        };
+        foreach (var headerName in annotatedHeaders)
+        {
+            Assert.That(headerToolGenExt.Combine($"{headerName}.extension.h").FileExists(),
+                Is.True, $"HeaderTool should generate {headerName}.extension.h");
+            Assert.That(headerToolGenExt.Combine($"ResetEngineExtension/{headerName}.ext.gen.cpp").FileExists(),
+                Is.True, $"HeaderTool should generate {headerName}.ext.gen.cpp (the compiled source)");
+            Assert.That(headerToolGenExt.Combine($"ResetEngineExtension/{headerName}.ext.gen.h").FileExists(),
+                Is.True, $"HeaderTool should generate {headerName}.ext.gen.h");
+        }
     }
 }

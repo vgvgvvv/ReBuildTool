@@ -82,12 +82,7 @@ public partial class VCProject
 			       new Tuple<string, string>("Condition",
 				       $"'$(Configuration)|$(Platform)'=='{configuration.ConfigurationName}|{configuration.PlatformName}'")))
 		{
-			// Always go through $RBT_HOME/rbt.bat so this stays correct regardless of which
-			// ReBuildTool build (dev checkout vs Booster-installed) generated this project.
-			var rbtExe = GlobalPaths.ReBuildToolHome.Combine("rbt.bat");
-			var commonArgs = $"{rbtExe.InQuotes()} --ProjectRoot {cppSource.ProjectRoot.InQuotes()} " +
-			                  $"--BuildConfig {configuration.ConfigurationName} --TargetArch {configuration.PlatformName} " +
-			                  $"--UseMakeFileBuild false";
+			var commonArgs = BuildCommonNMakeArgs(configuration);
 
 			projectCodeBuilder.WriteNode("NMakeBuildCommandLine", $"{commonArgs} --Mode Build");
 			projectCodeBuilder.WriteNode("NMakeReBuildCommandLine", $"{commonArgs} --Mode ReBuild");
@@ -98,7 +93,25 @@ public partial class VCProject
 		}
 	}
 
-	private string GetNMakeOutput(IProjectConfiguration configuration)
+	/// <summary>
+	/// Shared portion of the NMake build/rebuild/clean command lines for a given
+	/// configuration: the rbt.bat path, project root, config and arch, plus the
+	/// fixed <c>--UseMakeFileBuild false</c> flag. The caller appends <c>--Mode ...</c>.
+	/// </summary>
+	/// <remarks>
+	/// Always go through $RBT_HOME/rbt.bat so this stays correct regardless of which
+	/// ReBuildTool build (dev checkout vs Booster-installed) generated this project.
+	/// Exposed so the companion <see cref="LauncherVCProject"/> can emit identical commands.
+	/// </remarks>
+	internal string BuildCommonNMakeArgs(IProjectConfiguration configuration)
+	{
+		var rbtExe = GlobalPaths.ReBuildToolHome.Combine("rbt.bat");
+		return $"{rbtExe.InQuotes()} --ProjectRoot {cppSource.ProjectRoot.InQuotes()} " +
+		       $"--BuildConfig {configuration.ConfigurationName} --TargetArch {configuration.PlatformName} " +
+		       $"--UseMakeFileBuild false";
+	}
+
+	internal string GetNMakeOutput(IProjectConfiguration configuration)
 	{
 		var exeModule = FindExecutableModule();
 		if (exeModule == null)
@@ -106,16 +119,30 @@ public partial class VCProject
 			return string.Empty;
 		}
 
+		return GetExecutableOutputPath(exeModule, configuration);
+	}
+
+	/// <summary>
+	/// Resolves the absolute path of a specific executable module's output binary for a
+	/// given configuration (e.g. <c>Binary/Windows/Debug/x64/AppModule.exe</c>).
+	/// </summary>
+	/// <remarks>
+	/// Shared by <see cref="GetNMakeOutput"/> (the NMake output line) and the companion
+	/// <see cref="LauncherVCProject"/> (the VS debugger's LocalDebuggerCommand).
+	/// </remarks>
+	internal string GetExecutableOutputPath(IModuleInterface exeModule, IProjectConfiguration configuration)
+	{
 		var ext = generatorConfigProvider.ToolChain.ExecutableExtension;
 		var platformName = IPlatformSupport.CurrentTargetPlatform.ToString();
 		return cppSource.OutputRoot
 			.Combine(platformName)
 			.Combine(configuration.ConfigurationName)
 			.Combine(configuration.PlatformName)
-			.Combine(exeModule.TargetName + ext);
+			.Combine(exeModule.TargetName + ext)
+			.ToString();
 	}
 
-	private IModuleInterface? FindExecutableModule()
+	public IModuleInterface? FindExecutableModule()
 	{
 		return cppSource.ModuleRules.Values
 			.FirstOrDefault(module => module.TargetBuildType == BuildType.Executable);

@@ -55,7 +55,27 @@ public partial class VCProject : ISlnSubProject
 		result.GenerateFilter();
 		result.GenerateCommonProps();
 		owner.RegisterProj(result);
+		result.GenerateLaunchersForExecutableModules(owner);
 		return result;
+	}
+
+	/// <summary>
+	/// For every module in this project with <see cref="BuildType.Executable"/>, emit a
+	/// companion <see cref="LauncherVCProject"/> that is F5-launchable in VS (a Makefile
+	/// vcxproj reusing rbt.bat, plus a .vcxproj.user pointing the debugger at the exe).
+	/// No-op when the project contains no executable module.
+	/// </summary>
+	private void GenerateLaunchersForExecutableModules(SlnGenerator owner)
+	{
+		foreach (var (_, module) in cppSource.ModuleRules)
+		{
+			if (module.TargetBuildType != BuildType.Executable)
+			{
+				continue;
+			}
+
+			LauncherVCProject.GenerateOrGetLauncher(owner, this, module, outputFolder);
+		}
 	}
 
 	/// <summary>

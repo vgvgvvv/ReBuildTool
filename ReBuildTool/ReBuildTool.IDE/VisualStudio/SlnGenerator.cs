@@ -96,7 +96,7 @@ public class SlnGenerator : ISlnGenerator
 
 				foreach (var (key, proj) in SubProjectsByName)
 				{
-					if (proj is VCProject vcProj)
+					if (proj is VCProject or LauncherVCProject)
 					{
 						foreach (var c in proj.projectConfigs)
 						{

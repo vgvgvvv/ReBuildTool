@@ -32,3 +32,7 @@
 // the generated .ext.gen.cpp / .ext.body.h compile and link without a runtime.
 #define DEFINE_CLASS(ClassName)
 #define DEFINE_CLASS_IMP(ClassName)
+// Emitted by the generator for RECLASS classes that derive from a base class.
+// Stubbed for the same reason as DEFINE_CLASS above.
+#define DEFINE_DERIVED_CLASS(...)
+#define DEFINE_DERIVED_CLASS_IMP(...)
