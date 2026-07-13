@@ -164,12 +164,43 @@ public abstract class ICompileArgsBuilder : IArgsBuilder
 	
 	public abstract string CppStandardFlag { get; }
 	
+	/// <summary>
+	/// Whether RTTI (Run-Time Type Information) is enabled for this compile
+	/// unit. Disabled by default for smaller/faster binaries, but engines that
+	/// rely on <c>dynamic_cast</c> or reflection enable it via
+	/// <see cref="SetEnableRTTI"/> from <c>AdditionCompileArgs</c>.
+	/// </summary>
 	public bool EnableRTTI { get; private set; } = false;
-	
+
 	public abstract string RTTIFlag { get; }
 
+	/// <summary>
+	/// Enable or disable RTTI for this compile unit. Modules call this from
+	/// <see cref="CppModuleRule.AdditionCompileArgs"/> when their code needs
+	/// <c>dynamic_cast</c> or typeid support.
+	/// </summary>
+	public void SetEnableRTTI(bool enable)
+	{
+		EnableRTTI = enable;
+	}
+
+	/// <summary>
+	/// Whether C++ exception handling is enabled for this compile unit.
+	/// Disabled by default. Enable via <see cref="SetEnableException"/> from
+	/// <c>AdditionCompileArgs</c> when the module needs throw/try/catch.
+	/// </summary>
 	public bool EnableException { get; private set; } = false;
+
 	public abstract IEnumerable<string> ExceptionFlags { get; }
+
+	/// <summary>
+	/// Enable or disable C++ exception handling for this compile unit.
+	/// Modules call this from <see cref="CppModuleRule.AdditionCompileArgs"/>.
+	/// </summary>
+	public void SetEnableException(bool enable)
+	{
+		EnableException = enable;
+	}
 
 	public override IEnumerable<string> GetAllArguments()
 	{
