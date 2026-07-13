@@ -7,6 +7,7 @@ namespace ReBuildTool.Service.IDEService.VisualStudio;
 public interface ISlnSubProject
 {
 	string name { get; }
+	Guid projectTypeGuid { get; }
 	Guid guid { get; }
 	NPath fullPath { get; }
 	

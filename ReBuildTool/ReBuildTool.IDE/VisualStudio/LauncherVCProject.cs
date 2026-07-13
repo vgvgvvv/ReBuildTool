@@ -19,6 +19,8 @@ namespace ReBuildTool.IDE.VisualStudio;
 /// </remarks>
 public class LauncherVCProject : ISlnSubProject
 {
+	private static readonly Guid VCProjectTypeGuid = new("BC8A1FFA-BEE3-4634-8014-F334798102B3");
+
 	// VS doesn't auto-detect the installed MSVC toolset here - must match the host VCProject.
 	private const string PlatformToolsetVersion = "v143";
 
@@ -71,6 +73,7 @@ public class LauncherVCProject : ISlnSubProject
 	}
 
 	public string name { get; }
+	public Guid projectTypeGuid => VCProjectTypeGuid;
 	public Guid guid { get; }
 	public NPath fullPath => outputFolder.Combine(name + ".vcxproj");
 	public NPath userPath => outputFolder.Combine(name + ".vcxproj.user");

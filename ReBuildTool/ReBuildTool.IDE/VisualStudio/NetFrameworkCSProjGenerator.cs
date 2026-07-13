@@ -227,6 +227,7 @@ public class NetFrameworkCSProj : ISlnSubProject
 	}
 
 	public string name { get; private set; }
+	public Guid projectTypeGuid => new("FAE04EC0-301F-11D3-BF4B-00C04F79EFBC");
 	public Guid guid { get; private set; }
 	public NPath fullPath => outputFolder.Combine(name + ".csproj");
 	public SlnGenerator ownerSln { get; private set; }

@@ -24,6 +24,8 @@ public class VCProjectConfiguration : IProjectConfiguration
 
 public partial class VCProject : ISlnSubProject
 {
+	private static readonly Guid VCProjectTypeGuid = new("BC8A1FFA-BEE3-4634-8014-F334798102B3");
+
 	private class Tags
 	{
 		public static string ProjectConfiguration = nameof(ProjectConfiguration);
@@ -152,17 +154,17 @@ public partial class VCProject : ISlnSubProject
 
 	private static bool IsHeader(NPath path)
 	{
-		return path.ExtensionWithDot == ".h" || 
-		       path.ExtensionWithDot == "hpp" || 
-		       path.ExtensionWithDot == "inl";
+		return path.ExtensionWithDot == ".h" ||
+		       path.ExtensionWithDot == ".hpp" ||
+		       path.ExtensionWithDot == ".inl";
 	}
 		
 	private static bool IsSource(NPath path)
 	{
-		return path.ExtensionWithDot == ".cpp" || 
-		       path.ExtensionWithDot == "c" ||
-		       path.ExtensionWithDot == "cc" ||
-		       path.ExtensionWithDot == "cxx" ||
+		return path.ExtensionWithDot == ".cpp" ||
+		       path.ExtensionWithDot == ".c" ||
+		       path.ExtensionWithDot == ".cc" ||
+		       path.ExtensionWithDot == ".cxx" ||
 		       path.ExtensionWithDot == ".asm";
 	}
 
@@ -172,6 +174,7 @@ public partial class VCProject : ISlnSubProject
 	}
 	
 	public string name { get; private set; }
+	public Guid projectTypeGuid => VCProjectTypeGuid;
     public Guid guid { get; private set; }
     public NPath fullPath => outputFolder.Combine(name + ".vcxproj");
     public NPath filterPath => outputFolder.Combine(name + ".vcxproj.filters");

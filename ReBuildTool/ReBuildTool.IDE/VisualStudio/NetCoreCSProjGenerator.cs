@@ -226,6 +226,7 @@ public class NetCoreCSProj : ISlnSubProject
 	}
 	
 	public string name { get; private set; }
+	public Guid projectTypeGuid => new("9A19103F-16F7-4668-BE54-9A1E7A4F7556");
 	public Guid guid { get; private set; }
 
 	public NPath fullPath => outputFolder.Combine(name + ".csproj");

@@ -94,6 +94,36 @@ public partial class VCProject
 		AllFilters.Add(sourceFilter.FilterName, sourceFilter);
 
 		cppSource.ModuleRules.Values.ToList().ForEach(GenerateModule);
+		GenerateUnassignedSourceFiles();
+	}
+
+	private void GenerateUnassignedSourceFiles()
+	{
+		var assignedFiles = AllFilters.Values
+			.SelectMany(filter => filter.Files)
+			.Select(path => path.ToString())
+			.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+		foreach (var file in cppSource.SourceFolder.Files(true))
+		{
+			var relativeFile = file.RelativeTo(outputFolder);
+			if (!assignedFiles.Add(relativeFile.ToString()))
+			{
+				continue;
+			}
+
+			if (!AllFilters.TryGetValue(file.Parent, out var folderFilter))
+			{
+				folderFilter = new Filter
+				{
+					FilterName = file.Parent.RelativeTo(cppSource.ProjectRoot),
+					FilterGuid = Guid.NewGuid()
+				};
+				AllFilters.Add(file.Parent, folderFilter);
+			}
+
+			folderFilter.Files.Add(relativeFile);
+		}
 	}
 	
 	private void GenerateModule(IModuleInterface moduleInterface)

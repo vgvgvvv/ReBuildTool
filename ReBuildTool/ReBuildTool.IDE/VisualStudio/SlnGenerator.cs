@@ -68,7 +68,7 @@ public class SlnGenerator : ISlnGenerator
 		foreach (var (key, proj) in SubProjectsByName)
 		{
 			codeBuilder.AppendLine(
-				$"Project(\"{{{proj.guid}}}\") = \"{proj.name}\", \"{proj.fullPath.RelativeTo(outputFolder)}\", \"{{{proj.guid}}}\"");
+				$"Project(\"{{{proj.projectTypeGuid}}}\") = \"{proj.name}\", \"{proj.fullPath.RelativeTo(outputFolder)}\", \"{{{proj.guid}}}\"");
 			codeBuilder.AppendLine("EndProject");
 		}
 
