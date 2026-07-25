@@ -458,12 +458,49 @@ public class CMakeGenerator : ICMakeGenerator
 	{
 		var rbtExe = RbtExecutablePath();
 		var projectRoot = source.ProjectRoot.ToString().Replace("\\", "/");
+		var buildArgs = BuildRbtBuildArgs();
 
 		Root.FooterBuilder.AppendLine($"add_custom_target({Name}_rbt_build ALL");
-		Root.FooterBuilder.AppendLine($"\tCOMMAND \"{rbtExe}\" --ProjectRoot \"{projectRoot}\" --Mode Build --UseMakeFileBuild false");
+		Root.FooterBuilder.AppendLine($"\tCOMMAND \"{rbtExe}\" {buildArgs}");
 		Root.FooterBuilder.AppendLine($"\tWORKING_DIRECTORY \"{projectRoot}\"");
 		Root.FooterBuilder.AppendLine("\tUSES_TERMINAL");
 		Root.FooterBuilder.AppendLine(")");
+	}
+
+	// The build must target the exact same platform/arch/config the project was generated for -
+	// otherwise rbt falls back to the host platform (e.g. cross-generating for Android but then
+	// building with the host MSVC toolchain, which fails on Android-only headers). Rather than
+	// enumerate every relevant flag (TargetPlatform, TargetArch, BuildConfig, NDK paths, ...),
+	// replay this rbt process's own command line, since it already carries them all; only the
+	// run-mode / IDE-generation flags are swapped out for a direct build.
+	private static string BuildRbtBuildArgs()
+	{
+		// Flags (each followed by a value) that we override rather than pass through.
+		var overrideKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+		{
+			"--Mode", "--IDEProjectType", "--UseMakeFileBuild"
+		};
+
+		var args = Environment.GetCommandLineArgs();
+		var tokens = new List<string>();
+		// args[0] is the executable path - skipped, RbtExecutablePath() is emitted separately.
+		for (var i = 1; i < args.Length; i++)
+		{
+			if (overrideKeys.Contains(args[i]))
+			{
+				i++; // also skip the flag's value
+				continue;
+			}
+			// Quote every token (paths may contain spaces) and use forward slashes so CMake does
+			// not treat backslashes in the quoted string as escape sequences.
+			tokens.Add($"\"{args[i].Replace("\\", "/")}\"");
+		}
+
+		tokens.Add("--Mode");
+		tokens.Add("Build");
+		tokens.Add("--UseMakeFileBuild");
+		tokens.Add("false");
+		return string.Join(' ', tokens);
 	}
 
 	public bool FlushAllCMakeFile()
