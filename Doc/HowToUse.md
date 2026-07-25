@@ -77,7 +77,6 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 | `--ProjectRoot <path>` | Project root folder. Defaults to the current working directory. |
 | `--Mode <RunMode>` | **Required.** One of `Init`, `Build`, `Clean`, `ReBuild`. |
 | `--Target <name>` | Target to build. Defaults to the `ProjectRoot` folder name. |
-| `--RunDry` | Dry run — parse/validate without actually compiling. |
 | `--BoosterSource <path>` | Internal; set by the Booster scripts so RBT can regenerate them. Don't set manually. |
 
 `Mode` behavior (see [Program.cs](../ReBuildTool/ReBuildTool/Program.cs)):
@@ -86,11 +85,6 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 - **Build** — compiles the given target.
 - **Clean** — removes build outputs.
 - **ReBuild** — `Clean` followed by `Build`.
-
-RBT actually processes **two parallel project types** on every run: a
-C#-rule-based C++ project (`ICppProject`, described below) and a legacy
-INI-based project (`IIniProject`, see §6). Both are parsed and dispatched
-through the same `Mode`.
 
 ### C++-specific flags
 
@@ -202,8 +196,8 @@ builds and auto-generates `<Module>.internal.h/.cpp` import/export macro pairs.
 
 ## 5. Programmatic / lifecycle API
 
-Every project (C++ or INI) exposes the same lifecycle, also used internally
-by `Program.cs`'s mode dispatch and by the NUnit tests in
+Every project exposes the same lifecycle, also used internally by `Program.cs`'s
+mode dispatch and by the NUnit tests in
 [ReBuildTool.Test](../ReBuildTool/ReBuildTool.Test):
 
 ```csharp
@@ -214,33 +208,7 @@ project.Clean();
 project.ReBuild(targetName);
 ```
 
-## 6. Legacy INI project format
-
-Alongside the C# rules, RBT still parses an INI-based project/module format
-(`ReBuildTool.Ini`), run in parallel on every invocation. A generated default
-`.target`-style file looks like:
-
-```ini
-[Target]
-+Entries="Runtime"
-
-[Init]
-+DependOn="Action:DoSomething"
-+Actions=(Name="ReMake.Init", Args=(projectName="Sample"))
-
-[Build]
-# build actions
-
-[Action:DoSomething]
-+Actions=...
-```
-
-and correspondingly for `.module.ini` files with a `[Module]` section and
-`+Dependencies=`. This format predates the C# rule system — prefer
-`.target.cs` / `.module.cs` for new projects unless you specifically need
-the INI action/target-dependency graph (built on `Bullseye`).
-
-## 7. Self-update
+## 6. Self-update
 
 `ReBuildTool.Updater` (invoked via `rbt-updater.sh` / `rbt-updater.bat`) pulls
 the latest `ReBuildTool` git repo into `$RBT_HOME` and rebuilds it from
@@ -251,7 +219,7 @@ repository:
 ./BuildScript/rbt-updater.sh
 ```
 
-## 8. Quick reference
+## 7. Quick reference
 
 ```bash
 # one-time setup in an empty project folder
