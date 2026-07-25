@@ -1,4 +1,6 @@
 ﻿using Bullseye;
+
+using ReBuildTool.Internal;
 using ReBuildTool.Service.CommandGroup;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;

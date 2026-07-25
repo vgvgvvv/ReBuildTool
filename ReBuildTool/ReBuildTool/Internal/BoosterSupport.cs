@@ -40,11 +40,13 @@ public class BoosterSupport
 			Log.Error($"cannot found source booster file in {sourcePath} ..");
 		}
 
+		var _cmd = CmdParser.Get<ICommonCommandGroup>();
+		var targetName = string.IsNullOrEmpty(_cmd.Target.Value)
+			? GlobalPaths.ProjectRoot.FileName
+			: _cmd.Target.Value;
+		
 		{
-			var _cmd = CmdParser.Get<ICommonCommandGroup>();
-			var targetName = string.IsNullOrEmpty(_cmd.Target.Value)
-				? GlobalPaths.ProjectRoot.FileName
-				: _cmd.Target.Value;
+			
 
 			var initBat = GlobalPaths.ProjectRoot.Combine($"InitProject{ex}");
 			if (!initBat.Exists())
