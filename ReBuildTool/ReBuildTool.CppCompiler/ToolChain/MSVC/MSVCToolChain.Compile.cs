@@ -104,12 +104,12 @@ public partial class MSVCToolChain
 			yield return "/MT"; // default link static CRT
 		}
 		
-		foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
+		foreach (var argument in unit.CompileArgsBuilder.GetAllArguments(unit.IsCFile))
 		{
 			yield return argument;
 		}
 	}
-	
+
 	public override IEnumerable<string> ToolChainDefines()
 	{
 		yield return "COMPILER_MSVC";

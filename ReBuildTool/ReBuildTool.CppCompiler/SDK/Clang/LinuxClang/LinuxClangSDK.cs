@@ -16,9 +16,9 @@ public class LinuxClangSDK : ClangSDK
         yield return LinuxSDK;
     }
 
-    public override NPath GetCompiler()
+    public override NPath GetCompiler(NPath sourceFile)
     {
-        return RootPath.Combine("clang++");
+        return RootPath.Combine(sourceFile.ExtensionWithDot == ".c" ? "clang" : "clang++");
     }
 
     public override NPath GetLinker()

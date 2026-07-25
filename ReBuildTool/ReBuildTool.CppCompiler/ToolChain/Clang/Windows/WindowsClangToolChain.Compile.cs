@@ -101,7 +101,7 @@ public partial class WindowsClangToolchain
             yield return "/Zo"; // Enhance Optimized Debugging
         }
 		
-        foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
+        foreach (var argument in unit.CompileArgsBuilder.GetAllArguments(unit.IsCFile))
         {
             yield return argument;
         }

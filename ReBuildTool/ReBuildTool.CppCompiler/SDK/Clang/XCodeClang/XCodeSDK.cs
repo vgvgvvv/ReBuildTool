@@ -90,26 +90,28 @@ public class XCodeSDK : ClangSDK
 	public NPath XCodeToolchainLibLocation => XCodeToolchainRoot.Combine("usr/lib");
 	public NPath XCodeToolchainBinLocation => XCodeToolchainRoot.Combine("usr/bin");
 	public NPath XCodeClangLocation => XCodeToolchainBinLocation.Combine("clang++");
-	
-	
+	public NPath XCodeClangCLocation => XCodeToolchainBinLocation.Combine("clang");
+
+
 	public NPath XCodePlatformLocation => XCodeLocation.Combine("Contents/Developer/Platforms");
-	
+
 	public NPath DefaultClangLocation { get; } = "/usr/bin/clang++".ToNPath();
+	public NPath DefaultClangCLocation { get; } = "/usr/bin/clang".ToNPath();
 	public NPath DefaultArToolLocation { get; } = "/usr/bin/ar".ToNPath();
-	
+
 	public override IEnumerable<ICppLibrary> GetCppLibs(Architecture arch)
 	{
 		yield return new XCodeCppLibrary(this);
 	}
 
-	public override NPath GetCompiler()
+	public override NPath GetCompiler(NPath sourceFile)
 	{
-		return FindClang();
+		return FindClang(sourceFile.ExtensionWithDot == ".c");
 	}
 
 	public override NPath GetLinker()
 	{
-		return FindClang();
+		return FindClang(false);
 	}
 
 	public override NPath GetArchiver()
@@ -117,19 +119,21 @@ public class XCodeSDK : ClangSDK
 		return FindArTool();
 	}
 
-	private NPath FindClang()
+	private NPath FindClang(bool isC)
 	{
+		var xcodeLocation = isC ? XCodeClangCLocation : XCodeClangLocation;
+		var defaultLocation = isC ? DefaultClangCLocation : DefaultClangLocation;
 		if (XCodeLocation.DirectoryExists())
 		{
-			return XCodeClangLocation;
+			return xcodeLocation;
 		}
-		else if (DefaultClangLocation.Exists())
+		else if (defaultLocation.Exists())
 		{
-			return DefaultClangLocation;
+			return defaultLocation;
 		}
 		else
 		{
-			throw new Exception($"Clang not found: check path: {XCodeClangLocation} & {DefaultClangLocation}");
+			throw new Exception($"Clang not found: check path: {xcodeLocation} & {defaultLocation}");
 		}
 	}
 

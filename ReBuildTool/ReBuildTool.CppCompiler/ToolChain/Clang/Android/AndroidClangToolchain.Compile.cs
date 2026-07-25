@@ -60,7 +60,7 @@ public partial class AndroidClangToolchain
 
         yield return $"-D__ANDROID_API__={NdkClangSdk.Setting.Version}";
         
-        foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
+        foreach (var argument in unit.CompileArgsBuilder.GetAllArguments(unit.IsCFile))
         {
             yield return argument;
         }

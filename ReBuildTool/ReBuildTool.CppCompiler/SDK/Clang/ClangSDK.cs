@@ -13,7 +13,7 @@ public abstract class ClangSDK
 
 	public abstract IEnumerable<ICppLibrary> GetCppLibs(Architecture arch);
 
-	public abstract NPath GetCompiler();
+	public abstract NPath GetCompiler(NPath sourceFile);
 
 	public abstract NPath GetLinker();
 	

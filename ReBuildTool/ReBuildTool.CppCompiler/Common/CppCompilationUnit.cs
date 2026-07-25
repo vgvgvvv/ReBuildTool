@@ -14,6 +14,12 @@ public class CppCompilationUnit
     }
     
     public NPath SourceFile { get; set; }
+
+    /// <summary>
+    /// Plain C source (.c) must not receive C++-only compiler flags (std/RTTI/exceptions),
+    /// which most compilers either reject outright (gcc) or warn about as unused (clang/MSVC).
+    /// </summary>
+    public bool IsCFile => SourceFile.ExtensionWithDot == ".c";
     public NPath OutputFile { get; set; }
     public IEnumerable<string> Defines { get; set; }
     public IEnumerable<NPath> IncludePaths { get; set; }
