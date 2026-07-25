@@ -416,6 +416,20 @@ public class CMakeGenerator : ICMakeGenerator
 			// Emit compile_commands.json - this is what clangd / CLion / VS Code read for
 			// hints and go-to-definition, and it does not require the native build to run.
 			Root.PreambleBuilder.AppendLine("set(CMAKE_EXPORT_COMPILE_COMMANDS ON)");
+
+			// Expose rbt's build configurations so the IDE's config selector maps straight onto
+			// rbt's --BuildConfig via $<CONFIG> in the build target below. Multi-config generators
+			// (VS, Ninja Multi-Config) pick the config at build time; single-config ones (Ninja,
+			// Makefiles) at configure time via CMAKE_BUILD_TYPE - handle both.
+			Root.PreambleBuilder.AppendLine("get_property(_rbtMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)");
+			Root.PreambleBuilder.AppendLine("if(_rbtMultiConfig)");
+			Root.PreambleBuilder.AppendLine("\tset(CMAKE_CONFIGURATION_TYPES \"Debug;Release;ReleasePlus;ReleaseSize\" CACHE STRING \"rbt build configurations\" FORCE)");
+			Root.PreambleBuilder.AppendLine("else()");
+			Root.PreambleBuilder.AppendLine("\tif(NOT CMAKE_BUILD_TYPE)");
+			Root.PreambleBuilder.AppendLine("\t\tset(CMAKE_BUILD_TYPE \"Debug\" CACHE STRING \"rbt build configuration\" FORCE)");
+			Root.PreambleBuilder.AppendLine("\tendif()");
+			Root.PreambleBuilder.AppendLine("\tset_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS \"Debug\" \"Release\" \"ReleasePlus\" \"ReleaseSize\")");
+			Root.PreambleBuilder.AppendLine("endif()");
 		}
 
 		foreach ((string? key, var rule) in source.ModuleRules)
@@ -467,18 +481,22 @@ public class CMakeGenerator : ICMakeGenerator
 		Root.FooterBuilder.AppendLine(")");
 	}
 
-	// The build must target the exact same platform/arch/config the project was generated for -
+	// The build must target the exact same platform/arch the project was generated for -
 	// otherwise rbt falls back to the host platform (e.g. cross-generating for Android but then
 	// building with the host MSVC toolchain, which fails on Android-only headers). Rather than
-	// enumerate every relevant flag (TargetPlatform, TargetArch, BuildConfig, NDK paths, ...),
-	// replay this rbt process's own command line, since it already carries them all; only the
-	// run-mode / IDE-generation flags are swapped out for a direct build.
+	// enumerate every relevant flag (TargetPlatform, TargetArch, NDK paths, ...), replay this
+	// rbt process's own command line, since it already carries them all; only the run-mode,
+	// IDE-generation and build-config flags are swapped out for a direct build.
+	//
+	// --BuildConfig is intentionally dropped from the replay and re-emitted as $<CONFIG>, so the
+	// IDE's Debug/Release/... selector drives which config rbt builds (see the config block in
+	// GenerateCMakeProject); CMake expands the generator expression per build.
 	private static string BuildRbtBuildArgs()
 	{
 		// Flags (each followed by a value) that we override rather than pass through.
 		var overrideKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
-			"--Mode", "--IDEProjectType", "--UseMakeFileBuild"
+			"--Mode", "--IDEProjectType", "--UseMakeFileBuild", "--BuildConfig"
 		};
 
 		var args = Environment.GetCommandLineArgs();
@@ -500,6 +518,10 @@ public class CMakeGenerator : ICMakeGenerator
 		tokens.Add("Build");
 		tokens.Add("--UseMakeFileBuild");
 		tokens.Add("false");
+		// $<CONFIG> is a CMake generator expression expanded to the config being built, so the
+		// IDE's Debug/Release/... selection is what rbt compiles.
+		tokens.Add("--BuildConfig");
+		tokens.Add("\"$<CONFIG>\"");
 		return string.Join(' ', tokens);
 	}
 
