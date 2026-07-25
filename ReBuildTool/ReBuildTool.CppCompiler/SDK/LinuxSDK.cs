@@ -45,7 +45,11 @@ public class LinuxSDK : ICppLibrary
     public virtual NPath GetCompiler(NPath sourceFile)
     {
         var ex = sourceFile.ExtensionWithDot;
-        if(ex == ".c" || ex == ".cpp" || ex == ".cc" || ex == ".cxx")
+        if (ex == ".c")
+        {
+            return new NPath("/usr/bin/gcc");
+        }
+        else if (ex == ".cpp" || ex == ".cc" || ex == ".cxx")
         {
             return new NPath("/usr/bin/g++");
         }
@@ -61,7 +65,10 @@ public class LinuxSDK : ICppLibrary
 
     public NPath GetLinker()
     {
-        return new NPath("/usr/bin/ld");
+        // Link through the g++ driver rather than raw ld: the driver adds the crt
+        // startup objects, the dynamic linker path, and libc automatically, and
+        // also brings in libstdc++ when the link unit contains any C++ objects.
+        return new NPath("/usr/bin/g++");
     }
 
     public NPath GetArchiver()

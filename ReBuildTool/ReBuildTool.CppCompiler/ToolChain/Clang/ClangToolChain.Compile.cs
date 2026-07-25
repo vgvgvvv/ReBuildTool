@@ -32,7 +32,7 @@ public abstract partial class ClangToolChain
 	
 	public override NPath CompilerExecutableFor(NPath sourceFile)
 	{
-		return ClangSdk.GetCompiler();
+		return ClangSdk.GetCompiler(sourceFile);
 	}
 
 

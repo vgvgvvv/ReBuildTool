@@ -64,12 +64,15 @@ public partial class LinuxClangToolchain
             yield return "-Oz";
         }
         
-        foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
+        foreach (var argument in unit.CompileArgsBuilder.GetAllArguments(unit.IsCFile))
         {
             yield return argument;
         }
-        
-        yield return "-stdlib=libc++";
+
+        if (!unit.IsCFile)
+        {
+            yield return "-stdlib=libc++";
+        }
     }
     
     public override IEnumerable<string> ToolChainDefines()

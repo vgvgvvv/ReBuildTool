@@ -96,11 +96,11 @@ public partial class GccToolChain
             yield return "-Oz";
         }
         
-        foreach (var argument in unit.CompileArgsBuilder.GetAllArguments())
+        foreach (var argument in unit.CompileArgsBuilder.GetAllArguments(unit.IsCFile))
         {
             yield return argument;
         }
-        
+
     }
 
     public override IEnumerable<string> ToolChainDefines()

@@ -70,9 +70,9 @@ public class NDKClangSDK : ClangSDK
 		yield return new NDKClangCppLibrary(this, arch);
 	}
 
-	public override NPath GetCompiler()
+	public override NPath GetCompiler(NPath sourceFile)
 	{
-		var execName = "clang++";
+		var execName = sourceFile.ExtensionWithDot == ".c" ? "clang" : "clang++";
 		if (CurrentBuildPlatform == BuildEnvironmentPlatform.Windows)
 		{
 			execName += ".exe";

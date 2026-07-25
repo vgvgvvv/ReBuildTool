@@ -202,11 +202,21 @@ public abstract class ICompileArgsBuilder : IArgsBuilder
 		EnableException = enable;
 	}
 
-	public override IEnumerable<string> GetAllArguments()
+	/// <summary>
+	/// isCSource must be true for plain C (.c) translation units: they are compiled
+	/// with a C compiler/driver mode and must not receive the C++-only
+	/// std/RTTI/exception flags below (gcc rejects them outright; clang/MSVC warn).
+	/// </summary>
+	public IEnumerable<string> GetAllArguments(bool isCSource)
 	{
 		foreach (var argument in base.GetAllArguments())
 		{
 			yield return argument;
+		}
+
+		if (isCSource)
+		{
+			yield break;
 		}
 
 		yield return CppStandardFlag;
