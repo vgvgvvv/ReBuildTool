@@ -22,9 +22,6 @@ public partial class ServiceContext
 		var csharpDll = FindAssembly("ReBuildTool.CSharpCompiler");
 		RegisterType<IAssemblyCompileUnit>(csharpDll, "ReBuildTool.CSharpCompiler.SimpleAssemblyCompileUnit");
 		RegisterService<ICSharpCompilerService>(csharpDll, "ReBuildTool.CSharpCompiler.SimpleCompiler");
-		
-		var iniDll = FindAssembly("ReBuildTool.Ini");
-		RegisterType<IIniProject>(iniDll, "ReBuildTool.IniProject.ModuleProject");
 	}
 
 	private Assembly FindAssembly(string name)
