@@ -118,29 +118,6 @@ class ${targetName}
                     );
         }
         
-        var moduleIniPath = targetPath.ToNPath().Combine($"{targetName}.module.ini");
-        if (!moduleIniPath.Exists())
-        {
-            moduleIniPath.CreateFile().WriteAllText(new ContextArgs(@"# Define dependencies
-[Module]
-# +Dependencies=XXX
-
-# Create init steps
-[Init]
-# +DependOn=""Action:XXX""
-# +Action=(Name=XXX, Args=(XXX=XXX, XXX=XXX))
-
-# Create build steps
-[Build]
-# +DependOn=""Action:XXX""
-# +Action=(Name=XXX, Args=(XXX=XXX, XXX=XXX))
-
-# Create a new action
-# [Action:XXX]
-
-").GetText(context)
-            );
-        }
     }
     
 }
