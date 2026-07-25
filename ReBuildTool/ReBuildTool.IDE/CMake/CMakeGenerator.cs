@@ -13,7 +13,13 @@ public class CMakeTarget
 {
 	public string TargetName;
 	public BuildType TargetBuildType;
-	
+
+	// When true, the real add_library/add_executable target is emitted purely so the IDE
+	// can read its sources/includes/defines/flags (IntelliSense + navigation), but it is
+	// kept out of the default ALL build - the actual compilation is driven by rbt itself
+	// through a custom target on the root project.
+	public bool ExcludeFromAll { get; set; }
+
 	public List<string> PublicDefines { get; } = new();
 	public List<string> PrivateDefines { get; } = new();
 
@@ -60,6 +66,13 @@ public class CMakeTarget
 			break;
 		default:
 			throw new ArgumentOutOfRangeException();
+		}
+
+		if (ExcludeFromAll)
+		{
+			// Native CMake build is IntelliSense-only; the real build goes through rbt, so keep
+			// this target out of ALL (otherwise `cmake --build` would compile it natively too).
+			builder.AppendLine($"set_target_properties({TargetName} PROPERTIES EXCLUDE_FROM_ALL TRUE)");
 		}
 
 		#region definition
@@ -249,18 +262,19 @@ public class CMakeLists : ICMakeLists
 		FullPath = output.Combine("CMakeLists.txt");
 	}
 	
-	public CMakeLists(ICppSourceProviderInterface source, IModuleInterface rule, NPath output)
+	public CMakeLists(ICppSourceProviderInterface source, IModuleInterface rule, NPath output, bool excludeFromAll = false)
 	{
 		Name = rule.TargetName;
 		FullPath = output.Combine("CMakeLists.txt");
-		InitWithRule(source, rule);
+		InitWithRule(source, rule, excludeFromAll);
 	}
 
-	private void InitWithRule(ICppSourceProviderInterface source, IModuleInterface rule)
+	private void InitWithRule(ICppSourceProviderInterface source, IModuleInterface rule, bool excludeFromAll)
 	{
 		var target = TargetFromRule(source, rule);
 		if (target != null)
 		{
+			target.ExcludeFromAll = excludeFromAll;
 			Targets.Add(target);
 		}
 	}
@@ -338,7 +352,10 @@ public class CMakeLists : ICMakeLists
 		{
 			builder.AppendLine($"project({ProjectName})");
 		}
-		
+
+		// Preamble runs before add_subdirectory (e.g. CMAKE_EXPORT_COMPILE_COMMANDS).
+		builder.AppendLine(PreambleBuilder.ToString());
+
 		foreach (var subDirectory in SubDirectories)
 		{
 			builder.AppendLine($"add_subdirectory({subDirectory.InQuotes().Replace("\\", "/")})");
@@ -358,7 +375,8 @@ public class CMakeLists : ICMakeLists
 	public string ProjectName { get; set; }
 	public List<NPath> SubDirectories { get; } = new ();
 	public List<CMakeTarget> Targets { get; } = new ();
-	
+
+	public StringBuilder PreambleBuilder { get; } = new();
 	public StringBuilder HeaderBuilder { get; } = new();
 	public StringBuilder FooterBuilder { get; } = new();
 	
@@ -379,19 +397,73 @@ public class CMakeGenerator : ICMakeGenerator
 	
 	public string Name { get; private set; }
 	public string OutputPath { get; private set; }
+
+	/// <summary>
+	/// When true the generated CMake project does not compile natively: every module
+	/// target is emitted for IDE IntelliSense/navigation only (EXCLUDE_FROM_ALL) while the
+	/// real build is delegated to rbt through a custom target hooked to ALL.
+	/// </summary>
+	public bool UseRbtBuild { get; set; } = true;
+
 	public ICMakeLists GenerateCMakeProject(ICppSourceProviderInterface source, NPath output)
 	{
 		Source = source;
 		Root.Version = "3.17";
 		Root.ProjectName = Name;
+
+		if (UseRbtBuild)
+		{
+			// Emit compile_commands.json - this is what clangd / CLion / VS Code read for
+			// hints and go-to-definition, and it does not require the native build to run.
+			Root.PreambleBuilder.AppendLine("set(CMAKE_EXPORT_COMPILE_COMMANDS ON)");
+		}
+
 		foreach ((string? key, var rule) in source.ModuleRules)
 		{
 			var moduleDirectory = output.Combine (rule.TargetName);
-			var cmake = new CMakeLists(source, rule, moduleDirectory);
+			var cmake = new CMakeLists(source, rule, moduleDirectory, UseRbtBuild);
 			ModuleCMakeLists.Add(cmake);
 			Root.SubDirectories.Add(moduleDirectory);
 		}
+
+		if (UseRbtBuild)
+		{
+			AppendRbtBuildTarget(source);
+		}
+
 		return Root;
+	}
+
+	// The rbt executable currently generating this project - the CMake custom target invokes
+	// the very same binary to run the real build, so it stays correct regardless of where rbt
+	// lives (dev checkout vs Booster-installed) without depending on $RBT_HOME / the wrapper scripts.
+	private static string RbtExecutablePath()
+	{
+		var exePath = Environment.ProcessPath;
+		if (string.IsNullOrEmpty(exePath))
+		{
+			// Fallback for the rare case ProcessPath is unavailable (e.g. hosted via `dotnet <dll>`).
+			exePath = System.Reflection.Assembly.GetEntryAssembly()?.Location;
+		}
+		return (exePath ?? string.Empty).Replace("\\", "/");
+	}
+
+	/// <summary>
+	/// Emits a single root-level <c>add_custom_target(... ALL ...)</c> that invokes rbt to
+	/// perform the real compilation. Because every module's add_library/add_executable is
+	/// marked EXCLUDE_FROM_ALL, this is the only thing wired to ALL, so pressing "build" in
+	/// the IDE (or running <c>cmake --build</c>) runs rbt's own toolchain and incremental build.
+	/// </summary>
+	private void AppendRbtBuildTarget(ICppSourceProviderInterface source)
+	{
+		var rbtExe = RbtExecutablePath();
+		var projectRoot = source.ProjectRoot.ToString().Replace("\\", "/");
+
+		Root.FooterBuilder.AppendLine($"add_custom_target({Name}_rbt_build ALL");
+		Root.FooterBuilder.AppendLine($"\tCOMMAND \"{rbtExe}\" --ProjectRoot \"{projectRoot}\" --Mode Build --UseMakeFileBuild false");
+		Root.FooterBuilder.AppendLine($"\tWORKING_DIRECTORY \"{projectRoot}\"");
+		Root.FooterBuilder.AppendLine("\tUSES_TERMINAL");
+		Root.FooterBuilder.AppendLine(")");
 	}
 
 	public bool FlushAllCMakeFile()
