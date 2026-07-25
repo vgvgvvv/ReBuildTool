@@ -19,6 +19,10 @@ try
 	logFile.EnsureParentDirectoryExists();
 	logFile.DeleteIfExists();
 	Log.AppendLogger(new FileLogger(logFile).WithDate());
+	// Wrap the now-complete logger (Console + File) in a single background-writer
+	// queue so concurrent Log.* calls (parallel compile) are safe and FIFO-ordered.
+	// Flushed by Log.Shutdown() in the finally block.
+	Log.EnableAsync();
 
 	var path = CppCompilerArgs.Get().ProjectRoot.Value.ToNPath();
 	var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
@@ -35,6 +39,8 @@ catch (Exception e)
 finally
 {
 	Log.Info("Finished..");
+	// Flush the async queue before exit. No-op when async logging was not enabled.
+	Log.Shutdown();
 }
 
 

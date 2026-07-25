@@ -222,7 +222,24 @@ public:
 	public void Clean()
 	{
 		OutputRoot.DeleteIfExists(DeleteMode.Normal);
-		IntermediaFolder.DeleteIfExists(DeleteMode.Normal);
+		// Delete IntermediaFolder's contents but preserve the Logs/ subdirectory:
+		// the process holds Intermedia/Logs/Build.log open via FileLogger for its
+		// whole lifetime (Program.cs opens it before dispatching to Clean/Build,
+		// closing only at process exit), so a blanket DeleteIfExists would hit
+		// "file in use" on Windows and abort the clean. Logs/ is also what the
+		// user reads to see what just happened, so keeping it across cleans is
+		// desirable beyond just dodging the handle.
+		if (IntermediaFolder.DirectoryExists())
+		{
+			foreach (var child in IntermediaFolder.Contents())
+			{
+				if (string.Equals(child.FileName, "Logs", StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+				child.DeleteIfExists(DeleteMode.Normal);
+			}
+		}
 	}
 
 	private void CleanIfNeed()

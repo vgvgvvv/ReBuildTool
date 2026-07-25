@@ -23,6 +23,12 @@ try
     logFile.EnsureParentDirectoryExists();
     logFile.DeleteIfExists();
     Log.AppendLogger(new FileLogger(logFile).WithDate());
+    // Wrap the now-complete logger (Console + File) in a single background-writer
+    // queue: the Parallel.ForEach compile loop in CppBuilder calls Log.* from
+    // worker threads, and the underlying Console/FileLogger sinks are not
+    // thread-safe. The queue gives whole-line atomicity + strict FIFO ordering
+    // with one writer thread. Flushed by Log.Shutdown() in the finally block.
+    Log.EnableAsync();
 
     var root = GlobalPaths.ProjectRoot;
     var cppProject = ServiceContext.Instance.Create<ICppProject>(root);
@@ -67,4 +73,7 @@ catch (Exception e)
 finally
 {
     Log.Info("Finished..");
+    // Flush the async queue so the console and Build.log are fully written before
+    // the process exits. No-op when async logging was not enabled.
+    Log.Shutdown();
 }
