@@ -24,6 +24,11 @@ public partial class GccToolChain
         {
             yield return argument;
         }
+
+        foreach (var archiveFlag in unit.ArchiveFlags)
+        {
+            yield return archiveFlag;
+        }
         
         yield return unit.OutputPath.InQuotes();
 		

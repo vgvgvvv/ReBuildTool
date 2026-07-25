@@ -79,6 +79,74 @@ internal class WasmCompileArgsBuilder : ICompileArgsBuilder
 			}
 		}
 	}
+
+	// Note: the Wasm toolchain's Compile/Link/Archive invocations are not yet
+	// implemented (MakeLinkArgsBuilder/MakeArchiveArgsBuilder throw), so the
+	// flags below are only consumed if/when Wasm compile is wired up.
+
+	public override IEnumerable<string> WarningFlags
+	{
+		get
+		{
+			if (!WarningLevel.HasValue) yield break;
+			switch (WarningLevel.Value)
+			{
+				case ToolChain.WarningLevel.None:
+				case ToolChain.WarningLevel.Minimal:
+					yield return "-w";
+					break;
+				case ToolChain.WarningLevel.Default:
+					yield break;
+				case ToolChain.WarningLevel.All:
+					yield return "-Wall";
+					break;
+				case ToolChain.WarningLevel.Extra:
+					yield return "-Wall";
+					yield return "-Wextra";
+					break;
+				case ToolChain.WarningLevel.Pedantic:
+					yield return "-Wall";
+					yield return "-Wextra";
+					yield return "-Wpedantic";
+					break;
+			}
+		}
+	}
+
+	public override IEnumerable<string> OptimizationFlags
+	{
+		get
+		{
+			if (!OptimizationLevel.HasValue) yield break;
+			switch (OptimizationLevel.Value)
+			{
+				case ToolChain.OptimizationLevel.None:
+					yield return "-O0";
+					break;
+				case ToolChain.OptimizationLevel.Size:
+					yield return "-Oz";
+					break;
+				case ToolChain.OptimizationLevel.Speed:
+					yield return "-O2";
+					break;
+				case ToolChain.OptimizationLevel.MaxSpeed:
+					yield return "-O3";
+					break;
+			}
+		}
+	}
+
+	// CRT selection is an MSVC concept; emcc selects the C runtime implicitly.
+	public override IEnumerable<string> CRunTimeFlags => Enumerable.Empty<string>();
+
+	public override IEnumerable<string> PicFlags
+	{
+		get
+		{
+			if (!EnablePIC.HasValue) yield break;
+			yield return EnablePIC.Value ? "-fPIC" : "-fno-pic";
+		}
+	}
 }
 
 internal class WasmLinkArgsBuilder : ILinkArgsBuilder
@@ -114,14 +182,21 @@ internal class WasmLinkArgsBuilder : ILinkArgsBuilder
 		throw new NotImplementedException();
 	}
 
-	public override IEnumerable<string> GetAllArguments()
+	// Subsystem/manifest/incremental are Windows/MSVC concepts; wasm-ld has none.
+	public override IEnumerable<string> SubsystemFlags => Enumerable.Empty<string>();
+
+	public override IEnumerable<string> ModuleDefinitionFlags
 	{
-		foreach (var argument in base.GetAllArguments())
+		get
 		{
-			yield return argument;
+			if (string.IsNullOrEmpty(ModuleDefinitionFile)) yield break;
+			yield return $"--export-table,{ModuleDefinitionFile}";
 		}
 	}
 
+	public override IEnumerable<string> ManifestFlags => Enumerable.Empty<string>();
+
+	public override IEnumerable<string> IncrementalLinkFlags => Enumerable.Empty<string>();
 }
 
 internal class WasmArchiveArgsBuilder : IArchiveArgsBuilder

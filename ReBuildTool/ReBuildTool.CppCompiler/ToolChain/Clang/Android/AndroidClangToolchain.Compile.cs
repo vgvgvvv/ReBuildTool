@@ -42,36 +42,46 @@ public partial class AndroidClangToolchain
     
     private IEnumerable<string> DefaultCompileFlags(CppCompilationUnit unit)
     {
-        if (Configuration == BuildConfiguration.Debug)
+        // Optimization: emit the config-driven default only when the module
+        // hasn't overridden it via builder.SetOptimizationLevel.
+        if (unit.CompileArgsBuilder.OptimizationLevel == null)
         {
-            yield return "-O0";
-        }
-        
-        if (Configuration == BuildConfiguration.Release ||
-            Configuration == BuildConfiguration.ReleasePlus )
-        {
-            yield return "-O3";
-        }
+            if (Configuration == BuildConfiguration.Debug)
+            {
+                yield return "-O0";
+            }
 
-        if (Configuration == BuildConfiguration.ReleaseSize)
-        {
-            yield return "-Oz";
+            if (Configuration == BuildConfiguration.Release ||
+                Configuration == BuildConfiguration.ReleasePlus )
+            {
+                yield return "-O3";
+            }
+
+            if (Configuration == BuildConfiguration.ReleaseSize)
+            {
+                yield return "-Oz";
+            }
         }
 
         yield return $"-D__ANDROID_API__={NdkClangSdk.Setting.Version}";
-        
+
         foreach (var argument in unit.CompileArgsBuilder.GetAllArguments(unit.IsCFile))
         {
             yield return argument;
         }
 
-        yield return "-fPIC";
-        
+        // PIC: Android always needs position-independent code. If the module
+        // explicitly set EnablePIC=false, honor that; otherwise default to -fPIC.
+        if (unit.CompileArgsBuilder.EnablePIC == null)
+        {
+            yield return "-fPIC";
+        }
+
         yield return "-target";
         yield return NdkClangSdk.Setting.TargetPlatformName;
 
         yield return "--sysroot=" + NdkClangSdk.SysRoot.InQuotes();
-            
+
         // is
         // yield return "-stdlib=libc++";
     }

@@ -15,6 +15,11 @@ public partial class AndroidClangToolchain
         {
             yield return argument;
         }
+
+        foreach (var archiveFlag in unit.ArchiveFlags)
+        {
+            yield return archiveFlag;
+        }
         
         yield return unit.OutputPath.InQuotes();
 		

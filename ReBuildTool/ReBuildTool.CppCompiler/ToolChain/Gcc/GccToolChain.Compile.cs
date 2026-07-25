@@ -80,22 +80,27 @@ public partial class GccToolChain
 
     private IEnumerable<string> DefaultCompileFlags(CppCompilationUnit unit)
     {
-        if (Configuration == BuildConfiguration.Debug)
+        // Optimization: emit the config-driven default only when the module
+        // hasn't overridden it via builder.SetOptimizationLevel.
+        if (unit.CompileArgsBuilder.OptimizationLevel == null)
         {
-            yield return "-O0";
-        }
-        
-        if (Configuration == BuildConfiguration.Release ||
-            Configuration == BuildConfiguration.ReleasePlus )
-        {
-            yield return "-O3";
+            if (Configuration == BuildConfiguration.Debug)
+            {
+                yield return "-O0";
+            }
+
+            if (Configuration == BuildConfiguration.Release ||
+                Configuration == BuildConfiguration.ReleasePlus )
+            {
+                yield return "-O3";
+            }
+
+            if (Configuration == BuildConfiguration.ReleaseSize)
+            {
+                yield return "-Os";
+            }
         }
 
-        if (Configuration == BuildConfiguration.ReleaseSize)
-        {
-            yield return "-Oz";
-        }
-        
         foreach (var argument in unit.CompileArgsBuilder.GetAllArguments(unit.IsCFile))
         {
             yield return argument;

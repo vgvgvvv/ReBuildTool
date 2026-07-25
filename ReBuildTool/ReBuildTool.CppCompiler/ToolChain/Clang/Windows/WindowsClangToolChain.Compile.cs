@@ -59,46 +59,57 @@ public partial class WindowsClangToolchain
         yield return "/nologo";
         yield return "/c";
         yield return "/bigobj";
-        yield return "/W3";
+        // Only emit the default warning level when the module hasn't overridden
+        // it via builder.SetWarningLevel (which surfaces through GetAllArguments).
+        if (unit.CompileArgsBuilder.WarningLevel == null)
+        {
+            yield return "/W3";
+        }
         yield return "/Z7";
-		
+
         // Always /Gy to avoid ARM linker failure:
-        // "fatal error LNK1322: cannot avoid potential ARM hazard (QSD8960 P1 processor bug) in section 4; please consider using compiler option /Gy if it was not used"
+        // "fatal error LNK1322: cannot avoid potential ARM hazard (QSD8960 P1 processor bug) in section 4; please consider using /Gy if it was not used"
         // See case 766755
         yield return "/Gy";
-        
+
         yield return "/MP"; // Multi-processor compilation
-		
+
         yield return "/utf-8";
-		
+
         yield return "/Zc:inline"; // enable /Zc:inline by default to speed up linkage progress
 
-        if (Configuration == BuildConfiguration.Debug)
+        // Optimization level: emit the config-driven default only when the module
+        // hasn't overridden it via builder.SetOptimizationLevel. Note: unlike
+        // MSVC, WindowsClang has historically emitted no CRT flag here.
+        if (unit.CompileArgsBuilder.OptimizationLevel == null)
         {
-            yield return "/Od";
+            if (Configuration == BuildConfiguration.Debug)
+            {
+                yield return "/Od";
 
-            // '/RTC1' and '/clr' command-line options are incompatible
-            // if (!hasClrFlag && !DontLinkCrt)
-            // 	yield return "/RTC1"; // runtime errror check
-            //
-            // if (DontLinkCrt)
-            // 	yield return "/GS-"; // Buffer Security Check
-        }
-        else
-        {
-            if (Configuration == BuildConfiguration.ReleaseSize)
-                yield return "/O1"; //MinimizeSize
+                // '/RTC1' and '/clr' command-line options are incompatible
+                // if (!hasClrFlag && !DontLinkCrt)
+                // 	yield return "/RTC1"; // runtime errror check
+                //
+                // if (DontLinkCrt)
+                // 	yield return "/GS-"; // Buffer Security Check
+            }
             else
-                yield return "/Ox"; // Enable Most Speed Optimizations
+            {
+                if (Configuration == BuildConfiguration.ReleaseSize)
+                    yield return "/O1"; //MinimizeSize
+                else
+                    yield return "/Ox"; // Enable Most Speed Optimizations
 
-            yield return "/Oi"; // Generate Intrinsic Functions
-            // we recommend that you specify the /Oy- option after any other optimization compiler options.
-            yield return "/Oy-"; // Frame-Pointer Omission 
-            yield return "/GS-"; // Buffer Security Check, 
-            yield return "/Gw"; // Optimize Global Data
-            yield return "/GF"; // Eliminate Duplicate Strings
-            // Generate enhanced debugging information for optimized code in non-debug builds.
-            yield return "/Zo"; // Enhance Optimized Debugging
+                yield return "/Oi"; // Generate Intrinsic Functions
+                // we recommend that you specify the /Oy- option after any other optimization compiler options.
+                yield return "/Oy-"; // Frame-Pointer Omission
+                yield return "/GS-"; // Buffer Security Check,
+                yield return "/Gw"; // Optimize Global Data
+                yield return "/GF"; // Eliminate Duplicate Strings
+                // Generate enhanced debugging information for optimized code in non-debug builds.
+                yield return "/Zo"; // Enhance Optimized Debugging
+            }
         }
 		
         foreach (var argument in unit.CompileArgsBuilder.GetAllArguments(unit.IsCFile))
