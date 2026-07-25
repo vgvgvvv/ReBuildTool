@@ -494,9 +494,13 @@ public class CMakeGenerator : ICMakeGenerator
 	private static string BuildRbtBuildArgs()
 	{
 		// Flags (each followed by a value) that we override rather than pass through.
+		// --UseNinjaBuild is dropped here for the same reason as --UseMakeFileBuild: the
+		// CMake-driven build must go through the direct path (the IDE/cmake already
+		// schedules the build), and a stale replay value could otherwise silently switch
+		// the backend. Users wanting ninja can pass it explicitly when invoking the build.
 		var overrideKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
-			"--Mode", "--IDEProjectType", "--UseMakeFileBuild", "--BuildConfig"
+			"--Mode", "--IDEProjectType", "--UseMakeFileBuild", "--UseNinjaBuild", "--BuildConfig"
 		};
 
 		var args = Environment.GetCommandLineArgs();

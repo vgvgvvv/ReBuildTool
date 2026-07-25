@@ -70,12 +70,22 @@ public partial class GccToolChain
         {
             yield return "-g3";
         }
-        
+
+        // Dependency-file emission for the Ninja backend (deps = gcc). -MMD produces a
+        // .d file covering user includes only (no system headers — keeps it lean);
+        // -MF pins the output path next to the object file. Only set on the Ninja path.
+        if (compileUnit.DependencyFilePath != null)
+        {
+            yield return "-MMD";
+            yield return "-MF";
+            yield return compileUnit.DependencyFilePath.InQuotes();
+        }
+
         yield return "-o";
         yield return compileUnit.OutputFile.InQuotes();
-        
+
         yield return compileUnit.SourceFile.InQuotes();
-        
+
     }
 
     private IEnumerable<string> DefaultCompileFlags(CppCompilationUnit unit)

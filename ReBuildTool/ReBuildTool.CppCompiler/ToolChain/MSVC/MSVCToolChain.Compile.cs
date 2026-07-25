@@ -44,6 +44,19 @@ public partial class MSVCToolChain
 			{
 				yield return "/Fa" + compileUnit.SourceFile.ChangeExtension(".s").InQuotes();
 			}
+
+			// Dependency tracking for the Ninja backend: /showIncludes makes cl print a
+			// "Note: including file: <path>" line for every header it pulls in (English
+			// locale only — MSVCToolChain.EnvVars already forces VSLANG=1033). Ninja's
+			// `deps = msvc` trait + a top-level `msvc_deps_prefix = Note: including file:`
+			// parse those lines into the build graph, giving true header-dependency
+			// incremental rebuilds (recursive, macro-conditional aware). The gate is
+			// DependencyFilePath being non-null (only set on the Ninja path); its value
+			// isn't used since MSVC emits deps via stdout, not a .d file.
+			if (compileUnit.DependencyFilePath != null)
+			{
+				yield return "/showIncludes";
+			}
 		}
 
 		yield return "/Fo" + compileUnit.OutputFile.InQuotes();
