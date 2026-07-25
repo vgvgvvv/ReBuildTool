@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using NiceIO;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;
+using ReBuildTool.Service.IDEService;
 using ReBuildTool.ToolChain;
 using ReBuildTool.ToolChain.Project;
 using ResetCore.Common;
@@ -126,6 +127,50 @@ public class Tests
             ".vcxproj.user must contain DebuggerFlavor");
     }
 
+
+    // Generates the CMake project for a sample and verifies the rbt-driven build wiring:
+    //  - the real per-module targets are emitted EXCLUDE_FROM_ALL (IntelliSense only),
+    //  - a single root add_custom_target(... ALL ...) drives the actual build through rbt,
+    //  - compile_commands.json export is on (what the IDE reads for hints/navigation),
+    //  - no rbt call is emitted at CMake configure time (execute_process removed).
+    [Test]
+    public void TestCMakeProjectGenerate()
+    {
+        CmdParser.Parse<Tests>();
+        ServiceContext.Instance.Init();
+
+        // On Windows the default IDE project is VS - force CMake generation for this test.
+        ProjectGenArgs.Get().IDEProjectType.Value = ProjectGenType.CMake;
+
+        var path = TestCaseGlobalVars.SampleDirectory.Combine("StaticLibraryLink");
+        var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
+        project.Parse();
+        project.Setup();
+
+        // Root CMakeLists is written to the project root.
+        var rootCMake = path.Combine("CMakeLists.txt");
+        Assert.IsTrue(rootCMake.Exists(), "root CMakeLists.txt should be generated");
+
+        var rootText = rootCMake.ReadAllText();
+        Assert.IsTrue(rootText.Contains("set(CMAKE_EXPORT_COMPILE_COMMANDS ON)"),
+            "root must enable compile_commands.json for IDE IntelliSense");
+        Assert.IsTrue(rootText.Contains("add_custom_target(StaticLibraryLink_rbt_build ALL"),
+            "root must drive the real build through an rbt custom target on ALL");
+        Assert.IsTrue(rootText.Contains("--Mode Build"),
+            "the rbt custom target must invoke an rbt build");
+        Assert.IsFalse(rootText.Contains("execute_process"),
+            "no rbt call should run at CMake configure time");
+
+        // Every module's real target is emitted for IntelliSense only (kept out of ALL).
+        var cmakeProjectsDir = path.Combine("Intermedia/CppProject/CMakeProjects");
+        var moduleCMakeFiles = cmakeProjectsDir.Files("CMakeLists.txt", true).ToList();
+        Assert.IsNotEmpty(moduleCMakeFiles, "module CMakeLists files should be generated");
+        foreach (var moduleCMake in moduleCMakeFiles)
+        {
+            Assert.IsTrue(moduleCMake.ReadAllText().Contains("EXCLUDE_FROM_ALL TRUE"),
+                $"module target in {moduleCMake} must be EXCLUDE_FROM_ALL (native build off)");
+        }
+    }
 
     // End-to-end HeaderTool (RHT) codegen: a module with a RECLASS-annotated
     // header is built with the ResetEngineClassExtension plugin. Verifies the
