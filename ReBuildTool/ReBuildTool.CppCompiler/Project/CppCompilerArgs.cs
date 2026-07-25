@@ -64,6 +64,12 @@ public class CppCompilerArgs : CommandLineArgGroup<CppCompilerArgs>, ICommonComm
 	[CmdLine("use makefile to bulid")]
 	public CmdLineArg<bool> UseMakeFileBuild { get; set; } = CmdLineArg<bool>.FromObject(nameof (UseMakeFileBuild), true);
 
+	// Ninja backend. Opt-in only (--UseNinjaBuild); when set it takes precedence
+	// over UseMakeFileBuild and the platform default. Default false so existing
+	// Windows direct-compile / non-Windows MakeFile behaviour is unchanged.
+	[CmdLine("use ninja to build")]
+	public CmdLineArg<bool> UseNinjaBuild { get; set; } = CmdLineArg<bool>.FromObject(nameof(UseNinjaBuild), false);
+
 	[CmdLine("max parallel compile jobs, default is processor count")]
 	public CmdLineArg<int> MaxJobs { get; set; } = CmdLineArg<int>.FromObject(nameof(MaxJobs), Environment.ProcessorCount);
 

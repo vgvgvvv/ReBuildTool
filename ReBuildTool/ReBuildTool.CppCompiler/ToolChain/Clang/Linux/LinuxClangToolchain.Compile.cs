@@ -39,10 +39,19 @@ public partial class LinuxClangToolchain
         {
             yield return "-g3";
         }
-        
+
+        // Dependency-file emission for the Ninja backend (deps = gcc, same trait as
+        // GCC). -MMD = user includes only; -MF pins the output next to the object.
+        if (compileUnit.DependencyFilePath != null)
+        {
+            yield return "-MMD";
+            yield return "-MF";
+            yield return compileUnit.DependencyFilePath.InQuotes();
+        }
+
         yield return "-o";
         yield return compileUnit.OutputFile.InQuotes();
-        
+
         yield return compileUnit.SourceFile.InQuotes();
     }
 

@@ -4,6 +4,7 @@ using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Global;
 using ReBuildTool.ToolChain.Project;
 using ReBuildTool.ToolChain.SDK.MakeFile;
+using ReBuildTool.ToolChain.SDK.Ninja;
 
 using ResetCore.Common;
 
@@ -125,6 +126,12 @@ public partial class CppBuilder : ICppBuildContext
 	private void BuildPendingModules(ITargetInterface targetRule)
 	{
 		bool succ = true;
+		// Ninja backend is strictly opt-in: only an explicit --UseNinjaBuild on the
+		// command line enables it. It takes precedence over the Makefile/direct
+		// decision below so users can force it on any platform.
+		var useNinjaArg = CppCompilerArgs.Get().UseNinjaBuild;
+		bool useNinja = useNinjaArg.IsSet && useNinjaArg.Value;
+
 		// Windows defaults to direct compile (parallel + incremental); other platforms
 		// default to Makefile mode (GNU make already provides -j parallelism).
 		// An explicit --UseMakeFileBuild on the command line always wins.
@@ -136,7 +143,21 @@ public partial class CppBuilder : ICppBuildContext
 		{
 			var module = PendingModulesQueue.Dequeue();
 			Log.Info($"Build {module.TargetName} Begin...");
-			if (useMakeFile)
+			if (useNinja)
+			{
+				BuildNinjaFile(module, out var ninjaFilePath);
+				// Forward the toolchain env (MSVC PATH/VSLANG, etc.) so the compilers
+				// ninja spawns inherit the same environment as the direct path. The
+				// MakeFile backend skips this and relies on the outer shell, which is
+				// fragile especially on Windows.
+				if (!Ninja.RunNinja(ninjaFilePath,
+					    env: CurrentToolChain.EnvVars(),
+					    dryRun: CppCompilerArgs.Get().RunDry))
+				{
+					succ = false;
+				}
+			}
+			else if (useMakeFile)
 			{
 				BuildMakeFile(module, out var makeFilePath);
 				if (!MakeFile.RunMakeFile(CurrentBuildOption, makeFilePath))
@@ -151,12 +172,12 @@ public partial class CppBuilder : ICppBuildContext
 					succ = false;
 				}
 			}
-			
+
 			if (module is IPostBuildModule postBuildModule)
 			{
 				postBuildModule.PostBuild();
 			}
-			
+
 			Log.Info($"Build {module.TargetName} Done...");
 		}
 
@@ -200,6 +221,13 @@ public partial class CppBuilder : ICppBuildContext
 		CompileProcess process = CompileProcess.Create(module, this);
 		makeFilePath = process.GenerateMakeFile();
 		return !string.IsNullOrEmpty(File.ReadAllText(makeFilePath));
+	}
+
+	private bool BuildNinjaFile(IModuleInterface module, out NPath ninjaFilePath)
+	{
+		CompileProcess process = CompileProcess.Create(module, this);
+		ninjaFilePath = process.GenerateNinjaFile();
+		return !string.IsNullOrEmpty(File.ReadAllText(ninjaFilePath));
 	}
 	
 	private Queue<IModuleInterface> PendingModulesQueue { get; } = new();

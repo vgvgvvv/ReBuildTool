@@ -33,6 +33,16 @@ public partial class WindowsClangToolchain
             {
                 yield return "/Fa" + compileUnit.SourceFile.ChangeExtension(".s").InQuotes();
             }
+
+            // clang-cl is an MSVC-compatible driver, so for dependency tracking we use
+            // the same approach as MSVC: /showIncludes prints "Note: including file: X"
+            // for each header (under VSLANG=1033), and ninja's `deps = msvc` trait
+            // parses those lines. There's no separate .d file to emit, so
+            // DependencyFilePath being non-null is the gate, not its value.
+            if (compileUnit.DependencyFilePath != null)
+            {
+                yield return "/showIncludes";
+            }
         }
 
         yield return "/Fo" + compileUnit.OutputFile.InQuotes();

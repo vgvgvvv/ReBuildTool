@@ -25,6 +25,22 @@ public class CppCompilationUnit
     public IEnumerable<NPath> IncludePaths { get; set; }
     public IEnumerable<string> CompileFlags { get; set; }
     public bool OutputAssembly { get; set; } = false;
+
+    /// <summary>
+    /// When non-null, the toolchain's <c>CompileArgsFor</c> emits the flags that make the
+    /// compiler write a dependency file here (GCC/Clang: <c>-MMD -MF $path</c>; MSVC:
+    /// <c>/showIncludes</c>, which doesn't write a file but is parsed by ninja's
+    /// <c>deps = msvc</c> trait using the <c>msvc_deps_prefix</c>). This is set ONLY by the
+    /// Ninja build backend before collecting compile invocations — the direct-compile and
+    /// Makefile paths leave it null so they emit no depfile/showIncludes flags (those would
+    /// pollute their command lines / stdout for no benefit).
+    /// <para>
+    /// The value is always derived from <see cref="OutputFile"/> (e.g. <c>foo.obj</c> →
+    /// <c>foo.obj.d</c>) so it lands next to the object file under ObjectCache and stays
+    /// in sync across regenerations.
+    /// </para>
+    /// </summary>
+    public NPath? DependencyFilePath { get; set; }
     
     public ICompileArgsBuilder CompileArgsBuilder { get; set; }
     public IModuleInterface OwnerModule { get; set; }

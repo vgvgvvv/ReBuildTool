@@ -56,10 +56,20 @@ public partial class MacOSXClangToolchain
         {
             yield return "-g3";
         }
-        
+
+        // Dependency-file emission for the Ninja backend (deps = gcc). -MMD = user
+        // includes only; -MF pins the output next to the object file. Also applies to
+        // ObjC/ObjC++ sources since CompileArgsForObjectiveC delegates here.
+        if (compileUnit.DependencyFilePath != null)
+        {
+            yield return "-MMD";
+            yield return "-MF";
+            yield return compileUnit.DependencyFilePath.InQuotes();
+        }
+
         yield return "-o";
         yield return compileUnit.OutputFile.InQuotes();
-        
+
         yield return compileUnit.SourceFile.InQuotes();
     }
 
