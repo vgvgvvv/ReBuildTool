@@ -4,22 +4,28 @@ internal class GccCompileArgsBuilder : ICompileArgsBuilder
 {
     public override void DisableException(bool enable)
     {
-        // TODO:
+        // no-op: exception handling is driven by SetEnableException + ExceptionFlags
     }
 
     public override void DisableWarnings(string warnCode)
     {
-        // TODO:
+        Append($"-Wno-{warnCode}");
     }
 
     public override void SetWarnAsError(bool enable)
     {
-        // TODO:
+        if (enable)
+        {
+            Append("-Werror");
+        }
     }
 
     public override void SetLto(bool enable)
     {
-        // TODO:
+        if (enable)
+        {
+            Append("-flto");
+        }
     }
 
     public override string CppStandardFlag
@@ -43,7 +49,7 @@ internal class GccCompileArgsBuilder : ICompileArgsBuilder
             }
         }
     }
-    
+
     public override string RTTIFlag
     {
         get
@@ -58,7 +64,7 @@ internal class GccCompileArgsBuilder : ICompileArgsBuilder
             }
         }
     }
-    
+
     public override IEnumerable<string> ExceptionFlags
     {
         get
@@ -79,22 +85,28 @@ internal class GccLinkArgsBuilder : ILinkArgsBuilder
 {
     public override void DisableWarnings(string warnCode)
     {
-        // TODO:
+        Append($"-Wno-{warnCode}");
     }
 
     public override void SetLto(bool enable)
     {
-        // TODO:
+        if (enable)
+        {
+            Append("-flto");
+        }
     }
 
     public override void SetFastLink(bool enable)
     {
-        // TODO:
+        // no-op: no native fastlink equivalent on ld/lld
     }
 
     public override void SetWarnAsError(bool enable)
     {
-        // TODO:
+        if (enable)
+        {
+            Append("-Werror");
+        }
     }
 }
 
@@ -102,6 +114,6 @@ internal class GccArchiveArgsBuilder : IArchiveArgsBuilder
 {
     public override void SetLto(bool enable)
     {
-        // TODO:
+        // no-op: LTO not applicable to static archive (ar)
     }
 }

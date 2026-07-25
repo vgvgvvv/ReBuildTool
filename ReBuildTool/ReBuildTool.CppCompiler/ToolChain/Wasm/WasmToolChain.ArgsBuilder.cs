@@ -4,22 +4,28 @@ internal class WasmCompileArgsBuilder : ICompileArgsBuilder
 {
 	public override void DisableException(bool enable)
 	{
-		throw new NotImplementedException();
+		// no-op: exception handling is driven by SetEnableException + ExceptionFlags
 	}
 
 	public override void DisableWarnings(string warnCode)
 	{
-		throw new NotImplementedException();
+		Append($"-Wno-{warnCode}");
 	}
 
 	public override void SetWarnAsError(bool enable)
 	{
-		throw new NotImplementedException();
+		if (enable)
+		{
+			Append("-Werror");
+		}
 	}
 
 	public override void SetLto(bool enable)
 	{
-		throw new NotImplementedException();
+		if (enable)
+		{
+			Append("-flto");
+		}
 	}
 
 	public override string CppStandardFlag
@@ -43,7 +49,7 @@ internal class WasmCompileArgsBuilder : ICompileArgsBuilder
 			}
 		}
 	}
-	
+
 	public override string RTTIFlag
 	{
 		get
@@ -58,7 +64,7 @@ internal class WasmCompileArgsBuilder : ICompileArgsBuilder
 			}
 		}
 	}
-	
+
 	public override IEnumerable<string> ExceptionFlags
 	{
 		get
@@ -79,24 +85,30 @@ internal class WasmLinkArgsBuilder : ILinkArgsBuilder
 {
 	public override void DisableWarnings(string warnCode)
 	{
-		throw new NotImplementedException();
+		Append($"-Wno-{warnCode}");
 	}
 
 	public override void SetLto(bool enable)
 	{
-		throw new NotImplementedException();
+		if (enable)
+		{
+			Append("-flto");
+		}
 	}
 
 	public override void SetFastLink(bool enable)
 	{
-		throw new NotImplementedException();
+		// no-op: no native fastlink equivalent on wasm-ld
 	}
 
 	public override void SetWarnAsError(bool enable)
 	{
-		throw new NotImplementedException();
+		if (enable)
+		{
+			Append("-Werror");
+		}
 	}
-	
+
 	public void DisableDefaultLib()
 	{
 		throw new NotImplementedException();
@@ -109,13 +121,13 @@ internal class WasmLinkArgsBuilder : ILinkArgsBuilder
 			yield return argument;
 		}
 	}
-	
+
 }
 
 internal class WasmArchiveArgsBuilder : IArchiveArgsBuilder
 {
 	public override void SetLto(bool enable)
 	{
-		throw new NotImplementedException();
+		// no-op: LTO not applicable to static archive (ar)
 	}
 }

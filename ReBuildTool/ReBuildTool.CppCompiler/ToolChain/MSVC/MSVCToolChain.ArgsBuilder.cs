@@ -4,7 +4,7 @@ internal class MSVCCompileArgsBuilder : ICompileArgsBuilder
 {
 	public override void DisableException(bool enable)
 	{
-		
+		// TODO: no-op dead code; exception handling is driven by SetEnableException + ExceptionFlags
 	}
 
 	public override void DisableWarnings(string warnCode)
@@ -14,7 +14,10 @@ internal class MSVCCompileArgsBuilder : ICompileArgsBuilder
 
 	public override void SetWarnAsError(bool enable)
 	{
-		Append("/WX");
+		if (enable)
+		{
+			Append("/WX");
+		}
 	}
 
 	public override void SetLto(bool enable)
@@ -97,9 +100,12 @@ internal class MSVCLinkArgsBuilder : ILinkArgsBuilder
 
 	public override void SetWarnAsError(bool enable)
 	{
-		Append("/WX");
+		if (enable)
+		{
+			Append("/WX");
+		}
 	}
-	
+
 	public void DisableDefaultLib()
 	{
 		Append("/NODEFAULTLIB");

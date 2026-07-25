@@ -2,23 +2,6 @@
 
 internal class GccLikeClangCompileArgsBuilder : ClangCompileArgsBuilder
 {
-	public override void DisableException(bool enable)
-	{
-	}
-
-	public override void DisableWarnings(string warnCode)
-	{
-	}
-
-	public override void SetWarnAsError(bool enable)
-	{
-	}
-
-	public override void SetLto(bool enable)
-	{
-		Append("-flto");
-	}
-
 	public override string CppStandardFlag
 	{
 		get
@@ -55,7 +38,7 @@ internal class GccLikeClangCompileArgsBuilder : ClangCompileArgsBuilder
 			}
 		}
 	}
-	
+
 	public override IEnumerable<string> ExceptionFlags
 	{
 		get
@@ -70,33 +53,14 @@ internal class GccLikeClangCompileArgsBuilder : ClangCompileArgsBuilder
 			}
 		}
 	}
-	
-	
+
+
 }
 
 internal class GccLikeClangLinkArgsBuilder : ClangLinkArgsBuilder
 {
-	public override void DisableWarnings(string warnCode)
-	{
-	}
-
-	public override void SetLto(bool enable)
-	{
-		Append("-flto");
-	}
-
-	public override void SetFastLink(bool enable)
-	{
-	}
-
-	public override void SetWarnAsError(bool enable)
-	{
-	}
 }
 
 internal class GccLikeClangArchiveArgsBuilder : ClangArchiveArgsBuilder
 {
-	public override void SetLto(bool enable)
-	{
-	}
 }
