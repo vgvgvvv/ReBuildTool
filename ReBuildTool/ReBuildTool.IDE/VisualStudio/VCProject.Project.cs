@@ -1,5 +1,6 @@
 ﻿using NiceIO;
 using ReBuildTool.Common;
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.Global;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.IDEService.VisualStudio;
@@ -102,13 +103,26 @@ public partial class VCProject
 	/// Always go through $RBT_HOME/rbt.bat so this stays correct regardless of which
 	/// ReBuildTool build (dev checkout vs Booster-installed) generated this project.
 	/// Exposed so the companion <see cref="LauncherVCProject"/> can emit identical commands.
+	/// When <c>--TargetPlatform</c> was explicitly passed (e.g. cross-generating for
+	/// Android from a Windows host), it is forwarded so the NMake build uses the same
+	/// target platform's toolchain instead of falling back to the host platform.
 	/// </remarks>
 	internal string BuildCommonNMakeArgs(IProjectConfiguration configuration)
 	{
 		var rbtExe = GlobalPaths.ReBuildToolHome.Combine("rbt.bat");
-		return $"{rbtExe.InQuotes()} --ProjectRoot {cppSource.ProjectRoot.InQuotes()} " +
-		       $"--BuildConfig {configuration.ConfigurationName} --TargetArch {configuration.PlatformName} " +
-		       $"--UseMakeFileBuild false";
+		var args = $"{rbtExe.InQuotes()} --ProjectRoot {cppSource.ProjectRoot.InQuotes()} " +
+		           $"--BuildConfig {configuration.ConfigurationName} --TargetArch {configuration.PlatformName} " +
+		           $"--UseMakeFileBuild false";
+
+		// Forward --TargetPlatform only when it was explicitly set. When unset (None),
+		// rbt auto-detects the host platform on its own, so emitting it would be a no-op.
+		var targetPlatform = CppCompilerArgs.Get().TargetPlatform;
+		if (targetPlatform.IsSet && targetPlatform.Value != PlatformSupportType.None)
+		{
+			args += $" --TargetPlatform {targetPlatform.Value}";
+		}
+
+		return args;
 	}
 
 	internal string GetNMakeOutput(IProjectConfiguration configuration)
