@@ -231,6 +231,29 @@ internal class MSVCLinkArgsBuilder : ILinkArgsBuilder
 		}
 	}
 
+	public override IEnumerable<string> DeadCodeEliminationFlags
+	{
+		get
+		{
+			if (!EnableDeadCodeElimination.HasValue) yield break;
+			yield return EnableDeadCodeElimination.Value ? "/OPT:REF" : "/OPT:REF:NO";
+		}
+	}
+
+	public override IEnumerable<string> COMDATFoldingFlags
+	{
+		get
+		{
+			if (!EnableCOMDATFolding.HasValue) yield break;
+			yield return EnableCOMDATFolding.Value ? "/OPT:ICF" : "/OPT:ICF:NO";
+		}
+	}
+
+	// MSVC doesn't strip symbols via a linker flag — it emits debug info into a
+	// separate PDB (/DEBUG) and the final binary never carries the full symbol
+	// table the way ELF/Mach-O does. So strip is a no-op here.
+	public override IEnumerable<string> StripSymbolsFlags => Enumerable.Empty<string>();
+
 	public bool EnableFastLink { get; private set; }
 }
 

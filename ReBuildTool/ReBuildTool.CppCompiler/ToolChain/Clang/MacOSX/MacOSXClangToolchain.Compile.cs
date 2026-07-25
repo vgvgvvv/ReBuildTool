@@ -108,6 +108,14 @@ public partial class MacOSXClangToolchain
             }
         }
 
+        // Emit per-function/per-data sections in non-Debug builds so the linker
+        // can garbage-collect unreferenced ones (-Wl,--gc-sections in Link.cs).
+        if (Configuration != BuildConfiguration.Debug)
+        {
+            yield return "-ffunction-sections";
+            yield return "-fdata-sections";
+        }
+
         // Emit the builder flags for all source kinds (C, C++, ObjC, ObjC++).
         // GetAllArguments(isCSource) already skips C++-only flags for plain C,
         // and ObjC/ObjC++ need the C++ flags (std/RTTI/exceptions) just like C++.

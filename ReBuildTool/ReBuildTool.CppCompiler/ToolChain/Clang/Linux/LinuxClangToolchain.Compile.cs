@@ -69,6 +69,14 @@ public partial class LinuxClangToolchain
             }
         }
 
+        // Emit per-function/per-data sections in non-Debug builds so the linker
+        // can garbage-collect unreferenced ones (-Wl,--gc-sections in Link.cs).
+        if (Configuration != BuildConfiguration.Debug)
+        {
+            yield return "-ffunction-sections";
+            yield return "-fdata-sections";
+        }
+
         foreach (var argument in unit.CompileArgsBuilder.GetAllArguments(unit.IsCFile))
         {
             yield return argument;

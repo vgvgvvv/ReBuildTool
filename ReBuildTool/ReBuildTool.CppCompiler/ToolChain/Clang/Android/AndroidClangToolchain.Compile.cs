@@ -63,6 +63,14 @@ public partial class AndroidClangToolchain
             }
         }
 
+        // Emit per-function/per-data sections in non-Debug builds so the linker
+        // can garbage-collect unreferenced ones (-Wl,--gc-sections in Link.cs).
+        if (Configuration != BuildConfiguration.Debug)
+        {
+            yield return "-ffunction-sections";
+            yield return "-fdata-sections";
+        }
+
         yield return $"-D__ANDROID_API__={NdkClangSdk.Setting.Version}";
 
         foreach (var argument in unit.CompileArgsBuilder.GetAllArguments(unit.IsCFile))

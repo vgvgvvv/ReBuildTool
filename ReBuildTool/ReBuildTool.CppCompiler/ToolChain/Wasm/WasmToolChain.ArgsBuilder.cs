@@ -197,6 +197,29 @@ internal class WasmLinkArgsBuilder : ILinkArgsBuilder
 	public override IEnumerable<string> ManifestFlags => Enumerable.Empty<string>();
 
 	public override IEnumerable<string> IncrementalLinkFlags => Enumerable.Empty<string>();
+
+	public override IEnumerable<string> DeadCodeEliminationFlags
+	{
+		get
+		{
+			if (!EnableDeadCodeElimination.HasValue) yield break;
+			yield return EnableDeadCodeElimination.Value
+				? "-Wl,--gc-sections"
+				: "-Wl,--no-gc-sections";
+		}
+	}
+
+	// COMDAT folding has no portable equivalent across wasm-ld variants.
+	public override IEnumerable<string> COMDATFoldingFlags => Enumerable.Empty<string>();
+
+	public override IEnumerable<string> StripSymbolsFlags
+	{
+		get
+		{
+			if (StripSymbols != true) yield break;
+			yield return "-Wl,-s";
+		}
+	}
 }
 
 internal class WasmArchiveArgsBuilder : IArchiveArgsBuilder
