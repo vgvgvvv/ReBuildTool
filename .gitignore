@@ -409,3 +409,7 @@ Intermedia/
 # rbt-generated CMake project files (root CMakeLists.txt is emitted at each project
 # root; per-module ones live under the already-ignored Intermedia/). Never checked in.
 CMakeLists.txt
+
+# rbt-generated JSON Compilation Database (emitted at each project root for editor
+# code highlighting / go-to-definition). Machine-specific absolute + toolchain paths.
+compile_commands.json

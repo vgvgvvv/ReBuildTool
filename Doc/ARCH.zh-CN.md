@@ -189,12 +189,16 @@ stdout/stderr 重定向到日志，并且由于并行编译共享一个非线程
 ## 7. IDE 工程生成
 
 除直接编译外，`rbt` 还可通过 `IGenerateIDEProjService` 生成 IDE 工程
-（`ProjectGenType` = `VisualStudio` | `CMake`）：
+（`ProjectGenType` = `VisualStudio` | `CMake` | `CompileCommands`）：
 
 - **ReBuildTool.IDE / VisualStudio**——生成 `.vcxproj`（配置 / 过滤器 / 用户等 partial 位于
   `VCProject.*.cs`）与 `.sln`。生成的 NMake 工程把构建再 shell 回 `rbt`，同时保留 IDE 的 IntelliSense。
 - **ReBuildTool.IDE / CMake**——生成 `CMakeLists`，其自定义目标调用 `rbt`，把 IDE 的
   `$<CONFIG>`、目标平台与架构分别转发为对应的 `rbt --BuildConfig / --TargetPlatform / --TargetArch` 参数。
+- **ReBuildTool.IDE / CompileCommands**——直接根据 `rbt` 实际会执行的逐文件编译命令
+  （`CppBuilder.CollectCompileCommands`）在工程根目录生成 `compile_commands.json`（JSON 编译数据库），
+  让 clangd / VS Code / CLion 无需安装 CMake、无需 configure 即可获得代码高亮与跳转。它对**每一种**
+  工程类型都会生成（与 VS/CMake 产物一同输出），也可通过 `--IDEProjectType CompileCommands` 单独生成。
 
 这种「IDE 驱动 rbt」的设计保证了单一的构建事实来源：IDE 只是前端，真正的编译始终走上文描述的同一条
 规则 / 工具链路径。

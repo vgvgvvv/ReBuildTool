@@ -179,6 +179,47 @@ public class Tests
         }
     }
 
+    // Generates only a compile_commands.json (JSON Compilation Database) and verifies it is a
+    // valid array of per-file entries with the LLVM-spec keys, written to the project root.
+    // This is what clangd / VS Code / CLion read for code highlighting + go-to-definition.
+    [Test]
+    public void TestCompileCommandsGenerate()
+    {
+        CmdParser.Parse<Tests>();
+        ServiceContext.Instance.Init();
+
+        ProjectGenArgs.Get().IDEProjectType.Value = ProjectGenType.CompileCommands;
+
+        var path = TestCaseGlobalVars.SampleDirectory.Combine("StaticLibraryLink");
+        var dbPath = path.Combine("compile_commands.json");
+        dbPath.DeleteIfExists();
+
+        var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
+        project.Parse();
+        project.Setup();
+
+        Assert.IsTrue(dbPath.Exists(), "compile_commands.json should be generated at the project root");
+
+        using var doc = System.Text.Json.JsonDocument.Parse(dbPath.ReadAllText());
+        Assert.That(doc.RootElement.ValueKind, Is.EqualTo(System.Text.Json.JsonValueKind.Array),
+            "compile_commands.json must be a JSON array");
+        Assert.That(doc.RootElement.GetArrayLength(), Is.GreaterThan(0),
+            "the database must contain at least one compile entry");
+
+        foreach (var entry in doc.RootElement.EnumerateArray())
+        {
+            Assert.IsTrue(entry.TryGetProperty("directory", out _), "entry must have a directory");
+            Assert.IsTrue(entry.TryGetProperty("file", out var file), "entry must have a file");
+            Assert.IsTrue(entry.TryGetProperty("output", out _), "entry must have an output");
+            Assert.IsTrue(entry.TryGetProperty("arguments", out var args), "entry must have arguments");
+            Assert.That(args.ValueKind, Is.EqualTo(System.Text.Json.JsonValueKind.Array));
+            // argv[0] must be the compiler executable so clangd can infer the driver.
+            Assert.That(args.GetArrayLength(), Is.GreaterThan(0), "arguments must include the compiler");
+            Assert.IsTrue(file.GetString()!.EndsWith(".cpp") || file.GetString()!.EndsWith(".c"),
+                "each entry's file should be a compilable source");
+        }
+    }
+
     // End-to-end HeaderTool (RHT) codegen: a module with a RECLASS-annotated
     // header is built with the ResetEngineClassExtension plugin. Verifies the
     // full chain — HeaderTool runs, generates HeaderToolGen/, the framework
