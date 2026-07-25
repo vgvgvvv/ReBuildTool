@@ -1,5 +1,4 @@
 ﻿using Bullseye;
-using ReBuildTool.IniProject;
 using ReBuildTool.Service.CommandGroup;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;
@@ -24,11 +23,9 @@ try
     Log.AppendLogger(new FileLogger(logFile).WithDate());
 
     var root = GlobalPaths.ProjectRoot;
-    var iniProject = ServiceContext.Instance.Create<IIniProject>(root);
     var cppProject = ServiceContext.Instance.Create<ICppProject>(root);
     var projects = new List<IProjectInterface>
     {
-        iniProject.Value,
         cppProject.Value
     };
     var targetName = command.Target.Value;

@@ -1,9 +1,10 @@
 using NiceIO;
 using ReBuildTool.Actions;
+using ReBuildTool.Service.CommandGroup;
 using ReBuildTool.Service.Global;
 using ResetCore.Common;
 
-namespace ReBuildTool.IniProject;
+namespace ReBuildTool.Internal;
 
 public class BoosterSupport
 {
@@ -40,12 +41,17 @@ public class BoosterSupport
 		}
 
 		{
+			var _cmd = CmdParser.Get<ICommonCommandGroup>();
+			var targetName = string.IsNullOrEmpty(_cmd.Target.Value)
+				? GlobalPaths.ProjectRoot.FileName
+				: _cmd.Target.Value;
+
 			var initBat = GlobalPaths.ProjectRoot.Combine($"InitProject{ex}");
 			if (!initBat.Exists())
 			{
 				initBat.CreateFile();
 				ContextArgs.Context context = new ContextArgs.Context();
-				context.AddArg("targetName", IniProjectCommandGroup.Get().TargetName);
+				context.AddArg("targetName", targetName);
 				if (ex == ".sh")
 				{
 					initBat.WriteAllText(new ContextArgs(@"
@@ -72,7 +78,7 @@ cd %~dp0
 			{
 				buildBat.CreateFile();
 				ContextArgs.Context context = new ContextArgs.Context();
-				context.AddArg("targetName", CmdParser.Get<IniProjectCommandGroup>().TargetName);
+				context.AddArg("targetName", targetName);
 				if (ex == ".sh")
 				{
 					buildBat.WriteAllText(new ContextArgs(@"
