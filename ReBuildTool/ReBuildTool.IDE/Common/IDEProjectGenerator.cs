@@ -1,5 +1,6 @@
 ﻿using NiceIO;
 
+using ReBuildTool.IDE.CompileCommands;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;
 using ReBuildTool.Service.Global;
@@ -66,6 +67,11 @@ public class IDEProjectGenerator : IGenerateIDEProjService
 
 			cmakeProject.FlushAllCMakeFile();
 		}
+
+		// A compile_commands.json is emitted for every project type (and is the sole output when
+		// CompileCommands is selected on its own), so editors get code highlighting / navigation
+		// regardless of which IDE project was generated.
+		CompileCommandsGenerator.Generate(sourceProvider);
 	}
 	
 

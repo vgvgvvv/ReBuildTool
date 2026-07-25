@@ -77,11 +77,16 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 | `--ProjectRoot <path>` | Project root folder. Defaults to the current working directory. |
 | `--Mode <RunMode>` | **Required.** One of `Init`, `Build`, `Clean`, `ReBuild`. |
 | `--Target <name>` | Target to build. Defaults to the `ProjectRoot` folder name. |
+| `--IDEProjectType <type>` | Which project to generate in `Init` mode: `VisualStudio`, `CMake`, or `CompileCommands`. Defaults to Visual Studio on Windows, CMake elsewhere. |
 | `--BoosterSource <path>` | Internal; set by the Booster scripts so RBT can regenerate them. Don't set manually. |
 
 `Mode` behavior (see [Program.cs](../ReBuildTool/ReBuildTool/Program.cs)):
 - **Init** — scaffolds a default Target/Module under `Source/` if none
   exist, then generates the IDE project (`.sln` for Visual Studio, or CMake).
+  A `compile_commands.json` (JSON Compilation Database, for editor code
+  highlighting / go-to-definition via clangd, VS Code or CLion) is written to
+  the project root regardless of the project type, and can be generated on its
+  own with `--IDEProjectType CompileCommands`.
 - **Build** — compiles the given target.
 - **Clean** — removes build outputs.
 - **ReBuild** — `Clean` followed by `Build`.

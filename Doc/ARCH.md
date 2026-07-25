@@ -219,7 +219,8 @@ non-thread-safe logger, serializes output with a static lock.
 ## 7. IDE project generation
 
 Instead of compiling, `rbt` can emit IDE projects via
-`IGenerateIDEProjService` (`ProjectGenType` = `VisualStudio` | `CMake`):
+`IGenerateIDEProjService` (`ProjectGenType` = `VisualStudio` | `CMake` |
+`CompileCommands`):
 
 - **ReBuildTool.IDE / VisualStudio** — generates `.vcxproj` (with
   configuration/filter/user partials in `VCProject.*.cs`) and a `.sln`. The
@@ -229,6 +230,13 @@ Instead of compiling, `rbt` can emit IDE projects via
   invokes `rbt`, forwarding the IDE's `$<CONFIG>`, target platform and
   architecture into the corresponding `rbt --BuildConfig / --TargetPlatform /
   --TargetArch` arguments.
+- **ReBuildTool.IDE / CompileCommands** — emits a `compile_commands.json` (JSON
+  Compilation Database) at the project root directly from the exact per-file
+  compiler invocations `rbt` would run (`CppBuilder.CollectCompileCommands`), so
+  clangd / VS Code / CLion get code highlighting and go-to-definition with no
+  CMake install or configure step. It is written for **every** project type
+  (alongside the VS/CMake output) and can be requested on its own via
+  `--IDEProjectType CompileCommands`.
 
 This "IDE drives rbt" design keeps a single source of build truth: the IDE is a
 front end, the actual compilation always goes through the same rule/toolchain

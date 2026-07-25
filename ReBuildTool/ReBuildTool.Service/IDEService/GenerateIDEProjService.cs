@@ -7,11 +7,14 @@ using ResetCore.Common;
 
 namespace ReBuildTool.Service.IDEService;
 
-public enum ProjectGenType 
+public enum ProjectGenType
 {
 	Invalid,
 	VisualStudio,
 	CMake,
+	// Emits only a compile_commands.json (JSON Compilation Database) for editor
+	// code highlighting / go-to-definition, without a VS or CMake project.
+	CompileCommands,
 }
 
 public class ProjectGenArgs : CommandLineArgGroup<ProjectGenArgs> 
