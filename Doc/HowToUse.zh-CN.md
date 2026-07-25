@@ -75,7 +75,6 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 | `--ProjectRoot <path>` | 项目根目录，默认为当前工作目录。 |
 | `--Mode <RunMode>` | **必填。** 取值为 `Init`、`Build`、`Clean`、`ReBuild` 之一。 |
 | `--Target <name>` | 要构建的目标名称，默认为 `ProjectRoot` 文件夹名。 |
-| `--RunDry` | 空跑模式——只做解析/校验，不实际编译。 |
 | `--BoosterSource <path>` | 内部参数，由 Booster 脚本设置，用于 RBT 重新生成这些脚本。请勿手动设置。 |
 
 `Mode` 的行为（详见
@@ -85,10 +84,6 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 - **Build** —— 编译指定的目标。
 - **Clean** —— 清理构建产物。
 - **ReBuild** —— 先 `Clean` 再 `Build`。
-
-RBT 在每次运行时实际上会**并行处理两种工程类型**：基于 C# 规则的 C++ 工程
-（`ICppProject`，见下文）和一种旧版的基于 INI 的工程（`IIniProject`，见第 6 节）。
-两者都会被解析，并通过同一个 `Mode` 参数分发执行。
 
 ### C++ 相关的专用参数
 
@@ -200,8 +195,7 @@ public class MyGameModule : CppModuleRule
 
 ## 5. 编程式 / 生命周期 API
 
-无论是 C++ 工程还是 INI 工程，都暴露相同的生命周期方法，
-`Program.cs` 中的模式分发逻辑，以及
+所有工程类型都暴露相同的生命周期方法，`Program.cs` 中的模式分发逻辑，以及
 [ReBuildTool.Test](../ReBuildTool/ReBuildTool.Test) 中的 NUnit 测试内部都用到了它：
 
 ```csharp
@@ -212,33 +206,7 @@ project.Clean();
 project.ReBuild(targetName);
 ```
 
-## 6. 旧版 INI 工程格式
-
-除了 C# 规则以外，RBT 目前仍会解析一种基于 INI 的工程/模块格式
-（`ReBuildTool.Ini`），并且每次运行时都会与 C# 工程并行处理。
-自动生成的默认 `.target` 风格文件类似这样：
-
-```ini
-[Target]
-+Entries="Runtime"
-
-[Init]
-+DependOn="Action:DoSomething"
-+Actions=(Name="ReMake.Init", Args=(projectName="Sample"))
-
-[Build]
-# build actions
-
-[Action:DoSomething]
-+Actions=...
-```
-
-对应的 `.module.ini` 文件则包含一个 `[Module]` 段和
-`+Dependencies=` 配置。这种格式早于 C# 规则系统出现——除非你确实需要
-INI 里基于 `Bullseye` 实现的 action/target 依赖图功能，
-否则新项目建议优先使用 `.target.cs` / `.module.cs`。
-
-## 7. 自我更新
+## 6. 自我更新
 
 `ReBuildTool.Updater`（通过 `rbt-updater.sh` / `rbt-updater.bat` 调用）会拉取
 `$RBT_HOME` 下最新的 `ReBuildTool` git 仓库，并从源码重新构建
@@ -248,7 +216,7 @@ INI 里基于 `Bullseye` 实现的 action/target 依赖图功能，
 ./BuildScript/rbt-updater.sh
 ```
 
-## 8. 快速参考
+## 7. 快速参考
 
 ```bash
 # 在空项目文件夹中做一次性初始化
