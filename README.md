@@ -56,3 +56,4 @@ rbt --ProjectRoot . --Mode Build --Target MyGame
 
 - [What is ReBuildTool](Doc/Whats-ReBuildTool.md)
 - [How To Use](Doc/HowToUse.md) | [中文使用指南](Doc/HowToUse.zh-CN.md)
+- [Architecture](Doc/ARCH.md) | [架构说明](Doc/ARCH.zh-CN.md)
