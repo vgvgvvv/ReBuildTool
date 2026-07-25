@@ -22,6 +22,11 @@ public partial class MacOSXClangToolchain
     {
         var linkBuilder = cppLinkUnit.LinkArgsBuilder as ClangLinkArgsBuilder;
 
+        foreach (var linkFlag in cppLinkUnit.LinkFlags)
+        {
+            yield return linkFlag;
+        }
+
         foreach (var argument in cppLinkUnit.LinkArgsBuilder.GetAllArguments())
         {
             yield return argument;

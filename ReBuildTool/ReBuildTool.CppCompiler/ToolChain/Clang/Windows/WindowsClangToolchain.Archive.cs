@@ -22,10 +22,15 @@ public partial class WindowsClangToolchain
 		
         yield return "/NOLOGO";
 		
-        foreach (var argument in linkBuilder.GetAllArguments())
-        {
-            yield return argument;
-        }
+		foreach (var argument in linkBuilder.GetAllArguments())
+		{
+			yield return argument;
+		}
+
+		foreach (var archiveFlag in cppArchiveUnit.ArchiveFlags)
+		{
+			yield return archiveFlag;
+		}
 		
         foreach (var staticLibrary in cppArchiveUnit.StaticLibraries)
         {

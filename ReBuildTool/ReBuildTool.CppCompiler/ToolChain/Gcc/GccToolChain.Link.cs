@@ -31,6 +31,11 @@ public partial class GccToolChain
     {
         var linkBuilder = cppLinkUnit.LinkArgsBuilder as GccLinkArgsBuilder;
 
+        foreach (var linkFlag in cppLinkUnit.LinkFlags)
+        {
+            yield return linkFlag;
+        }
+
         foreach (var argument in cppLinkUnit.LinkArgsBuilder.GetAllArguments())
         {
             yield return argument;

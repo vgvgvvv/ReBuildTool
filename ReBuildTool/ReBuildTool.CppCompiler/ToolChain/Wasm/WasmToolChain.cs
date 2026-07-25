@@ -56,12 +56,15 @@ public partial class WasmToolchain : IToolChain
 
 	public override ILinkArgsBuilder MakeLinkArgsBuilder()
 	{
-		return new WasmLinkArgsBuilder();
+		// Wasm link/archive is not implemented yet — fail early here rather than
+		// returning a builder whose flags are never consumed (MakeLinkInvocation
+		// also throws NotImplementedException).
+		throw new NotSupportedException("Wasm toolchain link is not implemented yet");
 	}
 
 	public override IArchiveArgsBuilder MakeArchiveArgsBuilder()
 	{
-		return new WasmArchiveArgsBuilder();
+		throw new NotSupportedException("Wasm toolchain archive is not implemented yet");
 	}
 
 }

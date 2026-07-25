@@ -36,6 +36,11 @@ public partial class MSVCToolChain
 		{
 			yield return argument;
 		}
+
+		foreach (var archiveFlag in cppArchiveUnit.ArchiveFlags)
+		{
+			yield return archiveFlag;
+		}
 		
 		foreach (var staticLibrary in cppArchiveUnit.StaticLibraries)
 		{

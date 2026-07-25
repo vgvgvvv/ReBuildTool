@@ -7,10 +7,11 @@ public partial class WindowsClangToolchain
     protected override IEnumerable<string> LinkArgsFor(CppLinkUnit cppLinkUnit)
     {
         yield return $"/out:{cppLinkUnit.OutputPath.InQuotes()}";
-		
-        // TODO: manifest
-        // TODO: module definition file
-		
+
+        // manifest and module-definition file are driven via the link args
+        // builder (SetGenerateManifest / SetModuleDefinitionFile) and surface
+        // through DefaultLinkFlags -> GetAllArguments.
+
         foreach (var defaultLinkFlag in DefaultLinkFlags(cppLinkUnit))
         {
             yield return defaultLinkFlag;
@@ -35,8 +36,13 @@ public partial class WindowsClangToolchain
 		    }
 	    }
 	    
-	    // disable incremental linking
-	    yield return "/INCREMENTAL:NO";
+	    // disable incremental linking unless the module explicitly enabled it
+	    // via builder.SetEnableIncrementalLink(true) (which yields /INCREMENTAL
+	    // through GetAllArguments, so we skip the default /INCREMENTAL:NO).
+	    if (cppLinkUnit.LinkArgsBuilder.EnableIncrementalLink != true)
+	    {
+		    yield return "/INCREMENTAL:NO";
+	    }
 	    // support large address, only for x86
 	    yield return "/LARGEADDRESSAWARE";
 	    // https://learn.microsoft.com/en-us/cpp/build/reference/nxcompat-compatible-with-data-execution-prevention?view=msvc-170
@@ -76,6 +82,11 @@ public partial class WindowsClangToolchain
 		    }
 	    }
 	    
+	    foreach (var linkFlag in cppLinkUnit.LinkFlags)
+	    {
+		    yield return linkFlag;
+	    }
+
 	    foreach (var argument in cppLinkUnit.LinkArgsBuilder.GetAllArguments())
 	    {
 		    yield return argument;
