@@ -161,6 +161,13 @@ public class Tests
         Assert.IsFalse(rootText.Contains("execute_process"),
             "no rbt call should run at CMake configure time");
 
+        // The IDE's config selector drives rbt's --BuildConfig via $<CONFIG>, and rbt's configs
+        // are declared as the CMake configurations so Debug/Release/... map cleanly.
+        Assert.IsTrue(rootText.Contains("--BuildConfig \"$<CONFIG>\""),
+            "the rbt build config must follow the CMake $<CONFIG> selection");
+        Assert.IsTrue(rootText.Contains("Debug;Release;ReleasePlus;ReleaseSize"),
+            "root must declare rbt's build configurations for the IDE config selector");
+
         // Every module's real target is emitted for IntelliSense only (kept out of ALL).
         var cmakeProjectsDir = path.Combine("Intermedia/CppProject/CMakeProjects");
         var moduleCMakeFiles = cmakeProjectsDir.Files("CMakeLists.txt", true).ToList();
