@@ -192,6 +192,35 @@ internal class GccLinkArgsBuilder : ILinkArgsBuilder
 
     // Incremental linking is MSVC-specific; ld/lld don't model it this way.
     public override IEnumerable<string> IncrementalLinkFlags => Enumerable.Empty<string>();
+
+    public override IEnumerable<string> DeadCodeEliminationFlags
+    {
+        get
+        {
+            if (!EnableDeadCodeElimination.HasValue) yield break;
+            // Requires compile-side -ffunction-sections -fdata-sections to actually
+            // drop individual functions/data (the toolchain emits these in Release).
+            yield return EnableDeadCodeElimination.Value
+                ? "-Wl,--gc-sections"
+                : "-Wl,--no-gc-sections";
+        }
+    }
+
+    // COMDAT folding has no portable equivalent across ld/lld (lld has
+    // --icf=safe, but classic ld does not), so we don't emit anything here.
+    public override IEnumerable<string> COMDATFoldingFlags => Enumerable.Empty<string>();
+
+    public override IEnumerable<string> StripSymbolsFlags
+    {
+        get
+        {
+            // Only honor the explicit-enable case here. The Release default
+            // (-Wl,-s) is emitted by the toolchain's DefaultLinkFlags so that
+            // SetStripSymbols(false) can suppress it.
+            if (StripSymbols != true) yield break;
+            yield return "-Wl,-s";
+        }
+    }
 }
 
 internal class GccArchiveArgsBuilder : IArchiveArgsBuilder

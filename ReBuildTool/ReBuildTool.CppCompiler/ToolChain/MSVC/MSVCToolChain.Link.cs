@@ -79,18 +79,26 @@ public partial class MSVCToolChain
 	    if (Configuration != BuildConfiguration.Debug)
 	    {
 		    // https://learn.microsoft.com/en-us/cpp/build/reference/opt-optimizations?view=msvc-170
-		    
-		    yield return "/OPT:REF"; // remove unreferenced data
-		    yield return "/OPT:ICF"; // reuse common function code
-
-		    if (Arch is ARMv7Architecture)
+		    // /OPT:REF and /OPT:ICF are emitted by default on non-Debug builds
+		    // unless the module explicitly disabled them via the link args
+		    // builder (SetEnableDeadCodeElimination(false) / SetEnableCOMDATFolding(false)).
+		    if (cppLinkUnit.LinkArgsBuilder.EnableDeadCodeElimination != false)
 		    {
-			    /***
-			     *  if the linker detects a jump to an out-of-range address,
-			     * it replaces the branch instruction's destination address with the address of a code
-			     * "island" that contains a branch instruction that targets the actual destination. 
-			     */
-			    yield return "/OPT:LBR";
+			    yield return "/OPT:REF"; // remove unreferenced data
+		    }
+		    if (cppLinkUnit.LinkArgsBuilder.EnableCOMDATFolding != false)
+		    {
+			    yield return "/OPT:ICF"; // reuse common function code
+
+			    if (Arch is ARMv7Architecture)
+			    {
+				    /***
+				     *  if the linker detects a jump to an out-of-range address,
+				     * it replaces the branch instruction's destination address with the address of a code
+				     * "island" that contains a branch instruction that targets the actual destination.
+				     */
+				    yield return "/OPT:LBR";
+			    }
 		    }
 	    }
 	    

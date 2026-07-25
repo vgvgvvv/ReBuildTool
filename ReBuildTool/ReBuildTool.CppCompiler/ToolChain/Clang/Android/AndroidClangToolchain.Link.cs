@@ -31,6 +31,23 @@ public partial class AndroidClangToolchain
             yield return argument;
         }
 
+        // Release defaults: strip symbols and drop unreferenced sections to
+        // shrink the binary. Suppressed in Debug so the binary stays debuggable.
+        // Modules can opt out via SetStripSymbols(false) / SetEnableDeadCodeElimination(false).
+        // Note: --gc-sections only has effect when compile emitted
+        // -ffunction-sections -fdata-sections (the Release default).
+        if (Configuration != BuildConfiguration.Debug)
+        {
+            if (cppLinkUnit.LinkArgsBuilder.StripSymbols != false)
+            {
+                yield return "-Wl,-s";
+            }
+            if (cppLinkUnit.LinkArgsBuilder.EnableDeadCodeElimination != false)
+            {
+                yield return "-Wl,--gc-sections";
+            }
+        }
+
         yield return "-target";
         yield return NdkClangSdk.Setting.TargetName;
         

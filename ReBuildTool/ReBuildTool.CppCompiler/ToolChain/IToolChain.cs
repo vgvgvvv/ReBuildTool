@@ -498,6 +498,73 @@ public abstract class ILinkArgsBuilder : IArgsBuilder
 	}
 
 	/// <summary>
+	/// Dead-code elimination override (removes unreferenced functions/data
+	/// from the final binary). <c>null</c> means use the toolchain default
+	/// (MSVC: /OPT:REF on non-Debug; GCC/Clang: -Wl,--gc-sections on non-Debug).
+	/// On GCC/Clang this only has effect when compile produced
+	/// -ffunction-sections -fdata-sections (the Release default).
+	/// </summary>
+	public bool? EnableDeadCodeElimination { get; private set; }
+
+	/// <summary>
+	/// Native dead-code-elimination flag(s); empty when unset.
+	/// </summary>
+	public abstract IEnumerable<string> DeadCodeEliminationFlags { get; }
+
+	/// <summary>
+	/// Force enable/disable dead-code elimination. Modules call this from
+	/// <see cref="CppModuleRule.AdditionLinkArgs"/> (e.g. to keep unreferenced
+	/// symbols for reflection, or to enable it in Debug).
+	/// </summary>
+	public void SetEnableDeadCodeElimination(bool enable)
+	{
+		EnableDeadCodeElimination = enable;
+	}
+
+	/// <summary>
+	/// COMDAT folding override (merge identical functions/data). <c>null</c>
+	/// means use the toolchain default (MSVC: /OPT:ICF on non-Debug; GCC/Clang:
+	/// not applied — no portable equivalent across ld/lld).
+	/// </summary>
+	public bool? EnableCOMDATFolding { get; private set; }
+
+	/// <summary>
+	/// Native COMDAT-folding flag(s); empty when unset or unsupported.
+	/// </summary>
+	public abstract IEnumerable<string> COMDATFoldingFlags { get; }
+
+	/// <summary>
+	/// Force enable/disable COMDAT folding. Modules call this from
+	/// <see cref="CppModuleRule.AdditionLinkArgs"/>.
+	/// </summary>
+	public void SetEnableCOMDATFolding(bool enable)
+	{
+		EnableCOMDATFolding = enable;
+	}
+
+	/// <summary>
+	/// Symbol stripping override (remove symbol tables from the binary to
+	/// reduce size). <c>null</c> means use the toolchain default (MSVC: N/A,
+	/// uses PDB; GCC/Clang: -Wl,-s on non-Debug).
+	/// </summary>
+	public bool? StripSymbols { get; private set; }
+
+	/// <summary>
+	/// Native strip flag(s); empty when unset or unsupported (MSVC).
+	/// </summary>
+	public abstract IEnumerable<string> StripSymbolsFlags { get; }
+
+	/// <summary>
+	/// Force enable/disable symbol stripping. Modules call this from
+	/// <see cref="CppModuleRule.AdditionLinkArgs"/> (e.g. to keep symbols for
+	/// crash symbolication in Release).
+	/// </summary>
+	public void SetStripSymbols(bool enable)
+	{
+		StripSymbols = enable;
+	}
+
+	/// <summary>
 	/// Expands the high-level link options above into native flags. These are
 	/// emitted alongside whatever the builder accumulated via
 	/// <see cref="IArgsBuilder.Append"/> (DisableWarnings/SetLto/SetWarnAsError
@@ -527,6 +594,18 @@ public abstract class ILinkArgsBuilder : IArgsBuilder
 		foreach (var incrementalFlag in IncrementalLinkFlags)
 		{
 			yield return incrementalFlag;
+		}
+		foreach (var dceFlag in DeadCodeEliminationFlags)
+		{
+			yield return dceFlag;
+		}
+		foreach (var icfFlag in COMDATFoldingFlags)
+		{
+			yield return icfFlag;
+		}
+		foreach (var stripFlag in StripSymbolsFlags)
+		{
+			yield return stripFlag;
 		}
 	}
 }
