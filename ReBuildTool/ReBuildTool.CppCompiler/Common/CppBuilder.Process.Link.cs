@@ -63,6 +63,7 @@ public partial class CppBuilder
 
 		private bool RunLinkInvocations()
 		{
+			Log.Info($"linking: {LinkInvocation.Unit.OutputPath.FileName}");
 			if (CppCompilerArgs.Get().DebugToolchainCmd)
 			{
 				Log.Info($"Cmd: {LinkInvocation}");

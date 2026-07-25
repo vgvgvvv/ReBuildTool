@@ -190,7 +190,7 @@ public partial class CppBuilder
 				}
 				else
 				{
-					Log.Info($"Compile:[{index}/{maxCount}]{invocation}");
+					Log.Info($"Compile:[{index}/{maxCount}]{invocation.Unit.SourceFile} -> {invocation.Unit.OutputFile}");
 					if (CppCompilerArgs.Get().DebugToolchainCmd)
 					{
 						Log.Info($"Cmd: {invocation}");
