@@ -130,6 +130,7 @@ public class NDKClangCppLibrary : ICppLibrary
 	public IEnumerable<NPath> IncludePaths()
 	{
 		yield return Owner.SysRootLibVersionedPath; // for crtbegin_so.o & crtend_so.o
+		yield return Owner.SysRootIncludePath;
 		yield return Owner.SysRootIncludePath.Combine("c++/v1");
 	}
 	
