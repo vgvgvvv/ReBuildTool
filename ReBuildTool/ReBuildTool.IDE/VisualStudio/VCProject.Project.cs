@@ -106,12 +106,21 @@ public partial class VCProject
 	/// When <c>--TargetPlatform</c> was explicitly passed (e.g. cross-generating for
 	/// Android from a Windows host), it is forwarded so the NMake build uses the same
 	/// target platform's toolchain instead of falling back to the host platform.
+	/// The arch token is <see cref="Architecture.CommandLineName"/> (x86/x64/arm32/arm64),
+	/// NOT <see cref="Architecture.Name"/> - VS's Platform dropdown shows "ARM64"/"ARMv7"
+	/// but rbt's <c>--TargetArch</c> parser only accepts the lowercase CLI tokens, so the
+	/// raw display name would be rejected with <c>NotSupportedException</c>.
 	/// </remarks>
 	internal string BuildCommonNMakeArgs(IProjectConfiguration configuration)
 	{
 		var rbtExe = GlobalPaths.ReBuildToolHome.Combine("rbt.bat");
+		// configuration.PlatformName is the VS display name (Arch.Name); convert to the
+		// rbt CLI token via the Architecture object that VCProjectConfiguration carries.
+		var archArg = configuration is VCProjectConfiguration vc
+			? vc.Arch.CommandLineName
+			: configuration.PlatformName;
 		var args = $"{rbtExe.InQuotes()} --ProjectRoot {cppSource.ProjectRoot.InQuotes()} " +
-		           $"--BuildConfig {configuration.ConfigurationName} --TargetArch {configuration.PlatformName} " +
+		           $"--BuildConfig {configuration.ConfigurationName} --TargetArch {archArg} " +
 		           $"--UseMakeFileBuild false";
 
 		// Forward --TargetPlatform only when it was explicitly set. When unset (None),
