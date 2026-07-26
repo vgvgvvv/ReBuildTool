@@ -232,9 +232,12 @@ Instead of compiling, `rbt` can emit IDE projects via
   --TargetArch` arguments.
 - **ReBuildTool.IDE / VSCode** — generates a `.vscode/` folder (`tasks.json`,
   `launch.json`, `c_cpp_properties.json`) at the project root. Build / rebuild /
-  clean tasks invoke `rbt`, each executable module gets a run task plus a
-  cppvsdbg/cppdbg debug launch configuration (with a build preLaunchTask), and
-  IntelliSense reads the `compile_commands.json` `rbt` emits.
+  clean tasks invoke `rbt` — pinning `--TargetPlatform` and replaying the other
+  flags of the generating `rbt` invocation (`--TargetArch`, `--NDKRoot`, ...) so
+  a cross-compiled project keeps building for its target platform — each
+  executable module gets a run task plus a cppvsdbg/cppdbg debug launch
+  configuration (with a build preLaunchTask), and IntelliSense reads the
+  `compile_commands.json` `rbt` emits.
 - **ReBuildTool.IDE / CompileCommands** — emits a `compile_commands.json` (JSON
   Compilation Database) at the project root directly from the exact per-file
   compiler invocations `rbt` would run (`CppBuilder.CollectCompileCommands`), so

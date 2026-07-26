@@ -87,7 +87,9 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
   使用 `--IDEProjectType VSCode` 时，会在工程根目录写出 `.vscode/` 文件夹
   （`tasks.json`、`launch.json`、`c_cpp_properties.json`），让 VS Code 能够构建、
   运行、调试与清理工程 —— 所有操作都会委托回 RBT 执行，并为每个可执行模块生成
-  一个运行任务和一个调试启动配置。
+  一个运行任务和一个调试启动配置。生成出来的任务会带上生成工程时使用的平台参数
+  （`--TargetPlatform`、`--TargetArch` 等），因此用 `--TargetPlatform Android` 生成的工程
+  在 VS Code 中构建时同样会针对 Android 编译，而不会退回到宿主平台。
 - **Build** —— 编译指定的目标。
 - **Clean** —— 清理构建产物。
 - **ReBuild** —— 先 `Clean` 再 `Build`。

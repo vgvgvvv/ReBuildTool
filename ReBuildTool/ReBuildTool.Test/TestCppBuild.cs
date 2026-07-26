@@ -344,6 +344,14 @@ public class Tests
         // On Windows the default IDE project is VS - force VS Code generation for this test.
         ProjectGenArgs.Get().IDEProjectType.Value = ProjectGenType.VSCode;
 
+        // Explicitly select a target platform (the host one, so the generated project still
+        // matches this machine's toolchain) to check the generated tasks forward it: without
+        // --TargetPlatform an rbt task falls back to the host platform, which builds a
+        // cross-generated project with the wrong toolchain.
+        var targetPlatform = CppCompilerArgs.Get().TargetPlatform;
+        targetPlatform.Value = IPlatformSupport.CurrentTargetPlatform;
+        targetPlatform.MarkHasSet();
+
         var path = TestCaseGlobalVars.SampleDirectory.Combine("StaticLibraryLink");
         var vscodeDir = path.Combine(".vscode");
         vscodeDir.DeleteIfExists();
@@ -375,6 +383,21 @@ public class Tests
             var args = buildTask.GetProperty("args").EnumerateArray().Select(a => a.GetString()).ToList();
             Assert.IsTrue(args.Contains("--Mode") && args.Contains("Build"),
                 "the build task must invoke rbt --Mode Build");
+
+            // Every rbt task must carry the platform the project was generated for: without an
+            // explicit --TargetPlatform rbt falls back to the host platform, so a project
+            // generated with --TargetPlatform <other> would build with the host toolchain.
+            var expectedPlatform = targetPlatform.Value.ToString();
+            foreach (var label in new[] { "rbt: build [Debug]", "rbt: rebuild [Debug]", "rbt: clean" })
+            {
+                var task = tasks.EnumerateArray().First(t => t.GetProperty("label").GetString() == label);
+                var taskArgs = task.GetProperty("args").EnumerateArray().Select(a => a.GetString()).ToList();
+                var platformIndex = taskArgs.IndexOf("--TargetPlatform");
+                Assert.That(platformIndex, Is.GreaterThanOrEqualTo(0),
+                    $"'{label}' must pass --TargetPlatform to rbt");
+                Assert.AreEqual(expectedPlatform, taskArgs[platformIndex + 1],
+                    $"'{label}' must build for the platform the project was generated for");
+            }
         }
 
         // launch.json: one debug config per executable module, building before launch.
