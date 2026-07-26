@@ -21,7 +21,9 @@ public class ResetHeaderTool
     {
         var csprojLocation = RHTDir.Combine("ResetHeaderTool/ResetHeaderTool/ResetHeaderTool.csproj");
         var rhtName = "ResetHeaderTool";
-        Git.GetFromGit("git@github.com:vgvgvvv/ResetHeaderTool.git", rhtName, RHTDir);
+        // https rather than ssh: the repository is public, so an anonymous clone works
+        // on any machine without a github key.
+        Git.GetFromGit("https://github.com/vgvgvvv/ResetHeaderTool.git", rhtName, RHTDir);
 
         void BuildForPlatformAndArch(PlatformType platform, Architecture arch)
         {

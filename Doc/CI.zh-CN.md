@@ -35,11 +35,10 @@ Studio 工程生成测试，以及 VS setup API 测试。
 
 - **递归检出 submodule**（`Vendor/ReCSharpCommon`、`Vendor/UniToLua`），否则解决方案
   无法编译。
-- **ResetHeaderTool 由 workflow 预置。** rbt 原本通过 SSH clone 并执行其构建脚本来
-  引导，这在 runner 上行不通（没有密钥，且上游仓库没有 `Scripts/BuildAll.sh`）。
-  workflow 改为用 HTTPS clone 到
-  `Sample/HeaderToolTest/Intermedia/ResetHeaderTool` 并自行发布宿主平台的二进制；
-  由于 clone 已存在，rbt 会跳过自己的引导流程。
+- **ResetHeaderTool 自行引导。** `TestHeaderToolCodegen` 让 rbt 走和开发机上一样的
+  流程：用 HTTPS clone 公开仓库 `vgvgvvv/ResetHeaderTool` 到
+  `Sample/HeaderToolTest/Intermedia/` 并构建。CI 不做任何预置，因此引导路径本身也
+  在测试覆盖内。
 - **Linux 上的 `InterMedia` 符号链接。** rbt 把工程信息写在 `Intermedia/` 下，而
   ResetHeaderTool 读取时拼的是 `InterMedia/`。在 Windows 与 macOS 上是同一个目录，
   在大小写敏感的文件系统上则不存在，所以 workflow 建了这个别名。上游修正大小写后
@@ -58,6 +57,5 @@ dotnet build   ReBuildTool/ReBuildTool.sln -c Release --no-restore
 dotnet test    ReBuildTool/ReBuildTool.sln -c Release --no-build
 ```
 
-`TestHeaderToolCodegen` 还需要 ResetHeaderTool：要么让 rbt 自行引导（需要
-`vgvgvvv/ResetHeaderTool` 的 SSH 访问权限，且仅限 Windows），要么照 workflow 的做法
-预置。
+`TestHeaderToolCodegen` 首次运行会 clone 并构建 ResetHeaderTool，因此第一次
+`dotnet test` 需要联网，也会多花上一两分钟。
