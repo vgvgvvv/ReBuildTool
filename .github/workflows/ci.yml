@@ -1,0 +1,199 @@
+name: CI
+
+# Every push and every pull request must build and pass the automated tests on
+# all three host platforms before it can be considered good. Tags are handled by
+# release.yml, so they are skipped here.
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - 'v*'
+  pull_request:
+  workflow_dispatch:
+
+# A newer push to the same branch/PR supersedes the run in flight.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Build + run the NUnit suite on each host platform. The suite drives real
+  # C/C++ toolchains against the Sample/ projects, so it exercises the MSVC,
+  # XCode-clang and GCC paths respectively - one matrix leg per toolchain.
+  # ---------------------------------------------------------------------------
+  test:
+    name: Test (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows x64
+            # ResetHeaderTool RID + the Binary/<dir> layout RBT looks the tool up in
+            # (see HeaderToolPluginSupport.HeaderToolExePath).
+            rht_rid: win-x64
+            rht_dir: Win64
+          - os: ubuntu-latest
+            name: Linux x64
+            rht_rid: linux-x64
+            rht_dir: Linux
+          - os: macos-latest
+            name: macOS arm64
+            rht_rid: osx-arm64
+            rht_dir: MacArm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Install native build tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          if ! command -v make >/dev/null || ! command -v g++ >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y build-essential
+          fi
+          make --version | head -n 1
+          g++ --version | head -n 1
+
+      - name: Show native toolchain (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          xcode-select -p
+          ls -d /Applications/Xcode.app
+          make --version | head -n 1
+
+      # RBT bootstraps ResetHeaderTool itself by cloning it over SSH and running
+      # its build script - neither works on a runner (no SSH key, and the
+      # upstream Scripts/BuildAll.sh does not exist). Provision the tool here
+      # instead: RBT skips its own bootstrap when the clone is already present
+      # (HeaderToolPluginSupport.BuildHeaderTool), so it just uses these binaries.
+      - name: Provision ResetHeaderTool
+        shell: bash
+        run: |
+          set -euo pipefail
+          RHT_ROOT="Sample/HeaderToolTest/Intermedia/ResetHeaderTool"
+          RHT_INSTALL="$RHT_ROOT/ResetHeaderTool"
+          mkdir -p "$RHT_ROOT"
+          git clone --depth 1 https://github.com/vgvgvvv/ResetHeaderTool.git "$RHT_INSTALL"
+          dotnet publish "$RHT_INSTALL/ResetHeaderTool/ResetHeaderTool/ResetHeaderTool.csproj" \
+            -r ${{ matrix.rht_rid }} --self-contained -c Release \
+            -o "$RHT_INSTALL/Binary/${{ matrix.rht_dir }}/HeaderTool"
+
+      - name: Restore
+        run: dotnet restore ReBuildTool/ReBuildTool.sln
+
+      - name: Build
+        run: dotnet build ReBuildTool/ReBuildTool.sln -c Release --no-restore
+
+      - name: Test
+        run: >
+          dotnet test ReBuildTool/ReBuildTool.sln
+          -c Release --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --logger "console;verbosity=normal"
+          --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}
+          path: TestResults/**/*.trx
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # The shipped artifact is a self-contained binary per target RID. Publish all
+  # of them on every commit so a change that only breaks one RID (e.g. a
+  # Windows-only API used in shared code) is caught here and not at release time.
+  # ---------------------------------------------------------------------------
+  publish:
+    name: Publish (${{ matrix.rid }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [win-x64, osx-x64, osx-arm64, linux-x64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Publish ReBuildTool
+        run: >
+          dotnet publish ReBuildTool/ReBuildTool/ReBuildTool.csproj
+          -r ${{ matrix.rid }} --self-contained -c Release
+          -o Binary/${{ matrix.rid }}/ReBuildTool
+
+      - name: Publish ReBuildTool.Updater
+        run: >
+          dotnet publish ReBuildTool/ReBuildTool.Updater/ReBuildTool.Updater.csproj
+          -r ${{ matrix.rid }} --self-contained -c Release
+          -o Binary/${{ matrix.rid }}/ReBuildTool.Updater
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReBuildTool-${{ matrix.rid }}
+          path: Binary/${{ matrix.rid }}
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Single check to require in branch protection: it is green only when every
+  # matrix leg above succeeded.
+  # ---------------------------------------------------------------------------
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    needs: [test, publish]
+    if: always()
+    steps:
+      - name: Verify all jobs succeeded
+        run: |
+          echo "test:    ${{ needs.test.result }}"
+          echo "publish: ${{ needs.publish.result }}"
+          if [ "${{ needs.test.result }}" != "success" ] || [ "${{ needs.publish.result }}" != "success" ]; then
+            echo "::error::One or more CI jobs failed."
+            exit 1
+          fi
