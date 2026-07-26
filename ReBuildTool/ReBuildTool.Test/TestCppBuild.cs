@@ -97,6 +97,14 @@ public class Tests
     [Test]
     public void TestLauncherProjectGenerate()
     {
+        // Launchers are a Visual Studio concept, and the VS generator itself needs an
+        // installed MSVC SDK, so this only applies on Windows (elsewhere the default
+        // IDE project is CMake and no .vcxproj is produced).
+        if (!OperatingSystem.IsWindows())
+        {
+            Assert.Ignore("Visual Studio project generation is only supported on Windows.");
+        }
+
         CmdParser.Parse<Tests>();
         ServiceContext.Instance.Init();
 

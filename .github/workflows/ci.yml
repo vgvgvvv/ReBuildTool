@@ -39,7 +39,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
+          # Pinned rather than windows-latest: rbt resolves the MSVC toolchain through
+          # the VS setup COM API and only knows VS 2017/2019/2022 (MsvcSDK.Create), so
+          # the image has to be one that ships a Visual Studio it recognises.
+          - os: windows-2025
             name: Windows x64
             # ResetHeaderTool RID + the Binary/<dir> layout RBT looks the tool up in
             # (see HeaderToolPluginSupport.HeaderToolExePath).
@@ -82,6 +85,18 @@ jobs:
           make --version | head -n 1
           g++ --version | head -n 1
 
+      - name: Show native toolchain (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (Test-Path $vswhere) {
+            & $vswhere -all -products * -format value -property installationVersion
+            & $vswhere -all -products * -format value -property installationPath
+          } else {
+            Write-Host "vswhere not found at $vswhere"
+          }
+
       - name: Show native toolchain (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -105,6 +120,13 @@ jobs:
           dotnet publish "$RHT_INSTALL/ResetHeaderTool/ResetHeaderTool/ResetHeaderTool.csproj" \
             -r ${{ matrix.rht_rid }} --self-contained -c Release \
             -o "$RHT_INSTALL/Binary/${{ matrix.rht_dir }}/HeaderTool"
+          # ResetHeaderTool reads the project info rbt writes to Intermedia/ from a
+          # path it spells "InterMedia/" (ReBuildTool/Project.cs). Same directory on
+          # Windows and macOS, a missing one on a case-sensitive filesystem - so give
+          # it the alias it expects. Drop this once the casing is fixed upstream.
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            ln -sfn Intermedia Sample/HeaderToolTest/InterMedia
+          fi
 
       - name: Restore
         run: dotnet restore ReBuildTool/ReBuildTool.sln
