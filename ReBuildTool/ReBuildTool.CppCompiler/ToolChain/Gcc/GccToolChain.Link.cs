@@ -24,7 +24,49 @@ public partial class GccToolChain
 			yield return defaultLinkFlag;
 		}
 
+        // Objects before libraries: GNU ld resolves archives in command-line order and
+        // only pulls the members that satisfy symbols it has already seen. A -l placed
+        // ahead of the objects that need it contributes nothing, and the link fails with
+        // undefined references to the very library it was given.
         yield return "@" + cppLinkUnit.ResponseFile;
+
+        foreach (var libraryArg in LibraryArgs(cppLinkUnit))
+        {
+            yield return libraryArg;
+        }
+    }
+
+    private IEnumerable<string> LibraryArgs(CppLinkUnit cppLinkUnit)
+    {
+        foreach (var libraryPath in cppLinkUnit.LibraryPaths)
+        {
+            yield return "-L" + libraryPath;
+        }
+
+        foreach (var libpath in ToolChainLibraryPaths())
+        {
+            yield return "-L" + libpath;
+        }
+
+        foreach (var staticLibrary in ToolChainStaticLibraries())
+        {
+            yield return "-l" + staticLibrary.ToNPath();
+        }
+
+        foreach (var dynamicLibrary in ToolChainDynamicLibraries())
+        {
+            yield return "-l" + dynamicLibrary.ToNPath();
+        }
+
+        foreach (var staticLibrary in cppLinkUnit.StaticLibraries)
+        {
+            yield return "-l" + staticLibrary.ToNPath();
+        }
+
+        foreach (var dynamicLibrary in cppLinkUnit.DynamicLibraries)
+        {
+            yield return "-l" + dynamicLibrary.ToNPath();
+        }
     }
 
     protected IEnumerable<string> DefaultLinkFlags(CppLinkUnit cppLinkUnit)
@@ -70,37 +112,5 @@ public partial class GccToolChain
         {
             yield return "-static";
         }
-        
-        
-        foreach (var staticLibrary in ToolChainStaticLibraries())
-        {
-            yield return "-l" + staticLibrary.ToNPath();
-        }
-
-        foreach (var dynamicLibrary in ToolChainDynamicLibraries())
-        {
-            yield return "-l" + dynamicLibrary.ToNPath();
-        }
-
-        foreach (var staticLibrary in cppLinkUnit.StaticLibraries)
-        {
-            yield return "-l" + staticLibrary.ToNPath();
-        }
-
-        foreach (var dynamicLibrary in cppLinkUnit.DynamicLibraries)
-        {
-            yield return "-l" + dynamicLibrary.ToNPath();
-        }
-
-        foreach (var libraryPath in cppLinkUnit.LibraryPaths)
-        {
-            yield return "-L" + libraryPath;
-        }
-
-        foreach (var libpath in ToolChainLibraryPaths())
-        {
-            yield return "-L" + libpath;
-        }
-       
     }
 }
