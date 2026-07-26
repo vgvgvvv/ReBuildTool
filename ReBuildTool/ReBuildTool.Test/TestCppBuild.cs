@@ -108,6 +108,11 @@ public class Tests
         CmdParser.Parse<Tests>();
         ServiceContext.Instance.Init();
 
+        // ProjectGenArgs is process-global, and the CMake / VS Code / compile-commands
+        // tests each set it - so ask for VS explicitly instead of relying on the
+        // Windows default, which whichever test ran last may already have replaced.
+        ProjectGenArgs.Get().IDEProjectType.Value = ProjectGenType.VisualStudio;
+
         var path = TestCaseGlobalVars.SampleDirectory.Combine("StaticLibraryLink");
         var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
         project.Parse();
