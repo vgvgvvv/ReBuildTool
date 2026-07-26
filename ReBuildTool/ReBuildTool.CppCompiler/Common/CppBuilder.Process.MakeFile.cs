@@ -1,5 +1,5 @@
 ﻿
-﻿using NiceIO;
+using NiceIO;
 using ReBuildTool.Common;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Global;
@@ -213,9 +213,12 @@ public partial class CppBuilder
             // Path quoting for make/nmake target + dependency lines.
             // - Windows nmake: a backslash-space (`\ `) splits the path (nmake treats `\ ` as
             //   two tokens and then fails with NMAKE U1071), so paths with spaces must be
-            //   wrapped in double quotes (same form as the recipe lines via ShellQuote).
+            //   wrapped in double quotes (same form as the recipe lines via ShellQuote). Note
+            //   ShellQuote only quotes when the path actually needs it, so an ordinary path
+            //   stays bare here.
             // - POSIX make: backslash-space (`\ `) is the documented way to keep a path with
             //   spaces as a single token on a target/dependency line.
+            // The make-level escaping on top of this ($ and #) is applied by MakeFileGenerator.
             if (PlatformHelper.IsWindows())
             {
                 return ShellQuote.ForArgument(path.ToString());

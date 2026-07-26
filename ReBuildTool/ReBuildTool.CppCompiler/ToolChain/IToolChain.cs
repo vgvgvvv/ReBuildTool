@@ -159,15 +159,16 @@ internal class InvocationBase
 	public  List<string> Arguments { get; } = new();
 	public  Dictionary<string, string> EnvVars { get; } = new();
 
-		public override string ToString()
-		{
-			// Re-joined into a single shell command line (make/nmake recipes + diagnostic
-			// logs). Arguments are clean argv tokens now, so each one must be shell-quoted
-			// here — the same job that ProcessStartInfo.ArgumentList does on the direct-build
-			// path and NinjaFileGenerator.NinjaVar does on the ninja path.
-			return ShellQuote.ForProgram(ProgramName) + " " +
-			       string.Join(' ', Arguments.Select(ShellQuote.ForArgument));
-		}
+	public override string ToString()
+	{
+		// Re-joined into a single shell command line (make/nmake recipes + diagnostic logs).
+		// Arguments are clean argv tokens now, so each one must be shell-quoted here — the
+		// same job ProcessStartInfo.ArgumentList does on the direct-build path. Consumers
+		// that embed the result in a build file add their own format-level escaping on top
+		// (MakeFileGenerator / NinjaFileGenerator).
+		return ShellQuote.ForProgram(ProgramName) + " " +
+		       string.Join(' ', Arguments.Select(ShellQuote.ForArgument));
+	}
 }
 
 internal class CppCompileInvocation : InvocationBase
