@@ -74,71 +74,57 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
 
     public string ModuleDirectory { get; internal set; }
 
-    // Paths the framework itself contributes to the module: its own Public/Private
-    // directories and the generated-code directories under Intermedia. They are
-    // remembered separately from the public lists because Cleanup() wipes those on
-    // every re-setup, while these are added once when the rule is parsed. A project
-    // that is set up more than once in a process (IDE project / compile_commands
-    // generation followed by a build) would otherwise reach the build with no source
-    // directories at all, and link an executable out of zero object files.
-    private readonly List<string> FrameworkSourceDirectories = new();
-    private readonly List<string> FrameworkPublicIncludePaths = new();
-    private readonly List<string> FrameworkPrivateIncludePaths = new();
-
-    internal void AddFrameworkSourceDirectory(string path)
+    /// <summary>
+    /// Every list a rule declares into. Used to snapshot and restore the rule's
+    /// declared state around a re-setup - see <see cref="CaptureDeclaredState"/>.
+    /// </summary>
+    private List<string>[] DeclarativeLists => new[]
     {
-        AddFrameworkPath(FrameworkSourceDirectories, SourceDirectories, path);
-    }
+        PublicIncludePaths, PrivateIncludePaths,
+        PublicDefines, PrivateDefines,
+        PublicCompileFlags, PrivateCompileFlags,
+        PublicLinkFlags, PrivateLinkFlags,
+        PublicArchiveFlags, PrivateArchiveFlags,
+        PublicStaticLibraries, PrivateStaticLibraries,
+        PublicDynamicLibraries, PrivateDynamicLibraries,
+        PublicLibraryDirectories, PrivateLibraryDirectories,
+        SourceDirectories, SourceFiles,
+        ExcludeDirectories, ExcludeFiles,
+        Dependencies,
+    };
 
-    internal void AddFrameworkPublicIncludePath(string path)
-    {
-        AddFrameworkPath(FrameworkPublicIncludePaths, PublicIncludePaths, path);
-    }
+    // The rule's state as it stood before its first Setup(): what the rule's own
+    // constructor declared (dependencies, defines, ...) plus what the framework
+    // injected when the rule was parsed (the module's Public/Private directories and
+    // the generated-code directories). Captured once, and restored on every re-setup.
+    private List<string>[]? DeclaredState;
 
-    internal void AddFrameworkPrivateIncludePath(string path)
+    private void CaptureDeclaredState()
     {
-        AddFrameworkPath(FrameworkPrivateIncludePaths, PrivateIncludePaths, path);
-    }
-
-    private static void AddFrameworkPath(List<string> framework, List<string> live, string path)
-    {
-        if (!framework.Contains(path))
-        {
-            framework.Add(path);
-        }
-        if (!live.Contains(path))
-        {
-            live.Add(path);
-        }
+        DeclaredState = DeclarativeLists.Select(list => new List<string>(list)).ToArray();
     }
 
     /// <summary>
-    /// Puts the framework-provided paths back into the rule's live lists. Called on
-    /// every setup, after <see cref="Cleanup"/> has run and before the rule's own
-    /// <see cref="Setup"/>, so a rule still sees (and can add to) them.
+    /// Puts the rule back into its declared state. <see cref="Cleanup"/> empties the
+    /// lists so a second <see cref="Setup"/> doesn't append duplicates, but emptying
+    /// them also drops everything the constructor and the framework put there - and a
+    /// project is set up more than once per process whenever IDE project /
+    /// compile_commands generation is followed by a build. Without this, that second
+    /// pass reaches the compiler with no sources, no include paths and no module
+    /// dependencies at all.
     /// </summary>
-    private void ApplyFrameworkPaths()
+    private void RestoreDeclaredState()
     {
-        foreach (var path in FrameworkSourceDirectories)
+        if (DeclaredState == null)
         {
-            if (!SourceDirectories.Contains(path))
-            {
-                SourceDirectories.Add(path);
-            }
+            return;
         }
-        foreach (var path in FrameworkPublicIncludePaths)
+
+        var lists = DeclarativeLists;
+        for (var i = 0; i < lists.Length; i++)
         {
-            if (!PublicIncludePaths.Contains(path))
-            {
-                PublicIncludePaths.Add(path);
-            }
-        }
-        foreach (var path in FrameworkPrivateIncludePaths)
-        {
-            if (!PrivateIncludePaths.Contains(path))
-            {
-                PrivateIncludePaths.Add(path);
-            }
+            lists[i].Clear();
+            lists[i].AddRange(DeclaredState[i]);
         }
     }
 
@@ -234,9 +220,13 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
         if (_hasSetup && BuildContext != null)
         {
             Cleanup(BuildContext);
+            RestoreDeclaredState();
+        }
+        else
+        {
+            CaptureDeclaredState();
         }
         BuildContext = buildContext;
-        ApplyFrameworkPaths();
         if (IsSupport)
         {
             Setup(BuildContext);

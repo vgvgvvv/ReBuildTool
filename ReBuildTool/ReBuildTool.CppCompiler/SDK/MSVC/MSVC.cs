@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Setup.Configuration;
 using NiceIO;
+using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain.SDK;
 
@@ -117,10 +118,22 @@ internal abstract class MsvcSDK : ICppLibrary
 
 	public static MsvcSDK FindLatestSDK()
 	{
+		if (AllInstalledSDKs.Count == 0)
+		{
+			// Say what was actually found - "no Visual Studio at all" and "a Visual
+			// Studio whose layout we don't know" need very different fixes.
+			var found = MSVC.GetVisualStudioInstallPaths()
+				.Select(install => $"{install.Item1} ({install.Item2})")
+				.ToList();
+			var detail = found.Count == 0
+				? "the Visual Studio setup query reported no installation"
+				: $"found, but unsupported: {string.Join(", ", found)}";
+			throw new Exception($"No usable Visual Studio installation - {detail}.");
+		}
 		var latest = AllInstalledSDKs.Keys.Max();
 		return AllInstalledSDKs[latest];
 	}
-	
+
 	protected static MsvcSDK? Create(Version version, NPath installPath)
 	{
 		if(version.Major == 15)
@@ -131,8 +144,16 @@ internal abstract class MsvcSDK : ICppLibrary
 		{
 			return Msvc16.Create(version, installPath);
 		}
-		else if (version.Major == 17)
+		else if (version.Major >= 17)
 		{
+			// VS 2022 and later. Everything Msvc17 relies on (VC/Tools/MSVC,
+			// bin/Hostx64/<arch>, the Windows Kit lookup) has been stable since
+			// VS 2017, so a newer install is driven the same way rather than
+			// ignored - which would leave the toolchain with no SDK at all.
+			if (version.Major > 17)
+			{
+				Log.Info($"Visual Studio {version} is newer than the versions rbt knows about, using the VS 2022 layout.");
+			}
 			return Msvc17.Create(version, installPath);
 		}
 		else

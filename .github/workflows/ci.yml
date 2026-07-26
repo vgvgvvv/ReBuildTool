@@ -39,9 +39,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Pinned rather than windows-latest: rbt resolves the MSVC toolchain through
-          # the VS setup COM API and only knows VS 2017/2019/2022 (MsvcSDK.Create), so
-          # the image has to be one that ships a Visual Studio it recognises.
+          # Pinned rather than windows-latest: the native toolchain the tests exercise
+          # is whatever Visual Studio the image ships, so the image is chosen
+          # deliberately instead of moving under us when GitHub rolls the label.
           - os: windows-2025
             name: Windows x64
             # ResetHeaderTool RID + the Binary/<dir> layout RBT looks the tool up in
@@ -139,7 +139,7 @@ jobs:
           dotnet test ReBuildTool/ReBuildTool.sln
           -c Release --no-build
           --logger "trx;LogFileName=test-results.trx"
-          --logger "console;verbosity=normal"
+          --logger "console;verbosity=minimal"
           --results-directory TestResults
 
       - name: Upload test results
