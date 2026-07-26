@@ -59,6 +59,16 @@ public class VSCodeGenerator : IVSCodeGenerator
 
     public void GenerateVSCodeProject(ICppSourceProviderInterface source, NPath output)
     {
+        // Set every module up before reading any of it: a rule declares what it is
+        // (TargetBuildType, and everything else) from its Setup(), so the run tasks and
+        // launch configs below would otherwise see nothing but defaults.
+        var setupBuilder = new CppBuilder();
+        setupBuilder.SetSource(source);
+        foreach (var (_, rule) in source.ModuleRules)
+        {
+            setupBuilder.CompleteModuleInfo(rule);
+        }
+
         Source = source;
     }
 
