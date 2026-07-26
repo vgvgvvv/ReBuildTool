@@ -26,7 +26,8 @@ public partial class MacOSXClangToolchain
         // PrepareArchiveUnit writes one InQuotes()-wrapped object path per line into the
         // .rsp. We inline those object paths as command-line tokens (this toolchain doesn't
         // use @rsp), so unquote each line back to a clean argv token — downstream (Shell
-        // ArgumentList / NinjaVar / Makefile shell-quote) re-applies quoting per target.
+        // ArgumentList, or ShellQuote for the ninja/makefile command lines) re-applies
+        // quoting in the form its own target needs.
         var lines = File.ReadLines(unit.ResponseFile);
         foreach (var line in lines)
         {

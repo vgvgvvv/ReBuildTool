@@ -52,30 +52,38 @@ public class NinjaFileGenerator
     /// <summary>
     /// A Ninja <c>build</c> edge: <c>build $out: $rule $in | $implicit_deps</c>
     /// followed by indented variable assignments.
+    /// <para>
+    /// Paths are held as <see cref="NPath"/> and escaped by the generator when the edge is
+    /// written (see <see cref="NinjaPath"/>), so a caller cannot forget to escape — or
+    /// escape twice. Variable values are shell command-line fragments the caller has
+    /// already quoted with <c>ShellQuote</c>; the generator adds the ninja-level escape on
+    /// top of them (see <see cref="NinjaValue"/>).
+    /// </para>
     /// </summary>
     public class Edge
     {
-        public Edge(string output, string ruleName)
+        public Edge(NPath output, string ruleName)
         {
             Output = output;
             RuleName = ruleName;
         }
 
-        public string Output { get; }
+        public NPath Output { get; }
         public string RuleName { get; }
-        public List<string> ExplicitInputs { get; } = new();
-        /// <summary>Order-only prerequisites (<c>| ...</c>); Ninja won't rebuild $out when these change.</summary>
-        public List<string> ImplicitInputs { get; } = new();
+        public List<NPath> ExplicitInputs { get; } = new();
+        /// <summary>Implicit dependencies (<c>| ...</c>): they trigger a rebuild of $out like
+        /// explicit inputs do, but are not substituted into <c>$in</c>.</summary>
+        public List<NPath> ImplicitInputs { get; } = new();
         /// <summary>Per-edge variable bindings emitted as <c>key = value</c> lines under the edge.</summary>
         public List<KeyValuePair<string, string>> Variables { get; } = new();
 
-        public Edge WithInput(string input)
+        public Edge WithInput(NPath input)
         {
             ExplicitInputs.Add(input);
             return this;
         }
 
-        public Edge WithImplicitInput(string input)
+        public Edge WithImplicitInput(NPath input)
         {
             ImplicitInputs.Add(input);
             return this;
@@ -178,30 +186,29 @@ public class NinjaFileGenerator
     private static void FlushEdge(StringBuilder sb, Edge edge)
     {
         // build <out>: <rule> <inputs> | <implicit inputs>
-        // Output/inputs are already NinjaPath-escaped at edge-construction time
-        // (\->/, $: drive-letter escape, and `$ ... $` space-quoting for the path-list
-        // position), so write them verbatim — re-escaping here would double-wrap paths
-        // that contain spaces (NinjaVar would see the spaces inside and wrap again).
-        sb.Append($"build {edge.Output}: {edge.RuleName}");
+        // The generator owns the ninja-level escaping: paths go through NinjaPath here (the
+        // Edge holds them raw), so no call site can forget it or apply it twice.
+        sb.Append($"build {NinjaPath(edge.Output)}: {edge.RuleName}");
         foreach (var input in edge.ExplicitInputs)
         {
-            sb.Append($" {input}");
+            sb.Append($" {NinjaPath(input)}");
         }
         if (edge.ImplicitInputs.Count > 0)
         {
             sb.Append(" |");
             foreach (var implicitInput in edge.ImplicitInputs)
             {
-                sb.Append($" {implicitInput}");
+                sb.Append($" {NinjaPath(implicitInput)}");
             }
         }
         sb.AppendLine();
 
-        // Per-edge variables: 2-space indent (`key = value`). Values are shell-quoted by
-        // the caller (ShellQuote) because ninja runs `command = $cc $args` through a shell.
+        // Per-edge variables: 2-space indent (`key = value`). The value arrives shell-quoted
+        // from the caller (ninja runs `command = $cc $args` through a shell); NinjaValue adds
+        // the ninja-level escape on top so a literal '$' survives ninja's own lexer.
         foreach (var kvp in edge.Variables)
         {
-            sb.AppendLine($"  {kvp.Key} = {kvp.Value}");
+            sb.AppendLine($"  {kvp.Key} = {NinjaValue(kvp.Value)}");
         }
         sb.AppendLine();
     }
@@ -209,7 +216,7 @@ public class NinjaFileGenerator
     /// <summary>
     /// Escapes an <see cref="NPath"/> for use as a build-edge input/output or
     /// explicit/implicit dependency (the structural positions on a <c>build</c>
-    /// line). Three transformations:
+    /// line). Four transformations:
     /// <list type="bullet">
     /// <item>Backslashes → forward slashes: ninja is a POSIX-ish lexer and treats
     /// <c>\</c> as an escape; forward slashes work on all platforms and MSVC's
@@ -225,16 +232,42 @@ public class NinjaFileGenerator
     /// <c>$ ... $</c> wrapper around the whole path. e.g. <c>C:/My Dir/x.o</c> becomes
     /// <c>C$:/My$ Dir/x.o</c>. (Wrapping broke ninja's build-line parser — it treats the
     /// wrapped token as a different statement and errors "expected build command name".)</item>
+    /// <item><c>$</c> → <c>$$</c>: <c>$</c> is ninja's own escape character, so a literal one
+    /// in a path has to be doubled or ninja rejects the file with "bad $-escape".</item>
     /// </list>
     /// </summary>
     public static string NinjaPath(NPath path)
     {
-        var str = path.ToString().Replace('\\', '/');
+        return NinjaPathToken(path.ToString());
+    }
+
+    /// <summary>
+    /// <see cref="NinjaPath"/> on a raw path string. Split out so the escaping can be exercised
+    /// directly with paths that do not exist (and that <see cref="NPath"/> would normalise) on
+    /// whichever host the tests run on.
+    /// </summary>
+    public static string NinjaPathToken(string path)
+    {
+        var str = path.Replace('\\', '/');
+        // Order matters: double the path's own '$' FIRST, so the '$' characters the next two
+        // steps introduce (as the escapes '$:' and '$ ') are not doubled in turn.
+        str = str.Replace("$", "$$");
         str = str.Replace(":", "$:");
         // Escape each space as "$ " (ninja's literal-space escape for path-list positions).
-        // Order matters: do this after the ':' escape so we don't touch the '$:' we just added
-        // (it has no space anyway).
         str = str.Replace(" ", "$ ");
         return str;
+    }
+
+    /// <summary>
+    /// Escapes a shell command-line fragment for use as a ninja <em>variable value</em> (the
+    /// right-hand side of <c>cc = ...</c> / <c>args = ...</c>). Only <c>$</c> is significant
+    /// there — it must be doubled, or ninja fails the file with "bad $-escape (literal $ must
+    /// be written as $$)". Colons and spaces are literal in this position, so unlike
+    /// <see cref="NinjaPath"/> they are left alone: the shell-level quoting the caller
+    /// applied is what keeps the value one argv token at execution time.
+    /// </summary>
+    public static string NinjaValue(string value)
+    {
+        return value.Replace("$", "$$");
     }
 }

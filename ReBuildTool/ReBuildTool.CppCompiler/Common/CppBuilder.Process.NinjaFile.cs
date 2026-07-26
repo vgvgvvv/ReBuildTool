@@ -251,11 +251,11 @@ public partial class CppBuilder
             {
                 var unit = invocation.Unit;
                 var edge = new NinjaFileGenerator.Edge(
-                    NinjaFileGenerator.NinjaPath(unit.OutputFile),
+                    unit.OutputFile,
                     NinjaFileGenerator.CxxRuleName);
 
                 // $in = the source file (ninja requires explicit inputs).
-                edge.WithInput(NinjaFileGenerator.NinjaPath(unit.SourceFile));
+                edge.WithInput(unit.SourceFile);
 
                 // Header dependencies are NOT listed manually: the cxx rule's deps trait
                 // (gcc/msvc) makes ninja pull them from the compiler-generated depfile /
@@ -268,7 +268,8 @@ public partial class CppBuilder
                 // `$ ` space escaping only protects paths in the structural `build` line, not
                 // in variable values passed to the shell. ProgramName and Arguments are clean
                 // argv tokens, so ShellQuote.ForArgument wraps each one (same as the Makefile
-                // path); the `build` line's output/inputs above stay NinjaPath-escaped.
+                // path). The ninja-level escape on top of that, and the escaping of the
+                // `build` line's output/inputs, are both applied by the generator.
                 edge.WithVariable("cc", ShellQuote.ForProgram(invocation.ProgramName.ToString()));
                 edge.WithVariable("args",
                     string.Join(' ', invocation.Arguments.Select(ShellQuote.ForArgument)));
@@ -293,13 +294,13 @@ public partial class CppBuilder
 
             var unit = LinkInvocation.Unit;
             var edge = new NinjaFileGenerator.Edge(
-                NinjaFileGenerator.NinjaPath(unit.OutputPath),
+                unit.OutputPath,
                 NinjaFileGenerator.LinkRuleName);
 
             // Object files are explicit inputs (rebuild output when any obj changes).
             foreach (var objFile in unit.ObjectFiles)
             {
-                edge.WithInput(NinjaFileGenerator.NinjaPath(objFile));
+                edge.WithInput(objFile);
             }
 
             // Library deps: only order-only (|), mirroring CollectLinkTarget. We don't
@@ -320,7 +321,7 @@ public partial class CppBuilder
                     }
                     if (libPath.Exists())
                     {
-                        edge.WithImplicitInput(NinjaFileGenerator.NinjaPath(libPath));
+                        edge.WithImplicitInput(libPath);
                     }
                 }
                 foreach (var library in unit.StaticLibraries)
@@ -334,7 +335,7 @@ public partial class CppBuilder
                     }
                     if (libPath.Exists())
                     {
-                        edge.WithImplicitInput(NinjaFileGenerator.NinjaPath(libPath));
+                        edge.WithImplicitInput(libPath);
                     }
                 }
             }
@@ -359,12 +360,12 @@ public partial class CppBuilder
 
             var unit = ArchiveInvocation.Unit;
             var edge = new NinjaFileGenerator.Edge(
-                NinjaFileGenerator.NinjaPath(unit.OutputPath),
+                unit.OutputPath,
                 NinjaFileGenerator.ArchiveRuleName);
 
             foreach (var objFile in unit.ObjectFiles)
             {
-                edge.WithInput(NinjaFileGenerator.NinjaPath(objFile));
+                edge.WithInput(objFile);
             }
 
             // Static archive deps: order-only, existing-on-disk only (matches
@@ -383,7 +384,7 @@ public partial class CppBuilder
                     }
                     if (libPath.Exists())
                     {
-                        edge.WithImplicitInput(NinjaFileGenerator.NinjaPath(libPath));
+                        edge.WithImplicitInput(libPath);
                     }
                 }
             }

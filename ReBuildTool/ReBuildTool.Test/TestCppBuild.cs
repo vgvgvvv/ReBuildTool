@@ -219,14 +219,19 @@ public class Tests
             Assert.IsTrue(file.GetString()!.EndsWith(".cpp") || file.GetString()!.EndsWith(".c"),
                 "each entry's file should be a compilable source");
             // Each argument must be a single clean argv token (LLVM JSON Compilation Database
-            // spec). CompileArgsFor embeds shell-level quotes for the Ninja/shell path
-            // (-I"D:\...", --sysroot="D:\...", "D:\src.cpp"); the export must strip them so
-            // clangd / VS Code / CLion don't see the literal double quotes.
+            // spec): the toolchains must not bake shell-level quoting into a token, or clangd /
+            // VS Code / CLion see the literal double quotes as part of the path. Checked as the
+            // specific shapes quoting used to produce (-I"...", /Fo"...", "...", --sysroot="...")
+            // rather than "contains a quote at all" — a quote can legitimately be part of a
+            // value, e.g. a -DNAME="a b" macro body, and must survive untouched.
             foreach (var arg in args.EnumerateArray())
             {
                 var argStr = arg.GetString()!;
-                Assert.IsFalse(argStr.Contains('"'),
-                    $"arguments must not contain embedded quotes (found '{argStr}' for {file.GetString()})");
+                Assert.IsFalse(argStr.StartsWith('"') && argStr.EndsWith('"'),
+                    $"argument must not be wrapped in shell quotes (found '{argStr}' for {file.GetString()})");
+                Assert.IsFalse(argStr.Contains("-I\"") || argStr.Contains("/I\"") ||
+                               argStr.Contains("/Fo\"") || argStr.Contains("--sysroot=\""),
+                    $"argument must not embed shell quotes after a flag (found '{argStr}' for {file.GetString()})");
             }
         }
     }
