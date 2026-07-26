@@ -197,7 +197,7 @@ public partial class CppBuilder
 					}
 					if (!invocation.Run())
 					{
-						Log.Error($"Compile failed: {invocation.ProgramName} {string.Join(' ', invocation.Arguments)}");
+						Log.Error($"Compile failed: {invocation}");
 						Interlocked.Exchange(ref failed, 1);
 					}
 				}

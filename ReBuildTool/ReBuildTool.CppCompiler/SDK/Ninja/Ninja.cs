@@ -104,7 +104,7 @@ public static class Ninja
             .WithProgram(exe)
             .WithWorkspace(buildFile.Parent);
         shell.AppendArgument("-f");
-        shell.AppendArgument(buildFile.InQuotes());
+        shell.AppendArgument(buildFile.ToString());
         shell.AppendArgument($"-j{jCount}");
         if (dryRun)
         {

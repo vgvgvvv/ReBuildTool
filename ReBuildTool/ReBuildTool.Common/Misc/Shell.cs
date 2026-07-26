@@ -135,7 +135,14 @@ public class Shell : IDisposable
 		startInfo.RedirectStandardError = true;
 		startInfo.RedirectStandardInput = true;
         startInfo.CreateNoWindow = true;
-        startInfo.Arguments = string.Join(' ', Arguments);
+        // Per-token via ArgumentList: .NET applies the OS-correct argv quoting for each
+        // element, so callers must pass clean argv tokens (NOT pre-quoted strings). This
+        // is what lets the toolchains emit unquoted path tokens and still build correctly
+        // when a path contains spaces (e.g. C:\Program Files\...).
+        foreach (var arg in Arguments)
+        {
+	        startInfo.ArgumentList.Add(arg);
+        }
         foreach (var (key, value) in EnvVars)
 		{
 	        startInfo.Environment.Add(key, value);

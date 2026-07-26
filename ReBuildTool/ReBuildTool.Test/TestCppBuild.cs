@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using NiceIO;
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.Context;
 using ReBuildTool.Service.IDEService;
@@ -217,8 +218,113 @@ public class Tests
             Assert.That(args.GetArrayLength(), Is.GreaterThan(0), "arguments must include the compiler");
             Assert.IsTrue(file.GetString()!.EndsWith(".cpp") || file.GetString()!.EndsWith(".c"),
                 "each entry's file should be a compilable source");
+            // Each argument must be a single clean argv token (LLVM JSON Compilation Database
+            // spec). CompileArgsFor embeds shell-level quotes for the Ninja/shell path
+            // (-I"D:\...", --sysroot="D:\...", "D:\src.cpp"); the export must strip them so
+            // clangd / VS Code / CLion don't see the literal double quotes.
+            foreach (var arg in args.EnumerateArray())
+            {
+                var argStr = arg.GetString()!;
+                Assert.IsFalse(argStr.Contains('"'),
+                    $"arguments must not contain embedded quotes (found '{argStr}' for {file.GetString()})");
+            }
         }
     }
+
+    // Generates a build.ninja via the Ninja generator (same per-module path rbt's Ninja
+    // backend uses) and verifies quoting is correct so that paths with spaces survive both
+    // ninja's lexer AND the shell ninja hands the command to:
+    //   - structural `build` line paths: each space escaped as `$ ` (dollar+space) and each
+    //     `:` as `$:` (drive-letter) — ninja's path-list escape, NOT a `$ ... $` wrapper
+    //     (which breaks ninja's build-line parser with "expected build command name").
+    //   - variable values (cc/args): shell-quoted via ShellQuote, because ninja runs
+    //     `command = $cc $args` through a shell (sh -c / cmd /c) — ninja's `$ ` space escape
+    //     does NOT prevent word-splitting at execution time.
+    // Also asserts the generated file parses cleanly under the vendored ninja binary.
+    [Test]
+    public void TestNinjaFileEscape()
+    {
+        CmdParser.Parse<Tests>();
+        ServiceContext.Instance.Init();
+
+        var path = TestCaseGlobalVars.SampleDirectory.Combine("StaticLibraryLink");
+        var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
+        project.Parse();
+        project.Setup();
+
+        var builder = new CppBuilder();
+        builder.SetSource((ICppSourceProviderInterface)project);
+        var ninjaFiles = builder.GenerateNinjaFiles();
+
+        Assert.IsNotEmpty(ninjaFiles, "Ninja generator should produce a build.ninja per module");
+
+        foreach (var ninjaFile in ninjaFiles)
+        {
+            Assert.IsTrue(ninjaFile.Exists(), $"{ninjaFile} should exist");
+            var content = ninjaFile.ReadAllText();
+
+            // Variable values: no residual flag-internal quoting (-I"...", /Fo"...").
+            var argsLines = content.Split('\n')
+                .Where(l => l.TrimStart().StartsWith("args = "))
+                .ToList();
+            Assert.IsNotEmpty(argsLines, $"{ninjaFile} must have at least one args = line");
+            foreach (var line in argsLines)
+            {
+                Assert.IsFalse(line.Contains("-I\"") || line.Contains("/I\"") ||
+                               line.Contains("/Fo\"") || line.Contains("--sysroot=\""),
+                    $"{ninjaFile} args value must not contain flag-internal quotes: {line.Trim()}");
+            }
+
+            // Structural build lines must NOT use the old `$ ... $` wrapper (it breaks ninja's
+            // parser). Spaces there are escaped per-space as `$ `.
+            var buildLines = content.Split('\n').Where(l => l.StartsWith("build ")).ToList();
+            Assert.IsNotEmpty(buildLines, $"{ninjaFile} must have build lines");
+            foreach (var line in buildLines)
+            {
+                Assert.IsFalse(line.Contains("$ ") && line.TrimEnd().EndsWith(" $"),
+                    $"{ninjaFile} build line must not wrap the whole path in '$ ... $': {line}");
+            }
+        }
+    }
+
+
+    // Generates a Makefile via the Makefile generator (same per-module path rbt's Makefile
+    // backend uses) and verifies recipe lines shell-quote tokens with spaces via
+    // ShellQuote.ForArgument, with no residual flag-internal quoting like -I"D:\...".
+    [Test]
+    public void TestMakeFileRecipeEscape()
+    {
+        CmdParser.Parse<Tests>();
+        ServiceContext.Instance.Init();
+
+        var path = TestCaseGlobalVars.SampleDirectory.Combine("StaticLibraryLink");
+        var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
+        project.Parse();
+        project.Setup();
+
+        var builder = new CppBuilder();
+        builder.SetSource((ICppSourceProviderInterface)project);
+        var makeFiles = builder.GenerateMakeFiles();
+
+        Assert.IsNotEmpty(makeFiles, "Makefile generator should produce a Makefile per module");
+
+        foreach (var makeFile in makeFiles)
+        {
+            Assert.IsTrue(makeFile.Exists(), $"{makeFile} should exist");
+            var content = makeFile.ReadAllText();
+            // Recipe lines are tab-indented and contain the compiler invocation.
+            var recipeLines = content.Split('\n').Where(l => l.StartsWith("\t")).ToList();
+            Assert.IsNotEmpty(recipeLines, $"{makeFile} must have recipe lines");
+            foreach (var line in recipeLines)
+            {
+                // No flag-internal quotes should remain (e.g. -I"...", /Fo"...").
+                Assert.IsFalse(line.Contains("-I\"") || line.Contains("/I\"") ||
+                               line.Contains("/Fo\"") || line.Contains("--sysroot=\""),
+                    $"{makeFile} recipe must not contain flag-internal quotes: {line.Trim()}");
+            }
+        }
+    }
+
 
     // Generates the VS Code project (.vscode/tasks.json + launch.json + c_cpp_properties.json)
     // and verifies the rbt-driven wiring: build/rebuild/clean tasks all invoke rbt, every

@@ -76,7 +76,7 @@ public partial class CppBuilder
 			}
 			if (!ArchiveInvocation.Run())
 			{
-				Log.Error($"{ArchiveInvocation.ProgramName} {ArchiveInvocation.Arguments.Join(" ")}");
+				Log.Error($"{ArchiveInvocation}");
 				Log.Error($"Archive {Module.TargetName} failed !");
 				return false;
 			}

@@ -16,14 +16,14 @@ public partial class MSVCToolChain
 
 	private IEnumerable<string> ArchiveArgsFor(CppArchiveUnit unit)
 	{
-		yield return $"/out:{unit.OutputPath.InQuotes()}";
-		
+		yield return $"/out:{unit.OutputPath}";
+
 		foreach (var defaultLinkFlag in DefaultArchiveFlags(unit))
 		{
 			yield return defaultLinkFlag;
 		}
-		
-		yield return "@" + unit.ResponseFile.InQuotes();
+
+		yield return "@" + unit.ResponseFile;
 	}
 	
 	protected IEnumerable<string> DefaultArchiveFlags(CppArchiveUnit cppArchiveUnit)
@@ -44,17 +44,17 @@ public partial class MSVCToolChain
 		
 		foreach (var staticLibrary in cppArchiveUnit.StaticLibraries)
 		{
-			yield return staticLibrary.ToNPath().InQuotes();
+			yield return staticLibrary.ToNPath().ToString();
 		}
-		
+
 		foreach (var libraryPath in cppArchiveUnit.LibraryPaths)
 		{
-			yield return $"/LIBPATH:{libraryPath.InQuotes()}";
+			yield return $"/LIBPATH:{libraryPath}";
 		}
-		
+
 		foreach (var libpath in ToolChainLibraryPaths())
 		{
-			yield return $"/LIBPATH:{libpath.InQuotes()}";
+			yield return $"/LIBPATH:{libpath}";
 		}
 	}
 }

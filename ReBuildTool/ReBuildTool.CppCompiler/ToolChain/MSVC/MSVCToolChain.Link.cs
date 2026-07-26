@@ -17,7 +17,7 @@ public partial class MSVCToolChain
 
 	private IEnumerable<string> LinkArgsFor(CppLinkUnit cppLinkUnit)
 	{
-		yield return $"/out:{cppLinkUnit.OutputPath.InQuotes()}";
+		yield return $"/out:{cppLinkUnit.OutputPath}";
 
 		// manifest and module-definition file are driven via the link args
 		// builder (SetGenerateManifest / SetModuleDefinitionFile) and surface
@@ -28,7 +28,7 @@ public partial class MSVCToolChain
 			yield return defaultLinkFlag;
 		}
 		
-		yield return "@" + cppLinkUnit.ResponseFile.InQuotes();
+		yield return "@" + cppLinkUnit.ResponseFile;
 
 	}
 
@@ -114,32 +114,32 @@ public partial class MSVCToolChain
 	    
 	    foreach (var staticLibrary in ToolChainStaticLibraries())
 	    {
-		    yield return staticLibrary.ToNPath().InQuotes();
+		    yield return staticLibrary.ToNPath().ToString();
 	    }
-	    
+
 	    foreach (var dynamicLibrary in ToolChainDynamicLibraries())
 	    {
-		    yield return dynamicLibrary.ToNPath().InQuotes();
+		    yield return dynamicLibrary.ToNPath().ToString();
 	    }
-	    
+
 	    foreach (var staticLibrary in cppLinkUnit.StaticLibraries)
 	    {
-		    yield return staticLibrary.ToNPath().InQuotes();
+		    yield return staticLibrary.ToNPath().ToString();
 	    }
 
 	    foreach (var dynamicLibrary in cppLinkUnit.DynamicLibraries)
 	    {
-		    yield return dynamicLibrary.ToNPath().ChangeExtension(".lib").InQuotes();
+		    yield return dynamicLibrary.ToNPath().ChangeExtension(".lib").ToString();
 	    }
-	    
+
 	    foreach (var libraryPath in cppLinkUnit.LibraryPaths)
 	    {
-		    yield return "/LIBPATH:" + libraryPath.InQuotes();
+		    yield return "/LIBPATH:" + libraryPath;
 	    }
 
 	    foreach (var libpath in ToolChainLibraryPaths())
 	    {
-		    yield return "/LIBPATH:" + libpath.InQuotes();
+		    yield return "/LIBPATH:" + libpath;
 	    }
     }
 }

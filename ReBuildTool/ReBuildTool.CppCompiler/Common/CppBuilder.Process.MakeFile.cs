@@ -1,6 +1,8 @@
 ﻿
-using NiceIO;
+﻿using NiceIO;
+using ReBuildTool.Common;
 using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.Global;
 using ResetCore.Common;
 
 namespace ReBuildTool.ToolChain;
@@ -72,7 +74,7 @@ public partial class CppBuilder
             }
 
             var unit = LinkInvocation.Unit;
-            var target = new MakeFileGenerator.Target(unit.OutputPath.InQuotes(), MakeFileGenerator.TargetType.MainTarget);
+            var target = new MakeFileGenerator.Target(MakeSureValidPath(unit.OutputPath), MakeFileGenerator.TargetType.MainTarget);
             foreach (var objFile in unit.ObjectFiles)
             {
                 // Same reasoning as CollectCompileTarget: needs to match the sub-target's full path,
@@ -127,7 +129,7 @@ public partial class CppBuilder
             }
             
             var unit = ArchiveInvocation.Unit;
-            var target = new MakeFileGenerator.Target(unit.OutputPath.InQuotes(), MakeFileGenerator.TargetType.MainTarget);
+            var target = new MakeFileGenerator.Target(MakeSureValidPath(unit.OutputPath), MakeFileGenerator.TargetType.MainTarget);
             foreach (var objFile in unit.ObjectFiles)
             {
                 target.Dependencies.Add(MakeSureValidPath(objFile));
@@ -208,6 +210,16 @@ public partial class CppBuilder
 
         private string MakeSureValidPath(NPath path)
         {
+            // Path quoting for make/nmake target + dependency lines.
+            // - Windows nmake: a backslash-space (`\ `) splits the path (nmake treats `\ ` as
+            //   two tokens and then fails with NMAKE U1071), so paths with spaces must be
+            //   wrapped in double quotes (same form as the recipe lines via ShellQuote).
+            // - POSIX make: backslash-space (`\ `) is the documented way to keep a path with
+            //   spaces as a single token on a target/dependency line.
+            if (PlatformHelper.IsWindows())
+            {
+                return ShellQuote.ForArgument(path.ToString());
+            }
             return path.ToString().Replace(" ", "\\ ");
         }
     }

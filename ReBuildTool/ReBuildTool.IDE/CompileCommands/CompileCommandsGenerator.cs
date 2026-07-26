@@ -24,17 +24,17 @@ public static class CompileCommandsGenerator
 		builder.SetSource(source);
 		var entries = builder.CollectCompileCommands();
 
-		// Property names Directory/File/Arguments/Output become directory/file/arguments/output,
-		// matching the LLVM JSON Compilation Database spec.
-		var options = new JsonSerializerOptions
-		{
-			WriteIndented = true,
-			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-			// Compile flags contain '+' (c++latest) and quoted include paths; the default
-			// encoder escapes these as + / ". Relaxed encoding keeps the file
-			// human-readable while staying valid JSON.
-			Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-		};
+			// Property names Directory/File/Arguments/Output become directory/file/arguments/output,
+			// matching the LLVM JSON Compilation Database spec.
+			var options = new JsonSerializerOptions
+			{
+				WriteIndented = true,
+				PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+				// Compile flags contain '+' (c++latest) and backslashes; the default encoder
+				// escapes these. Relaxed encoding keeps the file human-readable while staying
+				// valid JSON.
+				Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+			};
 		var json = JsonSerializer.Serialize(entries, options);
 
 		var outputPath = source.ProjectRoot.Combine("compile_commands.json");
