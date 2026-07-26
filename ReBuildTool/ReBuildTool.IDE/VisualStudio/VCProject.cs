@@ -86,15 +86,12 @@ public partial class VCProject : ISlnSubProject
 	/// readers (GetIncludeDirectoriesForModule, GetOptionsForModule, ...).
 	/// </summary>
 	/// <remarks>
-	/// Calls <see cref="CppModuleRule.Setup"/> directly instead of going through
-	/// <see cref="CppBuilder.CompleteModuleInfo"/>/<see cref="CppModuleRule.SetupInternal"/>.
 	/// The module instances live in the shared <see cref="cppSource.ModuleRules"/>
-	/// dictionary and are reused by the build flow (CppBuilder.PendingModule). Going
-	/// through SetupInternal would flip the module's <c>_hasSetup</c> flag here, so a
-	/// later SetupInternal during Build would invoke Cleanup and wipe the
-	/// SourceDirectories/IncludePaths that InitAllRule populated — leaving the build
-	/// with no sources to compile. Calling Setup directly populates the lists for the
-	/// IDE readers without arming the setup/cleanup lifecycle.
+	/// dictionary and are reused by the build flow (CppBuilder.PendingModule), so this
+	/// goes through <see cref="CppBuilder.CompleteModuleInfo"/> /
+	/// <see cref="CppModuleRule.SetupInternal"/> rather than calling Setup() directly:
+	/// the lifecycle re-declares a rule when the build context changes and leaves it
+	/// alone when it does not, which a direct Setup() call would not.
 	/// </remarks>
 	private void SetupAllModules()
 	{

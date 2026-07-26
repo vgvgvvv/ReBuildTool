@@ -161,7 +161,7 @@ using ReBuildTool.ToolChain;
 
 public class MyGameModule : CppModuleRule
 {
-    public MyGameModule()
+    public override void Setup(ICppBuildContext buildContext)
     {
         TargetBuildType = BuildType.StaticLibrary; // 或 DynamicLibrary / Executable
         Dependencies.Add("SomeOtherModule");
@@ -169,6 +169,16 @@ public class MyGameModule : CppModuleRule
     }
 }
 ```
+
+> **声明写在 `Setup` 里，不要写在构造函数里。** 模块规则的这些列表会在每一轮
+> setup 时重建——build context 变化时（IDE 工程生成和构建各自持有一个）同一个规则
+> 对象会被重新 setup，`Cleanup` 会先清空列表以避免重复追加。构造函数里写的东西在第
+> 二轮就没了，因此 rbt 会直接拒绝在构造函数里声明的规则，并在报错里列出是哪几个属
+> 性。这么做换来的是 `buildContext`：`Setup` 里可以按当前构建的平台、架构、配置分支
+> 处理。
+
+Target 规则不同：它的 `UsedModules` / `Plugins` 在任何 target `Setup` 执行之前就会
+被读取，所以这些仍然写在构造函数里。
 
 `CppModuleRule` 的主要成员：
 - `BuildType TargetBuildType` —— `StaticLibrary`（静态库）\| `DynamicLibrary`（动态库，默认）\| `Executable`（可执行文件）。

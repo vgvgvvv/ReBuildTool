@@ -3,7 +3,7 @@ using ReBuildTool.ToolChain;
 
 public class BaseModule : CppModuleRule
 {
-    public BaseModule()
+    public override void Setup(ICppBuildContext buildContext)
     {
         TargetBuildType = BuildType.StaticLibrary;
         PublicDefines.Add("BASEMODULE_BUILT_AS_STATIC");

@@ -3,7 +3,7 @@ using ReBuildTool.ToolChain;
 
 public class GreeterModule : CppModuleRule
 {
-    public GreeterModule()
+    public override void Setup(ICppBuildContext buildContext)
     {
         TargetBuildType = BuildType.DynamicLibrary;
     }

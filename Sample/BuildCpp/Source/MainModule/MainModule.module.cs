@@ -5,7 +5,7 @@ using ReBuildTool.ToolChain;
 
 public class MainModule : CppModuleRule
 {
-    public MainModule()
+    public override void Setup(ICppBuildContext buildContext)
     {
         TargetBuildType = BuildType.Executable;
     }
