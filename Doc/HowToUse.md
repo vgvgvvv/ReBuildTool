@@ -91,7 +91,10 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
   `launch.json`, `c_cpp_properties.json`) is written to the project root so
   VS Code can build, run, debug and clean the project — every action is
   delegated back to RBT, and each executable module gets a run task and a
-  debug launch configuration.
+  debug launch configuration. The generated tasks carry the platform flags of
+  the generating command (`--TargetPlatform`, `--TargetArch`, ...), so a project
+  generated with e.g. `--TargetPlatform Android` also builds for Android from
+  inside VS Code instead of falling back to the host platform.
 - **Build** — compiles the given target.
 - **Clean** — removes build outputs.
 - **ReBuild** — `Clean` followed by `Build`.

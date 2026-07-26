@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using NiceIO;
 
+using ReBuildTool.CppCompiler;
 using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.IDEService.VSCode;
 using ReBuildTool.ToolChain;
@@ -121,7 +122,7 @@ public class VSCodeGenerator : IVSCodeGenerator
             ["label"] = "rbt: clean",
             ["type"] = "process",
             ["command"] = rbtExe,
-            ["args"] = new List<object> { "--Mode", "Clean", "--ProjectRoot", projectRoot },
+            ["args"] = RbtArgs("Clean", projectRoot, null),
             ["options"] = new Dictionary<string, object> { ["cwd"] = projectRoot },
             ["group"] = "build",
             ["problemMatcher"] = new List<object>(),
@@ -151,14 +152,77 @@ public class VSCodeGenerator : IVSCodeGenerator
         };
     }
 
-    private static List<object> RbtArgs(string mode, string projectRoot, BuildConfiguration config)
+    // Flags this generator re-emits itself, so a replayed value never reaches the task twice
+    // (and never contradicts what the task is meant to do): --Mode / --IDEProjectType belong to
+    // the generation run, while --ProjectRoot / --TargetPlatform / --BuildConfig are written
+    // explicitly below from the values the project was actually generated with.
+    private static readonly HashSet<string> OverriddenArgs = new(StringComparer.OrdinalIgnoreCase)
     {
-        return new List<object>
+        "--Mode", "--IDEProjectType", "--ProjectRoot", "--TargetPlatform", "--BuildConfig",
+    };
+
+    // A task must build for the exact platform the project was generated for. Emitting only
+    // Mode/ProjectRoot/BuildConfig made rbt fall back to the host platform, so a project
+    // cross-generated with e.g. "--TargetPlatform Android" was still compiled with the host
+    // (MSVC) toolchain. --TargetPlatform is therefore forwarded, and the remaining flags of
+    // this rbt invocation (--TargetArch, --NDKRoot, --UseClang, ...) are replayed so the
+    // cross-compile settings survive into the IDE build - same rationale as
+    // CMakeGenerator.BuildRbtBuildArgs and VCProject.RbtCommand.
+    // <paramref name="config"/> is null for config-agnostic modes (Clean).
+    private static List<object> RbtArgs(string mode, string projectRoot, BuildConfiguration? config)
+    {
+        var args = new List<object>
         {
             "--Mode", mode,
             "--ProjectRoot", projectRoot,
-            "--BuildConfig", config.ToString(),
         };
+
+        if (config.HasValue)
+        {
+            args.Add("--BuildConfig");
+            args.Add(config.Value.ToString());
+        }
+
+        // Only when it was explicitly set: left unset, rbt auto-detects the host platform
+        // itself, and pinning it would needlessly break a .vscode/ folder shared with a
+        // differently-hosted machine.
+        var targetPlatform = CppCompilerArgs.Get().TargetPlatform;
+        if (targetPlatform.IsSet && targetPlatform.Value != PlatformSupportType.None)
+        {
+            args.Add("--TargetPlatform");
+            args.Add(targetPlatform.Value.ToString());
+        }
+
+        args.AddRange(PassThroughArgs());
+        return args;
+    }
+
+    // The remaining command line of the rbt process generating this project, minus the flags
+    // RbtArgs writes itself. Tokens are grouped the way CmdParser reads them: a "--Flag" owns
+    // every following token until the next "--Flag" (list args such as --CustomDefines take
+    // several values, bool switches take none), so a whole group is kept or dropped together.
+    // Leading tokens that are not part of any flag are skipped - when rbt runs hosted (e.g.
+    // under a test runner) the process command line starts with tokens that are not rbt args.
+    private static IEnumerable<object> PassThroughArgs()
+    {
+        var args = Environment.GetCommandLineArgs();
+        var tokens = new List<object>();
+        var skipping = true;
+        // args[0] is the executable path - skipped, RbtExecutablePath() is the task's command.
+        for (var i = 1; i < args.Length; i++)
+        {
+            if (args[i].StartsWith("--", StringComparison.Ordinal))
+            {
+                skipping = OverriddenArgs.Contains(args[i]);
+            }
+
+            if (!skipping)
+            {
+                tokens.Add(args[i]);
+            }
+        }
+
+        return tokens;
     }
 
     private static string BuildTaskLabel(BuildConfiguration config) => $"rbt: build [{config}]";

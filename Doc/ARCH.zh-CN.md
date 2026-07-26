@@ -196,7 +196,9 @@ stdout/stderr 重定向到日志，并且由于并行编译共享一个非线程
 - **ReBuildTool.IDE / CMake**——生成 `CMakeLists`，其自定义目标调用 `rbt`，把 IDE 的
   `$<CONFIG>`、目标平台与架构分别转发为对应的 `rbt --BuildConfig / --TargetPlatform / --TargetArch` 参数。
 - **ReBuildTool.IDE / VSCode**——在工程根目录生成 `.vscode/` 文件夹（`tasks.json`、
-  `launch.json`、`c_cpp_properties.json`）。构建 / 重新构建 / 清理任务都调用 `rbt`，每个可执行模块
+  `launch.json`、`c_cpp_properties.json`）。构建 / 重新构建 / 清理任务都调用 `rbt`，并会固定写入
+  `--TargetPlatform`、同时回放生成工程时 `rbt` 命令行上的其余参数（`--TargetArch`、`--NDKRoot` 等），
+  保证交叉编译的工程在 IDE 中依然按目标平台构建；每个可执行模块
   都会得到一个运行任务以及一个 cppvsdbg/cppdbg 调试启动配置（带构建 preLaunchTask），
   IntelliSense 则读取 `rbt` 生成的 `compile_commands.json`。
 - **ReBuildTool.IDE / CompileCommands**——直接根据 `rbt` 实际会执行的逐文件编译命令
