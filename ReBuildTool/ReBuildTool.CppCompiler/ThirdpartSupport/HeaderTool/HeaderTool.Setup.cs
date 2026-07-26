@@ -32,17 +32,18 @@ public partial class HeaderToolPluginSupport
             return;
         }
 
+        // BuildHeaderTool, not BuildAll: the "build all" scripts also publish plugin
+        // projects that no longer live in the ResetHeaderTool repository (and the .bat
+        // ends with `pause`, which blocks an unattended build), while BuildAll.sh does
+        // not exist there at all. BuildHeaderTool.{bat,sh} builds just the tool, into
+        // the Binary/<platform>/HeaderTool layout HeaderToolExePath looks in.
         if (PlatformHelper.IsWindows())
         {
-            // Not BuildAll.bat: that one ends with `pause` and would sit waiting for a
-            // keypress. BuildAllNoPause.bat is the same script without it.
-            Cmd.RunCmd(installPath.Combine("Scripts/BuildAllNoPause.bat"), "", HeaderToolRoot);
+            Cmd.RunCmd(installPath.Combine("Scripts/BuildHeaderTool.bat"), "", HeaderToolRoot);
         }
         else
         {
-            // ResetHeaderTool ships no BuildAll.sh; BuildHeaderTool.sh produces the same
-            // Binary/<platform>/HeaderTool layout HeaderToolExePath looks in. Invoked
-            // through bash because the script is not committed with the executable bit.
+            // Through bash: the script is not committed with the executable bit.
             Cmd.RunCmd("/bin/bash", installPath.Combine("Scripts/BuildHeaderTool.sh").InQuotes(), HeaderToolRoot);
         }
     }
