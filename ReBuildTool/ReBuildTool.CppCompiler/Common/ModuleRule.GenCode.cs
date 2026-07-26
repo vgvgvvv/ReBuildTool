@@ -12,9 +12,20 @@ public abstract partial class CppModuleRule
         moduleDirectory.EnsureDirectoryExists();
         var publicDirectory = moduleDirectory.Combine("Public").EnsureDirectoryExists();
         var privateDirectory = moduleDirectory.Combine("Private").EnsureDirectoryExists();
-        module.PublicIncludePaths.Add(publicDirectory);
-        module.SourceDirectories.Add(publicDirectory);
-        module.SourceDirectories.Add(privateDirectory);
+        // Same as the module's own Public/Private dirs: registered as framework paths
+        // so a re-setup (Cleanup) doesn't drop the generated sources.
+        if (module is CppModuleRule moduleRule)
+        {
+            moduleRule.AddFrameworkPublicIncludePath(publicDirectory);
+            moduleRule.AddFrameworkSourceDirectory(publicDirectory);
+            moduleRule.AddFrameworkSourceDirectory(privateDirectory);
+        }
+        else
+        {
+            module.PublicIncludePaths.Add(publicDirectory);
+            module.SourceDirectories.Add(publicDirectory);
+            module.SourceDirectories.Add(privateDirectory);
+        }
         var moduleInternalName = $"{module.GetType().Name}.internal";
         WriteIfChanged(publicDirectory.Combine($"{moduleInternalName}.h"), GenerateHeader(module));
         WriteIfChanged(privateDirectory.Combine($"{moduleInternalName}.cpp"), GenerateSource(module));

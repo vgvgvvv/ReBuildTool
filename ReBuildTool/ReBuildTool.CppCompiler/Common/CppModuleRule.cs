@@ -74,6 +74,74 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
 
     public string ModuleDirectory { get; internal set; }
 
+    // Paths the framework itself contributes to the module: its own Public/Private
+    // directories and the generated-code directories under Intermedia. They are
+    // remembered separately from the public lists because Cleanup() wipes those on
+    // every re-setup, while these are added once when the rule is parsed. A project
+    // that is set up more than once in a process (IDE project / compile_commands
+    // generation followed by a build) would otherwise reach the build with no source
+    // directories at all, and link an executable out of zero object files.
+    private readonly List<string> FrameworkSourceDirectories = new();
+    private readonly List<string> FrameworkPublicIncludePaths = new();
+    private readonly List<string> FrameworkPrivateIncludePaths = new();
+
+    internal void AddFrameworkSourceDirectory(string path)
+    {
+        AddFrameworkPath(FrameworkSourceDirectories, SourceDirectories, path);
+    }
+
+    internal void AddFrameworkPublicIncludePath(string path)
+    {
+        AddFrameworkPath(FrameworkPublicIncludePaths, PublicIncludePaths, path);
+    }
+
+    internal void AddFrameworkPrivateIncludePath(string path)
+    {
+        AddFrameworkPath(FrameworkPrivateIncludePaths, PrivateIncludePaths, path);
+    }
+
+    private static void AddFrameworkPath(List<string> framework, List<string> live, string path)
+    {
+        if (!framework.Contains(path))
+        {
+            framework.Add(path);
+        }
+        if (!live.Contains(path))
+        {
+            live.Add(path);
+        }
+    }
+
+    /// <summary>
+    /// Puts the framework-provided paths back into the rule's live lists. Called on
+    /// every setup, after <see cref="Cleanup"/> has run and before the rule's own
+    /// <see cref="Setup"/>, so a rule still sees (and can add to) them.
+    /// </summary>
+    private void ApplyFrameworkPaths()
+    {
+        foreach (var path in FrameworkSourceDirectories)
+        {
+            if (!SourceDirectories.Contains(path))
+            {
+                SourceDirectories.Add(path);
+            }
+        }
+        foreach (var path in FrameworkPublicIncludePaths)
+        {
+            if (!PublicIncludePaths.Contains(path))
+            {
+                PublicIncludePaths.Add(path);
+            }
+        }
+        foreach (var path in FrameworkPrivateIncludePaths)
+        {
+            if (!PrivateIncludePaths.Contains(path))
+            {
+                PrivateIncludePaths.Add(path);
+            }
+        }
+    }
+
     /// <summary>
     /// Resolve a path entry from <see cref="SourceFiles"/> /
     /// <see cref="ExcludeDirectories"/> / <see cref="ExcludeFiles"/>: absolute
@@ -168,6 +236,7 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
             Cleanup(BuildContext);
         }
         BuildContext = buildContext;
+        ApplyFrameworkPaths();
         if (IsSupport)
         {
             Setup(BuildContext);

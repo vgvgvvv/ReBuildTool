@@ -380,10 +380,12 @@ public:
 			{
 				GenerateModuleCodes(rule);
 				rule.ModuleDirectory = moduleRulePath.Parent;
-				rule.SourceDirectories.Add(moduleRulePath.Parent.Combine("Public"));
-				rule.SourceDirectories.Add(moduleRulePath.Parent.Combine("Private"));
-				rule.PublicIncludePaths.Add(moduleRulePath.Parent.Combine("Public"));
-				rule.PrivateIncludePaths.Add(moduleRulePath.Parent.Combine("Private"));
+				// Registered as framework paths so they are restored after each
+				// Cleanup() - see CppModuleRule.ApplyFrameworkPaths.
+				rule.AddFrameworkSourceDirectory(moduleRulePath.Parent.Combine("Public"));
+				rule.AddFrameworkSourceDirectory(moduleRulePath.Parent.Combine("Private"));
+				rule.AddFrameworkPublicIncludePath(moduleRulePath.Parent.Combine("Public"));
+				rule.AddFrameworkPrivateIncludePath(moduleRulePath.Parent.Combine("Private"));
 			}
 			else
 			{
