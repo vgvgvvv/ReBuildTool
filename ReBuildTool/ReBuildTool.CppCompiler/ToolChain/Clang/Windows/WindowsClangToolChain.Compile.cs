@@ -25,13 +25,13 @@ public partial class WindowsClangToolchain
 			
             foreach (var includePath in compileUnit.IncludePaths.Concat(ToolChainIncludePaths()))
             {
-                yield return $"/I\"{includePath}\"";
+                yield return $"/I{includePath}";
             }
-			
-            yield return "/Fd" + compileUnit.OutputFile.ChangeExtension(".pdb").InQuotes();
+
+            yield return "/Fd" + compileUnit.OutputFile.ChangeExtension(".pdb");
             if (compileUnit.OutputAssembly)
             {
-                yield return "/Fa" + compileUnit.SourceFile.ChangeExtension(".s").InQuotes();
+                yield return "/Fa" + compileUnit.SourceFile.ChangeExtension(".s");
             }
 
             // clang-cl is an MSVC-compatible driver, so for dependency tracking we use
@@ -45,9 +45,9 @@ public partial class WindowsClangToolchain
             }
         }
 
-        yield return "/Fo" + compileUnit.OutputFile.InQuotes();
-		
-        yield return compileUnit.SourceFile.InQuotes();
+        yield return "/Fo" + compileUnit.OutputFile;
+
+        yield return compileUnit.SourceFile.ToString();
     }
 
     

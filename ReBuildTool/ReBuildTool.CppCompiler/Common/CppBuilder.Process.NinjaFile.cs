@@ -1,5 +1,6 @@
 using NiceIO;
 using ReBuildTool.Service.CompileService;
+using ReBuildTool.Service.Global;
 using ReBuildTool.ToolChain.Windows;
 using ResetCore.Common;
 
@@ -131,11 +132,14 @@ public partial class CppBuilder
                 };
                 // /c + /showIncludes, /Fo pointing at a throwaway object, /I to the temp dir.
                 // /nologo suppresses the banner; /EHsc avoids warnings; /Fo NUL avoids writing an obj.
+                // ArgumentList auto-quotes each token, so pass clean unquoted values
+                // (a token with a manually-added " would be double-quoted and break when
+                // the temp path or username contains a space).
                 psi.ArgumentList.Add("/nologo");
                 psi.ArgumentList.Add("/c");
                 psi.ArgumentList.Add("/showIncludes");
-                psi.ArgumentList.Add($"/I\"{Path.GetTempPath()}\"");
-                psi.ArgumentList.Add("/Fo\"nul\"");
+                psi.ArgumentList.Add("/I" + Path.GetTempPath());
+                psi.ArgumentList.Add("/Fonul");
                 psi.ArgumentList.Add(probeSrc.ToString());
                 foreach (var (k, v) in ToolChain.EnvVars())
                 {
@@ -259,11 +263,15 @@ public partial class CppBuilder
                 // a strict improvement over the old single-level GetAllCompileUnitDep scan.
                 // For .asm units (no depfile produced) ninja simply falls back to $in only.
 
-                // Per-edge command variables. ProgramName is already a path (possibly
-                // quoted in some toolchains' ToString()); Arguments are pre-quoted per
-                // toolchain. We hand them to ninja verbatim via $cc/$args.
-                edge.WithVariable("cc", $"\"{invocation.ProgramName}\"");
-                edge.WithVariable("args", string.Join(' ', invocation.Arguments));
+                // Per-edge command variables. Ninja runs `command = $cc $args` through a shell
+                // (sh -c / cmd /c), so variable values must be SHELL-quoted — ninja's own
+                // `$ ` space escaping only protects paths in the structural `build` line, not
+                // in variable values passed to the shell. ProgramName and Arguments are clean
+                // argv tokens, so ShellQuote.ForArgument wraps each one (same as the Makefile
+                // path); the `build` line's output/inputs above stay NinjaPath-escaped.
+                edge.WithVariable("cc", ShellQuote.ForProgram(invocation.ProgramName.ToString()));
+                edge.WithVariable("args",
+                    string.Join(' ', invocation.Arguments.Select(ShellQuote.ForArgument)));
 
                 generator.Edges.Add(edge);
             }
@@ -331,8 +339,9 @@ public partial class CppBuilder
                 }
             }
 
-            edge.WithVariable("cc", $"\"{LinkInvocation.ProgramName}\"");
-            edge.WithVariable("args", string.Join(' ', LinkInvocation.Arguments));
+            edge.WithVariable("cc", ShellQuote.ForProgram(LinkInvocation.ProgramName.ToString()));
+            edge.WithVariable("args",
+                string.Join(' ', LinkInvocation.Arguments.Select(ShellQuote.ForArgument)));
 
             generator.Edges.Add(edge);
         }
@@ -379,8 +388,9 @@ public partial class CppBuilder
                 }
             }
 
-            edge.WithVariable("cc", $"\"{ArchiveInvocation.ProgramName}\"");
-            edge.WithVariable("args", string.Join(' ', ArchiveInvocation.Arguments));
+            edge.WithVariable("cc", ShellQuote.ForProgram(ArchiveInvocation.ProgramName.ToString()));
+            edge.WithVariable("args",
+                string.Join(' ', ArchiveInvocation.Arguments.Select(ShellQuote.ForArgument)));
 
             generator.Edges.Add(edge);
         }

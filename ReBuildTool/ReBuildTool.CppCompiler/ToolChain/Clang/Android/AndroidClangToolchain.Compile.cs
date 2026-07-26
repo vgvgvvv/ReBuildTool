@@ -26,7 +26,7 @@ public partial class AndroidClangToolchain
 			
         foreach (var includePath in compileUnit.IncludePaths.Concat(ToolChainIncludePaths()))
         {
-            yield return $"-I\"{includePath}\"";
+            yield return $"-I{includePath}";
         }
 
         if (Configuration == BuildConfiguration.Debug)
@@ -35,9 +35,9 @@ public partial class AndroidClangToolchain
         }
 
         yield return "-o";
-        yield return compileUnit.OutputFile.InQuotes();
-        
-        yield return compileUnit.SourceFile.InQuotes();
+        yield return compileUnit.OutputFile.ToString();
+
+        yield return compileUnit.SourceFile.ToString();
     }
     
     private IEnumerable<string> DefaultCompileFlags(CppCompilationUnit unit)
@@ -88,7 +88,7 @@ public partial class AndroidClangToolchain
         yield return "-target";
         yield return NdkClangSdk.Setting.TargetPlatformName;
 
-        yield return "--sysroot=" + NdkClangSdk.SysRoot.InQuotes();
+        yield return "--sysroot=" + NdkClangSdk.SysRoot;
 
         // is
         // yield return "-stdlib=libc++";

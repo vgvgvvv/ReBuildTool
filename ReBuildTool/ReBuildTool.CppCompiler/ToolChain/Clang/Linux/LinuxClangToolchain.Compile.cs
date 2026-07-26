@@ -32,7 +32,7 @@ public partial class LinuxClangToolchain
 			
         foreach (var includePath in compileUnit.IncludePaths.Concat(ToolChainIncludePaths()))
         {
-            yield return $"-I\"{includePath}\"";
+            yield return $"-I{includePath}";
         }
 
         if (Configuration == BuildConfiguration.Debug)
@@ -46,13 +46,13 @@ public partial class LinuxClangToolchain
         {
             yield return "-MMD";
             yield return "-MF";
-            yield return compileUnit.DependencyFilePath.InQuotes();
+            yield return compileUnit.DependencyFilePath.ToString();
         }
 
         yield return "-o";
-        yield return compileUnit.OutputFile.InQuotes();
+        yield return compileUnit.OutputFile.ToString();
 
-        yield return compileUnit.SourceFile.InQuotes();
+        yield return compileUnit.SourceFile.ToString();
     }
 
     private IEnumerable<string> DefaultCompileFlags(CppCompilationUnit unit)

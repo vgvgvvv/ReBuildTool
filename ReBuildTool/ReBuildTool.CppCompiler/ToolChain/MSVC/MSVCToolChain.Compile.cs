@@ -36,13 +36,13 @@ public partial class MSVCToolChain
 			
 			foreach (var includePath in compileUnit.IncludePaths.Concat(ToolChainIncludePaths()))
 			{
-				yield return $"/I\"{includePath}\"";
+				yield return $"/I{includePath}";
 			}
-			
-			yield return "/Fd" + compileUnit.OutputFile.ChangeExtension(".pdb").InQuotes();
+
+			yield return "/Fd" + compileUnit.OutputFile.ChangeExtension(".pdb");
 			if (compileUnit.OutputAssembly)
 			{
-				yield return "/Fa" + compileUnit.SourceFile.ChangeExtension(".s").InQuotes();
+				yield return "/Fa" + compileUnit.SourceFile.ChangeExtension(".s");
 			}
 
 			// Dependency tracking for the Ninja backend: /showIncludes makes cl print a
@@ -59,9 +59,9 @@ public partial class MSVCToolChain
 			}
 		}
 
-		yield return "/Fo" + compileUnit.OutputFile.InQuotes();
-		
-		yield return compileUnit.SourceFile.InQuotes();
+		yield return "/Fo" + compileUnit.OutputFile;
+
+		yield return compileUnit.SourceFile.ToString();
 
 	}
 	

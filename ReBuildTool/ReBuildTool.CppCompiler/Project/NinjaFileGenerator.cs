@@ -178,22 +178,27 @@ public class NinjaFileGenerator
     private static void FlushEdge(StringBuilder sb, Edge edge)
     {
         // build <out>: <rule> <inputs> | <implicit inputs>
-        sb.Append($"build {NinjaVar(edge.Output)}: {edge.RuleName}");
+        // Output/inputs are already NinjaPath-escaped at edge-construction time
+        // (\->/, $: drive-letter escape, and `$ ... $` space-quoting for the path-list
+        // position), so write them verbatim — re-escaping here would double-wrap paths
+        // that contain spaces (NinjaVar would see the spaces inside and wrap again).
+        sb.Append($"build {edge.Output}: {edge.RuleName}");
         foreach (var input in edge.ExplicitInputs)
         {
-            sb.Append($" {NinjaVar(input)}");
+            sb.Append($" {input}");
         }
         if (edge.ImplicitInputs.Count > 0)
         {
             sb.Append(" |");
             foreach (var implicitInput in edge.ImplicitInputs)
             {
-                sb.Append($" {NinjaVar(implicitInput)}");
+                sb.Append($" {implicitInput}");
             }
         }
         sb.AppendLine();
 
-        // Per-edge variables: 2-space indent (`key = value`).
+        // Per-edge variables: 2-space indent (`key = value`). Values are shell-quoted by
+        // the caller (ShellQuote) because ninja runs `command = $cc $args` through a shell.
         foreach (var kvp in edge.Variables)
         {
             sb.AppendLine($"  {kvp.Key} = {kvp.Value}");
@@ -204,7 +209,7 @@ public class NinjaFileGenerator
     /// <summary>
     /// Escapes an <see cref="NPath"/> for use as a build-edge input/output or
     /// explicit/implicit dependency (the structural positions on a <c>build</c>
-    /// line). Two transformations:
+    /// line). Three transformations:
     /// <list type="bullet">
     /// <item>Backslashes → forward slashes: ninja is a POSIX-ish lexer and treats
     /// <c>\</c> as an escape; forward slashes work on all platforms and MSVC's
@@ -215,34 +220,21 @@ public class NinjaFileGenerator
     /// the colon with <c>$:</c> tells ninja's lexer to treat it literally while
     /// still producing <c>D:</c> in the actual path. (Only needed in structural
     /// positions — inside <c>args = ...</c> variable values, colons are literal.)</item>
-    /// <item>Spaces → wrap in <c>$ ... $</c>: ninja's way of quoting a path with
-    /// spaces on a build line (not shell quoting).</item>
+    /// <item>Space → <c>$ </c> (dollar+space) PER space: ninja's path-list escape for a
+    /// literal space is <c>$ </c>, applied to each space individually — NOT a
+    /// <c>$ ... $</c> wrapper around the whole path. e.g. <c>C:/My Dir/x.o</c> becomes
+    /// <c>C$:/My$ Dir/x.o</c>. (Wrapping broke ninja's build-line parser — it treats the
+    /// wrapped token as a different statement and errors "expected build command name".)</item>
     /// </list>
     /// </summary>
     public static string NinjaPath(NPath path)
     {
         var str = path.ToString().Replace('\\', '/');
         str = str.Replace(":", "$:");
-        if (str.Contains(' '))
-        {
-            return "$ " + str + " $";
-        }
+        // Escape each space as "$ " (ninja's literal-space escape for path-list positions).
+        // Order matters: do this after the ':' escape so we don't touch the '$:' we just added
+        // (it has no space anyway).
+        str = str.Replace(" ", "$ ");
         return str;
-    }
-
-    /// <summary>
-    /// Escapes an arbitrary token (e.g. a pre-quoted program path) for use as a
-    /// ninja <emphasis>variable value</emphasis> (the right-hand side of
-    /// <c>cc = ...</c>/<c>args = ...</c>). In that position ninja does NOT treat
-    /// <c>:</c> specially, so we deliberately do <emphasis>not</emphasis> colon-escape
-    /// here — only spaces (wrapped in <c>$ ... $</c>). No slash normalization.
-    /// </summary>
-    public static string NinjaVar(string token)
-    {
-        if (token.Contains(' '))
-        {
-            return "$ " + token + " $";
-        }
-        return token;
     }
 }

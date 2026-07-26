@@ -45,7 +45,7 @@ public class MakeFile
 			// instead of "the file to read", and since that path happens to exist on disk (it's
 			// the makefile itself), nmake considers it already satisfied and silently does nothing.
 			shell.WithArguments(new List<string>() {
-					"/F", makeFile.InQuotes(),
+					"/F", makeFile.ToString(),
 				});
 			shell.AppendArgument("/NOLOGO");
 		}

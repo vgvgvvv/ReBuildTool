@@ -7,14 +7,14 @@ public partial class LinuxClangToolchain
     protected override IEnumerable<string> LinkArgsFor(CppLinkUnit cppLinkUnit)
     {
         yield return $"-o";
-        yield return cppLinkUnit.OutputPath.InQuotes();
-        
+        yield return cppLinkUnit.OutputPath.ToString();
+
         foreach (var defaultLinkFlag in DefaultLinkFlags(cppLinkUnit))
         {
             yield return defaultLinkFlag;
         }
-        
-        yield return "@" + cppLinkUnit.ResponseFile.InQuotes();
+
+        yield return "@" + cppLinkUnit.ResponseFile;
     }
     
     protected IEnumerable<string> DefaultLinkFlags(CppLinkUnit cppLinkUnit)
@@ -76,32 +76,32 @@ public partial class LinuxClangToolchain
         
         foreach (var staticLibrary in ToolChainStaticLibraries())
         {
-            yield return "-l" + staticLibrary.ToNPath().InQuotes();
+            yield return "-l" + staticLibrary.ToNPath();
         }
-	    
+
         foreach (var dynamicLibrary in ToolChainDynamicLibraries())
         {
-            yield return "-l" + dynamicLibrary.ToNPath().InQuotes();
+            yield return "-l" + dynamicLibrary.ToNPath();
         }
-	    
+
         foreach (var staticLibrary in cppLinkUnit.StaticLibraries)
         {
-            yield return "-l" + staticLibrary.ToNPath().InQuotes();
+            yield return "-l" + staticLibrary.ToNPath();
         }
 
         foreach (var dynamicLibrary in cppLinkUnit.DynamicLibraries)
         {
-            yield return "-l" + dynamicLibrary.ToNPath().InQuotes();
+            yield return "-l" + dynamicLibrary.ToNPath();
         }
-        
+
         foreach (var libraryPath in cppLinkUnit.LibraryPaths)
         {
-            yield return "-L" + libraryPath.InQuotes();
+            yield return "-L" + libraryPath;
         }
 
         foreach (var libpath in ToolChainLibraryPaths())
         {
-            yield return "-L" + libpath.InQuotes();
+            yield return "-L" + libpath;
         }
        
     }

@@ -42,28 +42,28 @@ public partial class GccToolChain
         }
 
         yield return "-o";
-        yield return compileUnit.OutputFile.InQuotes();
-        
-        yield return compileUnit.SourceFile.InQuotes();
+        yield return compileUnit.OutputFile.ToString();
+
+        yield return compileUnit.SourceFile.ToString();
     }
 
     private IEnumerable<string> CompileArgsForCpp(CppCompilationUnit compileUnit)
     {
         yield return "-c";
-        
+
         foreach (var compileFlag in compileUnit.CompileFlags.Concat(DefaultCompileFlags(compileUnit)))
         {
             yield return compileFlag;
         }
-			
+
         foreach (var define in compileUnit.Defines.Concat(ToolChainDefines()))
         {
             yield return $"-D{define}";
         }
-			
+
         foreach (var includePath in compileUnit.IncludePaths.Concat(ToolChainIncludePaths()))
         {
-            yield return $"-I\"{includePath}\"";
+            yield return $"-I{includePath}";
         }
 
         if (Configuration == BuildConfiguration.Debug)
@@ -78,13 +78,13 @@ public partial class GccToolChain
         {
             yield return "-MMD";
             yield return "-MF";
-            yield return compileUnit.DependencyFilePath.InQuotes();
+            yield return compileUnit.DependencyFilePath.ToString();
         }
 
         yield return "-o";
-        yield return compileUnit.OutputFile.InQuotes();
+        yield return compileUnit.OutputFile.ToString();
 
-        yield return compileUnit.SourceFile.InQuotes();
+        yield return compileUnit.SourceFile.ToString();
 
     }
 

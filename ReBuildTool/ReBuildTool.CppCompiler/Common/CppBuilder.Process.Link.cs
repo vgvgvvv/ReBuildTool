@@ -70,7 +70,7 @@ public partial class CppBuilder
 			}
 			if (!LinkInvocation.Run())
 			{
-				Log.Error($"{LinkInvocation.ProgramName} {LinkInvocation.Arguments.Join(" ")}");
+				Log.Error($"{LinkInvocation}");
 				Log.Error($"Link {Module.TargetName} failed !");
 				return false;
 			}
