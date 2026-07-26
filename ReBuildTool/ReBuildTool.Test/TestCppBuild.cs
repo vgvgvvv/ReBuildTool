@@ -220,6 +220,80 @@ public class Tests
         }
     }
 
+    // Generates the VS Code project (.vscode/tasks.json + launch.json + c_cpp_properties.json)
+    // and verifies the rbt-driven wiring: build/rebuild/clean tasks all invoke rbt, every
+    // executable module gets a run task and a debug launch config, and IntelliSense is pointed
+    // at the compile_commands.json rbt emits.
+    [Test]
+    public void TestVSCodeProjectGenerate()
+    {
+        CmdParser.Parse<Tests>();
+        ServiceContext.Instance.Init();
+
+        // On Windows the default IDE project is VS - force VS Code generation for this test.
+        ProjectGenArgs.Get().IDEProjectType.Value = ProjectGenType.VSCode;
+
+        var path = TestCaseGlobalVars.SampleDirectory.Combine("StaticLibraryLink");
+        var vscodeDir = path.Combine(".vscode");
+        vscodeDir.DeleteIfExists();
+
+        var project = ServiceContext.Instance.Create<ICppProject>(path).Value;
+        project.Parse();
+        project.Setup();
+
+        // tasks.json: build/rebuild/clean, all delegating to rbt.
+        var tasksFile = vscodeDir.Combine("tasks.json");
+        Assert.IsTrue(tasksFile.Exists(), ".vscode/tasks.json should be generated");
+        using (var tasksDoc = System.Text.Json.JsonDocument.Parse(tasksFile.ReadAllText()))
+        {
+            var tasks = tasksDoc.RootElement.GetProperty("tasks");
+            Assert.That(tasks.ValueKind, Is.EqualTo(System.Text.Json.JsonValueKind.Array));
+            var labels = tasks.EnumerateArray()
+                .Select(t => t.GetProperty("label").GetString())
+                .ToList();
+            Assert.IsTrue(labels.Contains("rbt: build [Debug]"), "must have a Debug build task");
+            Assert.IsTrue(labels.Contains("rbt: rebuild [Debug]"), "must have a rebuild task");
+            Assert.IsTrue(labels.Contains("rbt: clean"), "must have a clean task");
+            // AppModule is an executable, so it must get a run task.
+            Assert.IsTrue(labels.Any(l => l!.StartsWith("rbt: run AppModule")),
+                "each executable module must get a run task");
+
+            // The default build task must drive an rbt build.
+            var buildTask = tasks.EnumerateArray()
+                .First(t => t.GetProperty("label").GetString() == "rbt: build [Debug]");
+            var args = buildTask.GetProperty("args").EnumerateArray().Select(a => a.GetString()).ToList();
+            Assert.IsTrue(args.Contains("--Mode") && args.Contains("Build"),
+                "the build task must invoke rbt --Mode Build");
+        }
+
+        // launch.json: one debug config per executable module, building before launch.
+        var launchFile = vscodeDir.Combine("launch.json");
+        Assert.IsTrue(launchFile.Exists(), ".vscode/launch.json should be generated");
+        using (var launchDoc = System.Text.Json.JsonDocument.Parse(launchFile.ReadAllText()))
+        {
+            var configs = launchDoc.RootElement.GetProperty("configurations");
+            Assert.That(configs.GetArrayLength(), Is.GreaterThan(0),
+                "there must be a debug config for the executable module");
+            var appConfig = configs.EnumerateArray()
+                .First(c => c.GetProperty("name").GetString()!.Contains("AppModule"));
+            Assert.AreEqual("launch", appConfig.GetProperty("request").GetString());
+            Assert.IsTrue(appConfig.TryGetProperty("preLaunchTask", out var preLaunch),
+                "a debug config must build before launching");
+            Assert.AreEqual("rbt: build [Debug]", preLaunch.GetString());
+        }
+
+        // c_cpp_properties.json: IntelliSense follows rbt's compile_commands.json.
+        var cppPropsFile = vscodeDir.Combine("c_cpp_properties.json");
+        Assert.IsTrue(cppPropsFile.Exists(), ".vscode/c_cpp_properties.json should be generated");
+        using (var cppDoc = System.Text.Json.JsonDocument.Parse(cppPropsFile.ReadAllText()))
+        {
+            var config = cppDoc.RootElement.GetProperty("configurations")[0];
+            Assert.That(config.GetProperty("compileCommands").GetString(),
+                Does.Contain("compile_commands.json"),
+                "IntelliSense must read rbt's compile_commands.json");
+        }
+    }
+
     // End-to-end HeaderTool (RHT) codegen: a module with a RECLASS-annotated
     // header is built with the ResetEngineClassExtension plugin. Verifies the
     // full chain — HeaderTool runs, generates HeaderToolGen/, the framework

@@ -75,7 +75,7 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 | `--ProjectRoot <path>` | 项目根目录，默认为当前工作目录。 |
 | `--Mode <RunMode>` | **必填。** 取值为 `Init`、`Build`、`Clean`、`ReBuild` 之一。 |
 | `--Target <name>` | 要构建的目标名称，默认为 `ProjectRoot` 文件夹名。 |
-| `--IDEProjectType <type>` | `Init` 模式下生成哪种工程：`VisualStudio`、`CMake` 或 `CompileCommands`。默认 Windows 为 Visual Studio，其他平台为 CMake。 |
+| `--IDEProjectType <type>` | `Init` 模式下生成哪种工程：`VisualStudio`、`CMake`、`VSCode` 或 `CompileCommands`。默认 Windows 为 Visual Studio，其他平台为 CMake。 |
 | `--BoosterSource <path>` | 内部参数，由 Booster 脚本设置，用于 RBT 重新生成这些脚本。请勿手动设置。 |
 
 `Mode` 的行为（详见
@@ -84,6 +84,10 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
   然后生成 IDE 工程（Visual Studio 的 `.sln`，或 CMake 工程）。无论生成哪种工程，
   都会在工程根目录写出 `compile_commands.json`（JSON 编译数据库，供 clangd / VS Code /
   CLion 实现代码高亮与跳转），也可通过 `--IDEProjectType CompileCommands` 单独生成。
+  使用 `--IDEProjectType VSCode` 时，会在工程根目录写出 `.vscode/` 文件夹
+  （`tasks.json`、`launch.json`、`c_cpp_properties.json`），让 VS Code 能够构建、
+  运行、调试与清理工程 —— 所有操作都会委托回 RBT 执行，并为每个可执行模块生成
+  一个运行任务和一个调试启动配置。
 - **Build** —— 编译指定的目标。
 - **Clean** —— 清理构建产物。
 - **ReBuild** —— 先 `Clean` 再 `Build`。
