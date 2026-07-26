@@ -7,6 +7,7 @@ using ReBuildTool.Service.Global;
 using ReBuildTool.Service.IDEService;
 using ReBuildTool.Service.IDEService.CMake;
 using ReBuildTool.Service.IDEService.VisualStudio;
+using ReBuildTool.Service.IDEService.VSCode;
 
 namespace ReBuildTool.IDE.Common;
 
@@ -66,6 +67,20 @@ public class IDEProjectGenerator : IGenerateIDEProjService
 			cmakeProject.GenerateCMakeProject(sourceProvider, outputPath.Combine ("CMakeProjects"));
 
 			cmakeProject.FlushAllCMakeFile();
+		}
+		else if (finalProjectType == ProjectGenType.VSCode)
+		{
+			// The .vscode folder must live at the workspace root for VS Code to pick it up, so it
+			// is written under projectRoot rather than the intermediate output path.
+			var vscodeResult = ServiceContext.Instance.Create<IVSCodeGenerator>(name, projectRoot);
+			if (!vscodeResult)
+			{
+				throw new Exception("cannot parse vscode generator");
+			}
+
+			var vscodeProject = vscodeResult.Value;
+			vscodeProject.GenerateVSCodeProject(sourceProvider, projectRoot);
+			vscodeProject.FlushAllFiles();
 		}
 
 		// A compile_commands.json is emitted for every project type (and is the sole output when

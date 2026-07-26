@@ -77,7 +77,7 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 | `--ProjectRoot <path>` | Project root folder. Defaults to the current working directory. |
 | `--Mode <RunMode>` | **Required.** One of `Init`, `Build`, `Clean`, `ReBuild`. |
 | `--Target <name>` | Target to build. Defaults to the `ProjectRoot` folder name. |
-| `--IDEProjectType <type>` | Which project to generate in `Init` mode: `VisualStudio`, `CMake`, or `CompileCommands`. Defaults to Visual Studio on Windows, CMake elsewhere. |
+| `--IDEProjectType <type>` | Which project to generate in `Init` mode: `VisualStudio`, `CMake`, `VSCode`, or `CompileCommands`. Defaults to Visual Studio on Windows, CMake elsewhere. |
 | `--BoosterSource <path>` | Internal; set by the Booster scripts so RBT can regenerate them. Don't set manually. |
 
 `Mode` behavior (see [Program.cs](../ReBuildTool/ReBuildTool/Program.cs)):
@@ -87,6 +87,11 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
   highlighting / go-to-definition via clangd, VS Code or CLion) is written to
   the project root regardless of the project type, and can be generated on its
   own with `--IDEProjectType CompileCommands`.
+  With `--IDEProjectType VSCode`, a `.vscode/` folder (`tasks.json`,
+  `launch.json`, `c_cpp_properties.json`) is written to the project root so
+  VS Code can build, run, debug and clean the project — every action is
+  delegated back to RBT, and each executable module gets a run task and a
+  debug launch configuration.
 - **Build** — compiles the given target.
 - **Clean** — removes build outputs.
 - **ReBuild** — `Clean` followed by `Build`.

@@ -220,7 +220,7 @@ non-thread-safe logger, serializes output with a static lock.
 
 Instead of compiling, `rbt` can emit IDE projects via
 `IGenerateIDEProjService` (`ProjectGenType` = `VisualStudio` | `CMake` |
-`CompileCommands`):
+`VSCode` | `CompileCommands`):
 
 - **ReBuildTool.IDE / VisualStudio** — generates `.vcxproj` (with
   configuration/filter/user partials in `VCProject.*.cs`) and a `.sln`. The
@@ -230,6 +230,11 @@ Instead of compiling, `rbt` can emit IDE projects via
   invokes `rbt`, forwarding the IDE's `$<CONFIG>`, target platform and
   architecture into the corresponding `rbt --BuildConfig / --TargetPlatform /
   --TargetArch` arguments.
+- **ReBuildTool.IDE / VSCode** — generates a `.vscode/` folder (`tasks.json`,
+  `launch.json`, `c_cpp_properties.json`) at the project root. Build / rebuild /
+  clean tasks invoke `rbt`, each executable module gets a run task plus a
+  cppvsdbg/cppdbg debug launch configuration (with a build preLaunchTask), and
+  IntelliSense reads the `compile_commands.json` `rbt` emits.
 - **ReBuildTool.IDE / CompileCommands** — emits a `compile_commands.json` (JSON
   Compilation Database) at the project root directly from the exact per-file
   compiler invocations `rbt` would run (`CppBuilder.CollectCompileCommands`), so
