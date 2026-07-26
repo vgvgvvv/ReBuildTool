@@ -98,12 +98,16 @@ public class ${targetName}Target : CppTargetRule
 		var moduleFolder = SourceFolder.Combine($"Src/{targetName}").CreateDirectory();
 		var moduleName = $"{targetName}Module";
 		{
+			// Scaffolds the Setup() shape, not a constructor: a module rule must declare
+			// from Setup(ICppBuildContext) - see CppModuleRule.ThrowIfDeclaredInConstructor.
 			var defaultTargetContent = @"using ReBuildTool.ToolChain;
 
 public class ${targetName}Module : CppModuleRule
 {
-    public ${targetName}Module()
+    public override void Setup(ICppBuildContext buildContext)
     {
+        // TargetBuildType = BuildType.Executable;
+        // Dependencies.Add(""SomeOtherModule"");
     }
 }
 ";
@@ -378,12 +382,19 @@ public:
 			var ruleName = rule.GetType().Name;
 			if (ModuleRulePaths.TryGetValue(ruleName, out var moduleRulePath))
 			{
+				// Before anything is injected: a rule that declared from its constructor
+				// would lose those entries on the next setup pass, so say so now rather
+				// than let it fail as a missing header or an empty link.
+				rule.ThrowIfDeclaredInConstructor();
+
 				GenerateModuleCodes(rule);
 				rule.ModuleDirectory = moduleRulePath.Parent;
-				rule.SourceDirectories.Add(moduleRulePath.Parent.Combine("Public"));
-				rule.SourceDirectories.Add(moduleRulePath.Parent.Combine("Private"));
-				rule.PublicIncludePaths.Add(moduleRulePath.Parent.Combine("Public"));
-				rule.PrivateIncludePaths.Add(moduleRulePath.Parent.Combine("Private"));
+				// Registered as framework paths: the live lists are emptied by Cleanup on
+				// every setup pass, these are put back each time.
+				rule.AddFrameworkSourceDirectory(moduleRulePath.Parent.Combine("Public"));
+				rule.AddFrameworkSourceDirectory(moduleRulePath.Parent.Combine("Private"));
+				rule.AddFrameworkPublicIncludePath(moduleRulePath.Parent.Combine("Public"));
+				rule.AddFrameworkPrivateIncludePath(moduleRulePath.Parent.Combine("Private"));
 			}
 			else
 			{

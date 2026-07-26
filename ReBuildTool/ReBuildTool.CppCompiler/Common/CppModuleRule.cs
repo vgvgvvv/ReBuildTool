@@ -75,56 +75,122 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
     public string ModuleDirectory { get; internal set; }
 
     /// <summary>
-    /// Every list a rule declares into. Used to snapshot and restore the rule's
-    /// declared state around a re-setup - see <see cref="CaptureDeclaredState"/>.
+    /// Every list a rule declares into, with the property name for diagnostics.
+    /// A rule must fill these from <see cref="Setup"/> - see
+    /// <see cref="ThrowIfDeclaredInConstructor"/>.
     /// </summary>
-    private List<string>[] DeclarativeLists => new[]
+    private (string Name, List<string> Values)[] DeclarativeLists => new[]
     {
-        PublicIncludePaths, PrivateIncludePaths,
-        PublicDefines, PrivateDefines,
-        PublicCompileFlags, PrivateCompileFlags,
-        PublicLinkFlags, PrivateLinkFlags,
-        PublicArchiveFlags, PrivateArchiveFlags,
-        PublicStaticLibraries, PrivateStaticLibraries,
-        PublicDynamicLibraries, PrivateDynamicLibraries,
-        PublicLibraryDirectories, PrivateLibraryDirectories,
-        SourceDirectories, SourceFiles,
-        ExcludeDirectories, ExcludeFiles,
-        Dependencies,
+        (nameof(PublicIncludePaths), PublicIncludePaths),
+        (nameof(PrivateIncludePaths), PrivateIncludePaths),
+        (nameof(PublicDefines), PublicDefines),
+        (nameof(PrivateDefines), PrivateDefines),
+        (nameof(PublicCompileFlags), PublicCompileFlags),
+        (nameof(PrivateCompileFlags), PrivateCompileFlags),
+        (nameof(PublicLinkFlags), PublicLinkFlags),
+        (nameof(PrivateLinkFlags), PrivateLinkFlags),
+        (nameof(PublicArchiveFlags), PublicArchiveFlags),
+        (nameof(PrivateArchiveFlags), PrivateArchiveFlags),
+        (nameof(PublicStaticLibraries), PublicStaticLibraries),
+        (nameof(PrivateStaticLibraries), PrivateStaticLibraries),
+        (nameof(PublicDynamicLibraries), PublicDynamicLibraries),
+        (nameof(PrivateDynamicLibraries), PrivateDynamicLibraries),
+        (nameof(PublicLibraryDirectories), PublicLibraryDirectories),
+        (nameof(PrivateLibraryDirectories), PrivateLibraryDirectories),
+        (nameof(SourceDirectories), SourceDirectories),
+        (nameof(SourceFiles), SourceFiles),
+        (nameof(ExcludeDirectories), ExcludeDirectories),
+        (nameof(ExcludeFiles), ExcludeFiles),
+        (nameof(Dependencies), Dependencies),
     };
 
-    // The rule's state as it stood before its first Setup(): what the rule's own
-    // constructor declared (dependencies, defines, ...) plus what the framework
-    // injected when the rule was parsed (the module's Public/Private directories and
-    // the generated-code directories). Captured once, and restored on every re-setup.
-    private List<string>[]? DeclaredState;
-
-    private void CaptureDeclaredState()
-    {
-        DeclaredState = DeclarativeLists.Select(list => new List<string>(list)).ToArray();
-    }
-
     /// <summary>
-    /// Puts the rule back into its declared state. <see cref="Cleanup"/> empties the
-    /// lists so a second <see cref="Setup"/> doesn't append duplicates, but emptying
-    /// them also drops everything the constructor and the framework put there - and a
-    /// project is set up more than once per process whenever IDE project /
-    /// compile_commands generation is followed by a build. Without this, that second
-    /// pass reaches the compiler with no sources, no include paths and no module
-    /// dependencies at all.
+    /// Rejects a rule that declared anything from its constructor. Declarations
+    /// belong in <see cref="Setup"/>: the lists are rebuilt on every setup pass
+    /// (<see cref="Cleanup"/> empties them so a re-setup under a different build
+    /// context does not append duplicates), so anything added once at construction
+    /// time would silently disappear on the second pass. Called by the framework
+    /// right after the rule is instantiated, before it injects its own paths.
     /// </summary>
-    private void RestoreDeclaredState()
+    internal void ThrowIfDeclaredInConstructor()
     {
-        if (DeclaredState == null)
+        var declared = DeclarativeLists
+            .Where(list => list.Values.Count > 0)
+            .Select(list => list.Name)
+            .ToList();
+        if (declared.Count == 0)
         {
             return;
         }
 
-        var lists = DeclarativeLists;
-        for (var i = 0; i < lists.Length; i++)
+        throw new Exception(
+            $"Module rule {TargetName} fills {string.Join(", ", declared)} in its constructor. " +
+            $"Move those declarations into Setup(ICppBuildContext) - the rule's lists are " +
+            $"rebuilt on every setup pass, so constructor-time entries do not survive.");
+    }
+
+    // Paths the framework itself contributes: the module's own Public/Private
+    // directories and the generated-code directories under Intermedia. They are kept
+    // apart from the lists above because they are registered once, when the rule is
+    // parsed, while Cleanup() empties the live lists on every setup pass.
+    private readonly List<string> FrameworkSourceDirectories = new();
+    private readonly List<string> FrameworkPublicIncludePaths = new();
+    private readonly List<string> FrameworkPrivateIncludePaths = new();
+
+    internal void AddFrameworkSourceDirectory(string path)
+    {
+        AddFrameworkPath(FrameworkSourceDirectories, SourceDirectories, path);
+    }
+
+    internal void AddFrameworkPublicIncludePath(string path)
+    {
+        AddFrameworkPath(FrameworkPublicIncludePaths, PublicIncludePaths, path);
+    }
+
+    internal void AddFrameworkPrivateIncludePath(string path)
+    {
+        AddFrameworkPath(FrameworkPrivateIncludePaths, PrivateIncludePaths, path);
+    }
+
+    private static void AddFrameworkPath(List<string> framework, List<string> live, string path)
+    {
+        if (!framework.Contains(path))
         {
-            lists[i].Clear();
-            lists[i].AddRange(DeclaredState[i]);
+            framework.Add(path);
+        }
+        if (!live.Contains(path))
+        {
+            live.Add(path);
+        }
+    }
+
+    /// <summary>
+    /// Puts the framework-provided paths back into the live lists after a
+    /// <see cref="Cleanup"/>, before the rule's own <see cref="Setup"/> runs - so a
+    /// rule always sees (and can add to) them.
+    /// </summary>
+    private void ApplyFrameworkPaths()
+    {
+        foreach (var path in FrameworkSourceDirectories)
+        {
+            if (!SourceDirectories.Contains(path))
+            {
+                SourceDirectories.Add(path);
+            }
+        }
+        foreach (var path in FrameworkPublicIncludePaths)
+        {
+            if (!PublicIncludePaths.Contains(path))
+            {
+                PublicIncludePaths.Add(path);
+            }
+        }
+        foreach (var path in FrameworkPrivateIncludePaths)
+        {
+            if (!PrivateIncludePaths.Contains(path))
+            {
+                PrivateIncludePaths.Add(path);
+            }
         }
     }
 
@@ -215,16 +281,28 @@ public abstract partial class CppModuleRule : IModuleInterface, IPostBuildModule
         Dependencies.Clear();
     }
     
+    /// <summary>
+    /// Brings the rule up to date for <paramref name="buildContext"/>. Idempotent for
+    /// a context it has already been set up with, so the repeated walks over the
+    /// module graph within one operation cost nothing and cannot double-add entries.
+    /// A different context (IDE generation and a build use their own
+    /// <see cref="CppBuilder"/>) means the rule has to be re-declared against it:
+    /// <see cref="Cleanup"/> drops what the previous pass produced, the framework
+    /// paths go back in, and <see cref="Setup"/> runs again.
+    /// </summary>
     public void SetupInternal(ICppBuildContext buildContext)
     {
-        if (_hasSetup && BuildContext != null)
+        if (_hasSetup)
         {
-            Cleanup(BuildContext);
-            RestoreDeclaredState();
-        }
-        else
-        {
-            CaptureDeclaredState();
+            if (ReferenceEquals(BuildContext, buildContext))
+            {
+                return;
+            }
+            if (BuildContext != null)
+            {
+                Cleanup(BuildContext);
+                ApplyFrameworkPaths();
+            }
         }
         BuildContext = buildContext;
         if (IsSupport)

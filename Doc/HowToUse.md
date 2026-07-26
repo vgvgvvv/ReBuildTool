@@ -166,7 +166,7 @@ using ReBuildTool.ToolChain;
 
 public class MyGameModule : CppModuleRule
 {
-    public MyGameModule()
+    public override void Setup(ICppBuildContext buildContext)
     {
         TargetBuildType = BuildType.StaticLibrary; // or DynamicLibrary / Executable
         Dependencies.Add("SomeOtherModule");
@@ -174,6 +174,18 @@ public class MyGameModule : CppModuleRule
     }
 }
 ```
+
+> **Declare in `Setup`, not in the constructor.** A module rule's lists are rebuilt
+> on every setup pass — the same rule object is set up again when the build context
+> changes (IDE generation and a build each bring their own), and `Cleanup` empties
+> the lists first so nothing is added twice. Anything a constructor put there would
+> be dropped on that second pass, so rbt rejects a rule that declares from its
+> constructor with an error naming the properties. `buildContext` is what makes this
+> worth it: `Setup` can branch on the platform, architecture or configuration
+> currently being built.
+
+Target rules are different: their `UsedModules` / `Plugins` are read before any
+target `Setup` runs, so those stay in the constructor.
 
 Key members of `CppModuleRule`:
 - `BuildType TargetBuildType` — `StaticLibrary` \| `DynamicLibrary` (default) \| `Executable`.

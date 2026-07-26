@@ -35,7 +35,11 @@ public partial class CppBuilder
 	{
 		if (targetRule is CppModuleRule cppModuleRule)
 		{
-			cppModuleRule.Setup(this);
+			// Through the lifecycle, not Setup() directly: calling Setup() twice on the
+			// same rule would append its declarations twice (duplicate source dirs mean
+			// the same object file linked twice), and the rule needs the same
+			// Cleanup/re-declare treatment here as it gets on the build path.
+			cppModuleRule.SetupInternal(this);
 		}
 
 		if (!targetRule.IsSupport)

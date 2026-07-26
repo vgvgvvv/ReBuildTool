@@ -8,7 +8,7 @@ using ReBuildTool.ToolChain;
 
 public class ReflectModule : CppModuleRule
 {
-    public ReflectModule()
+    public override void Setup(ICppBuildContext buildContext)
     {
         TargetBuildType = BuildType.StaticLibrary;
     }

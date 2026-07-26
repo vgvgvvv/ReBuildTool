@@ -432,6 +432,16 @@ public class CMakeGenerator : ICMakeGenerator
 			Root.PreambleBuilder.AppendLine("endif()");
 		}
 
+		// Set every module up before reading any of them: a module's target is built from
+		// its own declarations plus the public ones of the modules it depends on, and a
+		// rule only declares when its Setup() has run.
+		var setupBuilder = new CppBuilder();
+		setupBuilder.SetSource(source);
+		foreach ((_, var rule) in source.ModuleRules)
+		{
+			setupBuilder.CompleteModuleInfo(rule);
+		}
+
 		foreach ((string? key, var rule) in source.ModuleRules)
 		{
 			var moduleDirectory = output.Combine (rule.TargetName);

@@ -7,7 +7,7 @@ using ReBuildTool.ToolChain;
 // module is actually linked (see MathCoreModule.h).
 public class MathCoreModule : CppModuleRule
 {
-    public MathCoreModule()
+    public override void Setup(ICppBuildContext buildContext)
     {
         TargetBuildType = BuildType.StaticLibrary;
         PublicDefines.Add("MATHCOREMODULE_BUILT_AS_STATIC");
