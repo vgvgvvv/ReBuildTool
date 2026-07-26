@@ -57,3 +57,12 @@ rbt --ProjectRoot . --Mode Build --Target MyGame
 - [What is ReBuildTool](Doc/Whats-ReBuildTool.md)
 - [How To Use](Doc/HowToUse.md) | [中文使用指南](Doc/HowToUse.zh-CN.md)
 - [Architecture](Doc/ARCH.md) | [架构说明](Doc/ARCH.zh-CN.md)
+- [Continuous Integration](Doc/CI.md) | [持续集成](Doc/CI.zh-CN.md)
+
+## Continuous Integration
+
+Every push and pull request builds the solution and runs the test suite on
+Windows, Linux and macOS — each leg driving that platform's real C/C++ toolchain
+against the `Sample/` projects — and publishes the self-contained binaries for
+all four target RIDs. See [Doc/CI.md](Doc/CI.md) for the job layout and for how
+to make the `CI` check required on `main`.
