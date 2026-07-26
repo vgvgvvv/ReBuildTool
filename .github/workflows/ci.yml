@@ -44,18 +44,10 @@ jobs:
           # deliberately instead of moving under us when GitHub rolls the label.
           - os: windows-2025
             name: Windows x64
-            # ResetHeaderTool RID + the Binary/<dir> layout RBT looks the tool up in
-            # (see HeaderToolPluginSupport.HeaderToolExePath).
-            rht_rid: win-x64
-            rht_dir: Win64
           - os: ubuntu-latest
             name: Linux x64
-            rht_rid: linux-x64
-            rht_dir: Linux
           - os: macos-latest
             name: macOS arm64
-            rht_rid: osx-arm64
-            rht_dir: MacArm64
 
     steps:
       - name: Checkout
@@ -104,29 +96,18 @@ jobs:
           ls -d /Applications/Xcode.app
           make --version | head -n 1
 
-      # RBT bootstraps ResetHeaderTool itself by cloning it over SSH and running
-      # its build script - neither works on a runner (no SSH key, and the
-      # upstream Scripts/BuildAll.sh does not exist). Provision the tool here
-      # instead: RBT skips its own bootstrap when the clone is already present
-      # (HeaderToolPluginSupport.BuildHeaderTool), so it just uses these binaries.
-      - name: Provision ResetHeaderTool
-        shell: bash
+      # The HeaderTool test lets rbt bootstrap ResetHeaderTool itself (clone +
+      # build, see HeaderToolPluginSupport.BuildHeaderTool). Nothing to provision -
+      # except that ResetHeaderTool reads the project info rbt writes to
+      # Intermedia/ from a path it spells "InterMedia/" (ReBuildTool/Project.cs).
+      # Same directory on Windows and macOS, a missing one on a case-sensitive
+      # filesystem, so give it the alias it expects. Drop this once the casing is
+      # fixed upstream.
+      - name: Alias InterMedia for ResetHeaderTool (Linux)
+        if: runner.os == 'Linux'
         run: |
-          set -euo pipefail
-          RHT_ROOT="Sample/HeaderToolTest/Intermedia/ResetHeaderTool"
-          RHT_INSTALL="$RHT_ROOT/ResetHeaderTool"
-          mkdir -p "$RHT_ROOT"
-          git clone --depth 1 https://github.com/vgvgvvv/ResetHeaderTool.git "$RHT_INSTALL"
-          dotnet publish "$RHT_INSTALL/ResetHeaderTool/ResetHeaderTool/ResetHeaderTool.csproj" \
-            -r ${{ matrix.rht_rid }} --self-contained -c Release \
-            -o "$RHT_INSTALL/Binary/${{ matrix.rht_dir }}/HeaderTool"
-          # ResetHeaderTool reads the project info rbt writes to Intermedia/ from a
-          # path it spells "InterMedia/" (ReBuildTool/Project.cs). Same directory on
-          # Windows and macOS, a missing one on a case-sensitive filesystem - so give
-          # it the alias it expects. Drop this once the casing is fixed upstream.
-          if [ "$RUNNER_OS" = "Linux" ]; then
-            ln -sfn Intermedia Sample/HeaderToolTest/InterMedia
-          fi
+          mkdir -p Sample/HeaderToolTest/Intermedia
+          ln -sfn Intermedia Sample/HeaderToolTest/InterMedia
 
       - name: Restore
         run: dotnet restore ReBuildTool/ReBuildTool.sln

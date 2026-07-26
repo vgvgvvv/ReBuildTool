@@ -37,12 +37,10 @@ after the whole matrix has passed against the current tip.
 
 - **Submodules** are checked out recursively (`Vendor/ReCSharpCommon`,
   `Vendor/UniToLua`); the solution does not build without them.
-- **ResetHeaderTool is provisioned by the workflow.** rbt normally bootstraps it
-  by cloning over SSH and running its build script, which cannot work on a runner
-  (no key, and the upstream repo has no `Scripts/BuildAll.sh`). The workflow
-  clones it over HTTPS into `Sample/HeaderToolTest/Intermedia/ResetHeaderTool` and
-  publishes the host binary itself; rbt then skips its own bootstrap because the
-  clone is already there.
+- **ResetHeaderTool bootstraps itself.** `TestHeaderToolCodegen` lets rbt do what
+  it does on a developer machine: clone `vgvgvvv/ResetHeaderTool` (public, over
+  HTTPS) into `Sample/HeaderToolTest/Intermedia/` and build it. Nothing is
+  pre-provisioned, so the bootstrap path is covered by CI too.
 - **`InterMedia` symlink on Linux.** ResetHeaderTool reads the project info rbt
   writes under `Intermedia/` from a path it spells `InterMedia/`. Same directory
   on Windows and macOS, missing on a case-sensitive filesystem, so the workflow
@@ -61,6 +59,5 @@ dotnet build   ReBuildTool/ReBuildTool.sln -c Release --no-restore
 dotnet test    ReBuildTool/ReBuildTool.sln -c Release --no-build
 ```
 
-`TestHeaderToolCodegen` additionally needs ResetHeaderTool. Either let rbt
-bootstrap it (requires SSH access to `vgvgvvv/ResetHeaderTool`, Windows only) or
-provision it the way the workflow does.
+`TestHeaderToolCodegen` clones and builds ResetHeaderTool on first run, so the
+first `dotnet test` needs network access and takes a couple of minutes longer.
