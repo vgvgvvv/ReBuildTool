@@ -20,11 +20,12 @@ public class PackageRestoreOptions
 /// </summary>
 public class RestoredPackage
 {
-	public RestoredPackage(string name, NPath root, PackageManifest? manifest)
+	public RestoredPackage(string name, NPath root, PackageManifest? manifest, NPath? overlay = null)
 	{
 		Name = name;
 		Root = root;
 		Manifest = manifest;
+		Overlay = overlay;
 	}
 
 	public string Name { get; }
@@ -33,6 +34,12 @@ public class RestoredPackage
 	public NPath Root { get; }
 
 	public PackageManifest? Manifest { get; }
+
+	/// <summary>
+	/// A <c>.module.cs</c> supplied by the consuming project for a package that ships none of its
+	/// own - an unmodified upstream source tree. Already resolved to an absolute path.
+	/// </summary>
+	public NPath? Overlay { get; }
 }
 
 public class PackageRestoreResult

@@ -243,21 +243,30 @@ under `Packages/`, and records exactly what it resolved to in
     "GreeterLib": { "git": "https://github.com/x/greeter.git", "tag": "v1.2.0" },
     // pinned to an exact commit
     "FooLib":     { "git": "https://github.com/x/foo.git", "commit": "a1b2c3d4..." },
+    // a release archive, verified against its hash
+    "zlib":       { "url": "https://.../zlib-1.3.tar.gz", "sha256": "…", "strip": 1 },
     // a directory on this machine, for local co-development
     "LocalLib":   { "path": "../LocalLib" }
   }
 }
 ```
 
-Each dependency sets **exactly one** source (`git` or `path`), and a git source
-must carry a `commit`, `tag` or `branch` — RBT resolves exact pins only and will
-never pick a version for you.
+Each dependency sets **exactly one** source (`git`, `url` or `path`), and a git
+source must carry a `commit`, `tag` or `branch` — RBT resolves exact pins only
+and will never pick a version for you.
 
-### What a package is
+`url` accepts `.zip`, `.tar.gz`/`.tgz` and `.tar`. `strip` drops that many leading
+path components, like `tar --strip-components`, because release tarballs almost
+always wrap everything in a single `name-version/` directory. A URL is not
+self-verifying the way a commit is — the bytes behind it can change without the
+manifest changing — so give it a `sha256`; a mismatch aborts the restore and
+prints both hashes.
 
-A package is just a directory containing `.module.cs` rule files. Once restored,
-its rules are globbed into the very same `CompileRules.dll` as the project's own,
-so a package module is depended on by name like any local one:
+### The three shapes a package can take
+
+**1. A source package** ships its own `.module.cs`. Nothing special happens: its
+rules are globbed into the very same `CompileRules.dll` as the project's own, so
+its modules are depended on by name like any local one.
 
 ```csharp
 Dependencies.Add("GeometryModule");
@@ -268,6 +277,46 @@ project's decision, so a `*.target.cs` inside a package is ignored. A package's
 name and its modules' names are independent; see
 [Sample/PackageConsumer](../Sample/PackageConsumer) and the package it consumes,
 [Sample/GeometryPackage](../Sample/GeometryPackage).
+
+**2. A prebuilt binary package** ships headers and libraries but no rule. It
+declares them in its own manifest and RBT synthesizes the module:
+
+```jsonc
+{
+  "name": "SomePrebuilt",
+  "binary": {
+    "module": "SomePrebuiltModule",          // defaults to the package name
+    "includes": ["include"],
+    "artifacts": [
+      { "platform": "Windows", "arch": "x64", "config": "Release",
+        "libraryDirectories": ["lib/win-x64"], "staticLibraries": ["some.lib"] },
+      { "platform": "Linux", "arch": "x64",
+        "libraryDirectories": ["lib/linux-x64"], "staticLibraries": ["libsome.a"] }
+    ]
+  }
+}
+```
+
+`platform` matches `--TargetPlatform`, `arch` matches `--TargetArch`, `config`
+matches `--BuildConfig`; **omit one to match every value**. The right artifact is
+picked while the build is being set up, not when the rule is generated, so
+switching target platform does not invalidate anything. If nothing matches, RBT
+warns rather than linking silently against nothing.
+
+**3. An unmodified upstream source tree** ships neither headers-and-libs nor a
+rule — just somebody else's `src/` layout. The consuming project supplies the
+rule with `overlay`:
+
+```jsonc
+"glfw": {
+  "git": "https://github.com/glfw/glfw.git", "tag": "3.4",
+  "overlay": "Overlays/glfw.module.cs"
+}
+```
+
+The overlay is copied into the package, so its relative `SourceDirectories`,
+`SourceFiles`, `ExcludeDirectories` and `ExcludeFiles` resolve against the
+upstream tree — which is exactly what those members exist for.
 
 ### Transitive dependencies
 

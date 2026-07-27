@@ -142,14 +142,32 @@ Parse()
   │    ├─ PackageResolver: depth-first walk
   │    │     fetch → read the package's own manifest → recurse
   │    │     exact pins only; conflicting pins and cycles are hard errors
-  │    ├─ IPackageFetcher per source      Git (clone/fetch/reset) | Path (used in place)
+  │    ├─ IPackageFetcher per source      Git (clone/fetch/reset)
+  │    │                                  HttpArchive (download, sha256, unpack)
+  │    │                                  Path (used in place)
   │    └─ write RBTPackage.lock.json      only when changed
-  └─ ParseRules()                         globs Source/ + each restored package root
+  ├─ PackageModuleBinder                  synthesizes a rule for a binary package;
+  │                                       installs a consumer-supplied overlay rule
+  └─ ParseRules()                         globs Source/ + package roots + generated rules
 ```
 
-Key types, all in `ReBuildTool.Service/PackageService/`: `PackageManifest`,
+Key types in `ReBuildTool.Service/PackageService/`: `PackageManifest`,
 `PackageLockFile`, `PackageResolver`, `PackageRestoreService`, and
-`Fetchers/IPackageFetcher`. The `--Offline` / `--ForceRestore` / `--UpdateLock`
+`Fetchers/IPackageFetcher`. The download / extract / SHA256 helpers the archive
+fetcher needs live in `ReBuildTool.Common/Misc/` (`Downloader`,
+`ArchiveExtractor`, `Hashing`) — the first networking in rbt that is not a
+shell-out to git.
+
+Above them, in `ReBuildTool.CppCompiler/Package/`: `PackageModuleBinder`
+generates a module rule for a prebuilt binary package and installs a
+consumer-supplied `overlay` rule, and `PackageArtifactSelector` picks the right
+prebuilt artifact at `Setup` time. Generating a rule file, rather than
+registering an `IModuleInterface` straight into `ModuleRules`, keeps everything
+downstream working unchanged: the `ModuleRulePaths` lookup in `InitAllRule`
+(which throws for a module it has no path for), the `SetupInternal` lifecycle,
+the `_API` macro codegen, all four IDE generators and the HeaderTool plugin.
+
+The `--Offline` / `--ForceRestore` / `--UpdateLock`
 flags live in `ReBuildTool.CppCompiler/Project/PackageArgs.cs` — deliberately in
 that assembly rather than beside the service, because `CmdParser` discovers
 argument groups by scanning `AppDomain.CurrentDomain.GetAssemblies()` and .NET
