@@ -246,14 +246,16 @@ under `Packages/`, and records exactly what it resolved to in
     // a release archive, verified against its hash
     "zlib":       { "url": "https://.../zlib-1.3.tar.gz", "sha256": "…", "strip": 1 },
     // a directory on this machine, for local co-development
-    "LocalLib":   { "path": "../LocalLib" }
+    "LocalLib":   { "path": "../LocalLib" },
+    // a vcpkg port
+    "fmt":        { "vcpkg": "fmt", "triplet": "x64-windows" }
   }
 }
 ```
 
-Each dependency sets **exactly one** source (`git`, `url` or `path`), and a git
-source must carry a `commit`, `tag` or `branch` — RBT resolves exact pins only
-and will never pick a version for you.
+Each dependency sets **exactly one** source (`git`, `url`, `path` or `vcpkg`),
+and a git source must carry a `commit`, `tag` or `branch` — RBT resolves exact
+pins only and will never pick a version for you.
 
 `url` accepts `.zip`, `.tar.gz`/`.tgz` and `.tar`. `strip` drops that many leading
 path components, like `tar --strip-components`, because release tarballs almost
@@ -347,6 +349,18 @@ actually changes, so it does not churn your working tree.
 | `--Offline` | Never access the network. Fails if the lock is not already satisfied on disk. |
 | `--ForceRestore` | Re-fetch every package even when the lock is already satisfied. |
 | `--UpdateLock` | Re-resolve moving pins (tags and branches) and rewrite the lock, like `cargo update`. |
+| `--PackageAdd <Name>=<spec>` | Write a dependency into `RBTPackage.json` and restore it in one go. |
+| `--PackageRemove <Name>` | Drop a dependency from `RBTPackage.json`. |
+
+`<spec>` is `git:<url>#<tag-or-commit>`, `path:<dir>`, `url:<href>#<sha256>` or
+`vcpkg:<port>#<triplet>`. A 40-character hex qualifier is recorded as a commit,
+anything else as a tag.
+
+```bash
+rbt --Mode Restore --PackageAdd "GreeterLib=git:https://github.com/x/greeter.git#v1.2.0"
+```
+
+Edits go through the raw JSON, so any field RBT does not model survives them.
 
 ### Where things land
 

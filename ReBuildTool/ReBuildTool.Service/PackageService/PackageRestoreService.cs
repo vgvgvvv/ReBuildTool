@@ -50,6 +50,7 @@ public class PackageRestoreService : IPackageService
 		yield return new GitPackageFetcher();
 		yield return new PathPackageFetcher();
 		yield return new HttpArchivePackageFetcher();
+		yield return new VcpkgPackageFetcher();
 	}
 
 	/// <summary>

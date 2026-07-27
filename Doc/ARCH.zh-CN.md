@@ -122,6 +122,7 @@ Parse()
   │    ├─ 按来源分派 IPackageFetcher      Git（clone/fetch/reset）
   │    │                                  HttpArchive（下载、sha256 校验、解压）
   │    │                                  Path（原地使用）
+  │    │                                  Vcpkg（install 后描述为二进制包）
   │    └─ 写出 RBTPackage.lock.json      仅在内容变化时
   ├─ PackageModuleBinder                  为二进制包合成规则；
   │                                       安装消费方提供的 overlay 规则

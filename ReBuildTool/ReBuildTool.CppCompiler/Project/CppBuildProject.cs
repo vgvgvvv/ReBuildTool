@@ -206,7 +206,19 @@ public:
 			return;
 		}
 
-		var result = service.Value.Restore(ProjectRoot, PackageArgs.Get().ToRestoreOptions());
+		var packageArgs = PackageArgs.Get();
+		// Manifest edits happen before resolution, so --PackageAdd both records the dependency and
+		// fetches it in one invocation.
+		if (packageArgs.PackageAdd.IsSet && !string.IsNullOrWhiteSpace(packageArgs.PackageAdd.Value))
+		{
+			PackageManifestEditor.Add(ProjectRoot, packageArgs.PackageAdd.Value);
+		}
+		if (packageArgs.PackageRemove.IsSet && !string.IsNullOrWhiteSpace(packageArgs.PackageRemove.Value))
+		{
+			PackageManifestEditor.Remove(ProjectRoot, packageArgs.PackageRemove.Value);
+		}
+
+		var result = service.Value.Restore(ProjectRoot, packageArgs.ToRestoreOptions());
 		RestoredPackages.Clear();
 		RestoredPackages.AddRange(result.Packages);
 

@@ -236,13 +236,15 @@ Target 规则不同：它的 `UsedModules` / `Plugins` 在任何 target `Setup` 
     // 发布压缩包，按哈希校验
     "zlib":       { "url": "https://.../zlib-1.3.tar.gz", "sha256": "…", "strip": 1 },
     // 本机上的目录，用于本地联调
-    "LocalLib":   { "path": "../LocalLib" }
+    "LocalLib":   { "path": "../LocalLib" },
+    // vcpkg port
+    "fmt":        { "vcpkg": "fmt", "triplet": "x64-windows" }
   }
 }
 ```
 
-每条依赖**有且只有一个**来源（`git`、`url` 或 `path`）；git 来源必须带上 `commit`、
-`tag` 或 `branch` —— RBT 只接受精确 pin，永远不会替你挑版本。
+每条依赖**有且只有一个**来源（`git`、`url`、`path` 或 `vcpkg`）；git 来源必须带上
+`commit`、`tag` 或 `branch` —— RBT 只接受精确 pin，永远不会替你挑版本。
 
 `url` 支持 `.zip`、`.tar.gz`/`.tgz` 和 `.tar`。`strip` 会丢掉指定数量的前导路径段，
 等同于 `tar --strip-components` —— 因为发布用的 tarball 基本都会把内容包在一层
@@ -327,6 +329,17 @@ commit 不会 —— 这样后续 restore 能复现同一棵树，且完全不�
 | `--Offline` | 绝不访问网络。若 lock 尚未在磁盘上被满足则直接失败。 |
 | `--ForceRestore` | 即使 lock 已满足也重新拉取所有包。 |
 | `--UpdateLock` | 重新解析会移动的 pin（tag / branch）并重写 lock，相当于 `cargo update`。 |
+| `--PackageAdd <Name>=<spec>` | 往 `RBTPackage.json` 写入一条依赖，并顺带 restore。 |
+| `--PackageRemove <Name>` | 从 `RBTPackage.json` 移除一条依赖。 |
+
+`<spec>` 的形式为 `git:<url>#<tag 或 commit>`、`path:<目录>`、`url:<href>#<sha256>`
+或 `vcpkg:<port>#<triplet>`。40 位十六进制的限定符会被记为 commit，其余记为 tag。
+
+```bash
+rbt --Mode Restore --PackageAdd "GreeterLib=git:https://github.com/x/greeter.git#v1.2.0"
+```
+
+编辑走的是原始 JSON，因此 RBT 不认识的字段都会被原样保留。
 
 ### 东西放在哪
 
