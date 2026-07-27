@@ -5,6 +5,7 @@ using ReBuildTool.Service.IDEService;
 using ReBuildTool.Service.IDEService.CMake;
 using ReBuildTool.Service.IDEService.VisualStudio;
 using ReBuildTool.Service.IDEService.VSCode;
+using ReBuildTool.Service.PackageService;
 
 namespace ReBuildTool.Service.Context;
 
@@ -21,6 +22,9 @@ public partial class ServiceContext
 		var cppDll = FindAssembly("ReBuildTool.CppCompiler");
 		RegisterType<ICppProject>(cppDll, "ReBuildTool.ToolChain.Project.CppBuildProject");
 		
+		// Lives in this assembly, so it is registered directly rather than looked up by type name.
+		RegisterService<IPackageService>(new PackageRestoreService());
+
 		var csharpDll = FindAssembly("ReBuildTool.CSharpCompiler");
 		RegisterType<IAssemblyCompileUnit>(csharpDll, "ReBuildTool.CSharpCompiler.SimpleAssemblyCompileUnit");
 		RegisterService<ICSharpCompilerService>(csharpDll, "ReBuildTool.CSharpCompiler.SimpleCompiler");

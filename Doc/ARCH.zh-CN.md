@@ -28,7 +28,7 @@ ReBuildTool 是一个用 **.NET 8** 编写的 C++ 构建系统，设计思路借
 | **ReBuildTool.CppCompiler** | 核心。解析 C++ 构建规则、解析 module/target，通过各平台工具链与 SDK 驱动 compile + link + archive，约 9k 行。 |
 | **ReBuildTool.CSharpCompiler** | 在运行时把用户的 `*.target.cs` / `*.module.cs` 规则文件编译为 `CompileRules.dll`（基于 Roslyn）。 |
 | **ReBuildTool.IDE** | 生成器，输出 Visual Studio（`.vcxproj`/`.sln`）与 CMake 工程。 |
-| **ReBuildTool.Ini** | `IIniProject` 实现——一套基于 INI 的备选 project 前端，与 C++ project 并行运行。 |
+| ~~**ReBuildTool.Ini**~~ | 已移除。`Program.cs` 不再创建 `IIniProject`；`ServiceContext.Config.cs::InitFromIni()` 仅作为返回 `false` 的桩保留。 |
 | **ReBuildTool.Common** | 共享工具：`Shell`（进程封装）、`NiceIO` 路径辅助等。 |
 | **ReBuildTool.Updater** | 独立的自更新可执行文件，与 `rbt` 一起分发。 |
 | **ReBuildTool.CppCompiler.Standalone** | 围绕 C++ 编译器的轻量独立宿主，用于隔离运行 / 测试。 |
@@ -101,6 +101,42 @@ CppCompiler   CSharpCompiler     IDE           Ini
 
 `NeedReBuildRuleAssembly()` 通过比较时间戳，仅在某个规则文件（或 `rbt` 本身）更新时才重新
 编译规则 DLL——并对加载失败设有次数上限的重试。
+
+### 4.1 包管理，以及它为什么必须跑在最前面
+
+`CppBuildProject.Parse()` 会在 `ParseRules()` **之前**调用 `RestorePackages()`。
+这个顺序是被上一节的机制强制的：`CompileRules.dll` 用 `Assembly.LoadFile` 只加载一次，
+.NET 无法卸载它，因此不存在「先编译规则、再发现依赖、再把依赖的规则加进同一个程序集」
+这条路。所有包的 `.module.cs` 都必须在 glob 之前就位于磁盘上。
+
+同样的约束决定了清单格式必须是 JSON 而不是 C#：解析传递依赖意味着反复读取「尚未下载的包」
+的清单，普通文件读取轻而易举，而「编译 + 加载」的循环做不到。
+
+```
+Parse()
+  ├─ RestorePackages()                    IPackageService（ReBuildTool.Service/PackageService）
+  │    ├─ 读取 <ProjectRoot>/RBTPackage.json      （不存在则立即返回，零开销）
+  │    ├─ PackageResolver：深度优先遍历
+  │    │     拉取 → 读取该包自己的清单 → 递归
+  │    │     只接受精确 pin；pin 冲突与依赖成环均为硬错误
+  │    ├─ 按来源分派 IPackageFetcher      Git（clone/fetch/reset）| Path（原地使用）
+  │    └─ 写出 RBTPackage.lock.json      仅在内容变化时
+  └─ ParseRules()                         glob Source/ 以及每个已 restore 的包根目录
+```
+
+主要类型都在 `ReBuildTool.Service/PackageService/` 下：`PackageManifest`、
+`PackageLockFile`、`PackageResolver`、`PackageRestoreService`，以及
+`Fetchers/IPackageFetcher`。`--Offline` / `--ForceRestore` / `--UpdateLock` 三个参数
+定义在 `ReBuildTool.CppCompiler/Project/PackageArgs.cs` —— 特意放在该程序集而不是服务旁边，
+因为 `CmdParser` 通过扫描 `AppDomain.CurrentDomain.GetAssemblies()` 发现参数组，
+而 .NET 的程序集是惰性加载的。
+
+包提供的是**模块和 extension，绝不是 target**：包里的 `*.target.cs` 会被忽略，
+构建什么始终由消费方项目决定。restore 出来的包放在 `<ProjectRoot>/Packages/`，
+不在 `Intermedia/` 下 —— 见 §8。
+
+`CppTargetRule.GitLibraries` 是这套机制被取代掉的前身。它已标记 `[Obsolete]` 且从未被读取；
+基于上面的顺序原因，它本来也不可能工作。
 
 ---
 
@@ -225,6 +261,20 @@ stdout/stderr 重定向到日志，并且由于并行编译共享一个非线程
 `ObjectCache` 镜像源码树，使增量时间戳检查（`IsCompileUnitUpToDate`）能确定性地把每个源文件
 映射到它的目标文件。
 
+restore 出来的包特意放在这棵树**之外**：
+
+```
+<ProjectRoot>/
+  RBTPackage.json                           依赖清单，手写
+  RBTPackage.lock.json                      解析到的 commit，工具生成，应当提交
+  Packages/<name>/                          物化后的包（git clone；path 依赖原地使用，
+                                            不会出现在这里）
+```
+
+`Packages/` 不放在 `Intermedia/` 下，是因为 `Clean()` 会清空该目录，而且只要 rbt 的二进制
+比上次构建新，`CleanIfNeed()` 就会自行触发一次 clean —— 那样每次 rebuild、每次 rbt 升级
+都要重新下载全部依赖。restore 会把 `/Packages/` 加进项目的 `.gitignore`。
+
 ---
 
 ## 9. 分发与更新
@@ -245,6 +295,7 @@ stdout/stderr 重定向到日志，并且由于并行编译共享一个非线程
 | CLI 分派 | `ReBuildTool/Program.cs` |
 | 服务装配 | `ReBuildTool.Service/Context/ServiceContext*.cs` |
 | 规则编译 + 加载 | `ReBuildTool.CppCompiler/Project/CppBuildProject.cs` |
+| 包 restore / 解析 | `ReBuildTool.Service/PackageService/`（从 `PackageResolver.cs` 读起） |
 | 编译调度 / 增量 | `ReBuildTool.CppCompiler/Common/CppBuilder.Process.Compile.cs` |
 | 新增工具链 | `ReBuildTool.CppCompiler/ToolChain/IToolChain.cs` + 已有的 `ToolChain/<Name>/` |
 | SDK 探测 | `ReBuildTool.CppCompiler/SDK/` |

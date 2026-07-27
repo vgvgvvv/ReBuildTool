@@ -7,6 +7,7 @@ using ReBuildTool.Service.Global;
 using ReBuildTool.Service.IDEService;
 using ReBuildTool.Service.IDEService.CMake;
 using ReBuildTool.Service.IDEService.VisualStudio;
+using ReBuildTool.Service.PackageService;
 using ResetCore.Common;
 using ResetCore.Common.Parser.Ini;
 
@@ -39,13 +40,24 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		var moduleFiles = SourceFolder.Files($"*{ICppProject.ModuleDefineExtension}", true).ToList();
 		var extraFiles = SourceFolder.Files($"*{ICppProject.ExtensionDefineExtension}", true).ToList();
 
+		// Only the project's own Source/ decides whether this is a fresh project needing a
+		// scaffold. A project that consumes packages but has not written its target yet still
+		// has to be initialized, so restored packages must not count here.
 		if (targetFiles.Count == 0)
 		{
 			CreateDefaultProject();
 			ParseRules();
 			return;
 		}
-		
+
+		// Packages contribute modules, never targets: what to build is the consuming project's
+		// decision, and a package's target would otherwise silently join the build.
+		foreach (var package in RestoredPackages)
+		{
+			moduleFiles.AddRange(package.Root.Files($"*{ICppProject.ModuleDefineExtension}", true));
+			extraFiles.AddRange(package.Root.Files($"*{ICppProject.ExtensionDefineExtension}", true));
+		}
+
 		foreach (var targetFile in targetFiles)
 		{
 			TargetRulePaths.Add(targetFile.FileNameWithoutExtension, targetFile);
@@ -54,7 +66,18 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 		foreach (var moduleFile in moduleFiles)
 		{
 			var fileName = moduleFile.FileName;
-			ModuleRulePaths.Add(fileName.Substring(0, fileName.Length - ICppProject.ModuleDefineExtension.Length), moduleFile);
+			var moduleName = fileName.Substring(0, fileName.Length - ICppProject.ModuleDefineExtension.Length);
+			// Two rule files claiming one module name cannot both win, and the rule assembly would
+			// fail to compile later with a duplicate-type error that names neither file. Packages
+			// make this collision far more likely, so say exactly which files clash.
+			if (ModuleRulePaths.TryGetValue(moduleName, out var existing))
+			{
+				throw new Exception(
+					$"module \"{moduleName}\" is defined twice:{Environment.NewLine}" +
+					$"  {existing}{Environment.NewLine}" +
+					$"  {moduleFile}");
+			}
+			ModuleRulePaths.Add(moduleName, moduleFile);
 		}
 		
 		var compiler = ServiceContext.Instance.FindService<ICSharpCompilerService>().Value;
@@ -160,7 +183,31 @@ public:
 
 	public void Parse()
 	{
+		RestorePackages();
 		ParseRules();
+	}
+
+	/// <summary>
+	/// Brings the declared packages onto disk. This has to happen before <see cref="ParseRules"/>:
+	/// a package's own <c>.module.cs</c> files are globbed into the same rule assembly as the
+	/// project's, and that assembly is loaded once with <c>Assembly.LoadFile</c> and can never be
+	/// unloaded - there is no second chance to add rules after the fact.
+	///
+	/// A project without an <c>RBTPackage.json</c> pays nothing: the service returns immediately
+	/// and no Packages/ directory or lock file is created.
+	/// </summary>
+	public void RestorePackages()
+	{
+		var service = ServiceContext.Instance.FindService<IPackageService>();
+		if (!service)
+		{
+			// Package support is optional; a context that did not register it still builds.
+			return;
+		}
+
+		var result = service.Value.Restore(ProjectRoot, PackageArgs.Get().ToRestoreOptions());
+		RestoredPackages.Clear();
+		RestoredPackages.AddRange(result.Packages);
 	}
 
 	public void Setup()
@@ -532,6 +579,9 @@ public:
 
 	private Dictionary<string, NPath> TargetRulePaths { get; } = new();
 	private Dictionary<string, NPath> ModuleRulePaths { get; } = new();
+
+	/// <summary>Packages materialized by the last <see cref="RestorePackages"/>, in dependency order.</summary>
+	private List<RestoredPackage> RestoredPackages { get; } = new();
 	
 	private IAssemblyCompileUnit BuildRuleCompileUnit { get; set; }
 	private NPath CppBuildRuleProjectOutput => IntermediaFolder.Combine("CppBuildRule/Project");

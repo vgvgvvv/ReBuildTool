@@ -8,7 +8,14 @@ public enum RunMode
 	Init,
 	Build,
 	Clean,
-	ReBuild
+	ReBuild,
+
+	/// <summary>
+	/// Fetch the packages declared in RBTPackage.json and write the lock, without building.
+	/// Every other mode restores implicitly, so this is for populating a checkout up front
+	/// (a CI cache-warm step, or an offline machine's last online moment).
+	/// </summary>
+	Restore
 }
 
 public interface ICommonCommandGroup : ICommandLineArgGroup

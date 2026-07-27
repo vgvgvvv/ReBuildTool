@@ -1,0 +1,6 @@
+{
+  "name": "PackageConsumer",
+  "dependencies": {
+    "GeometryPackage": { "path": "../GeometryPackage" }
+  }
+}

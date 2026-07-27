@@ -7,6 +7,7 @@ A C#-driven native build system in the spirit of Unreal Engine's UBT. Describe *
 - **C# rule files** — `.target.cs` / `.module.cs` describe your build graph; no separate DSL to learn
 - **Multi-toolchain** — MSVC (VS2017/2019/2022 auto-detect), Clang, GCC, Wasm
 - **Cross-platform** — Windows, Linux, macOS (x64 & arm64)
+- **Package management** — declare git/path dependencies in `RBTPackage.json`; RBT resolves them transitively, pins them in a lock file and folds their modules into the build
 - **IDE integration** — generates Visual Studio `.sln` and CMake projects
 - **Self-updating** — `rbt-updater` rebuilds RBT from its own repo
 
