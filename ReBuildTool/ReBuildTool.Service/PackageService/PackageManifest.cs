@@ -129,6 +129,12 @@ public class PackageDependency
 /// </summary>
 public class PackageBinarySpec
 {
+	/// <summary>
+	/// Name of the module rbt synthesizes for these artifacts, and therefore the name consumers
+	/// put in <c>Dependencies</c>. Defaults to the package name.
+	/// </summary>
+	[JsonProperty("module")] public string? Module { get; set; }
+
 	[JsonProperty("includes")] public List<string> Includes { get; set; } = new();
 
 	[JsonProperty("artifacts")] public List<PackageBinaryArtifact> Artifacts { get; set; } = new();

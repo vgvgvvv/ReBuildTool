@@ -233,19 +233,26 @@ Target 规则不同：它的 `UsedModules` / `Plugins` 在任何 target `Setup` 
     "GreeterLib": { "git": "https://github.com/x/greeter.git", "tag": "v1.2.0" },
     // 固定到精确 commit
     "FooLib":     { "git": "https://github.com/x/foo.git", "commit": "a1b2c3d4..." },
+    // 发布压缩包，按哈希校验
+    "zlib":       { "url": "https://.../zlib-1.3.tar.gz", "sha256": "…", "strip": 1 },
     // 本机上的目录，用于本地联调
     "LocalLib":   { "path": "../LocalLib" }
   }
 }
 ```
 
-每条依赖**有且只有一个**来源（`git` 或 `path`）；git 来源必须带上 `commit`、`tag`
-或 `branch` —— RBT 只接受精确 pin，永远不会替你挑版本。
+每条依赖**有且只有一个**来源（`git`、`url` 或 `path`）；git 来源必须带上 `commit`、
+`tag` 或 `branch` —— RBT 只接受精确 pin，永远不会替你挑版本。
 
-### 什么是一个包
+`url` 支持 `.zip`、`.tar.gz`/`.tgz` 和 `.tar`。`strip` 会丢掉指定数量的前导路径段，
+等同于 `tar --strip-components` —— 因为发布用的 tarball 基本都会把内容包在一层
+`name-version/` 目录里。URL 不像 commit 那样自带校验能力：它背后的字节可以在清单不变的
+情况下被换掉，所以请给它写上 `sha256`；不匹配会中止 restore 并打印两个哈希。
 
-包就是一个装着 `.module.cs` 规则文件的目录。restore 之后，它的规则会和项目自己的
-规则一起被 glob 进同一个 `CompileRules.dll`，因此包里的模块和本地模块一样按名字依赖：
+### 包的三种形态
+
+**1. 源码包**自带 `.module.cs`。没有任何特殊处理：它的规则会和项目自己的规则一起被
+glob 进同一个 `CompileRules.dll`，因此包里的模块和本地模块一样按名字依赖：
 
 ```csharp
 Dependencies.Add("GeometryModule");
@@ -255,6 +262,43 @@ Dependencies.Add("GeometryModule");
 `*.target.cs` 会被忽略。包名和它里面的模块名互相独立；参见
 [Sample/PackageConsumer](../Sample/PackageConsumer) 及它消费的
 [Sample/GeometryPackage](../Sample/GeometryPackage)。
+
+**2. 预编译二进制包**只带头文件和库，不带规则。它在自己的清单里声明产物，RBT 负责合成模块：
+
+```jsonc
+{
+  "name": "SomePrebuilt",
+  "binary": {
+    "module": "SomePrebuiltModule",          // 缺省为包名
+    "includes": ["include"],
+    "artifacts": [
+      { "platform": "Windows", "arch": "x64", "config": "Release",
+        "libraryDirectories": ["lib/win-x64"], "staticLibraries": ["some.lib"] },
+      { "platform": "Linux", "arch": "x64",
+        "libraryDirectories": ["lib/linux-x64"], "staticLibraries": ["libsome.a"] }
+    ]
+  }
+}
+```
+
+`platform` 对应 `--TargetPlatform`，`arch` 对应 `--TargetArch`，`config` 对应
+`--BuildConfig`；**省略某一项即表示匹配全部取值**。产物是在构建 setup 阶段选择的，
+不是在生成规则文件时选的，因此切换目标平台不会让任何缓存失效。若一条都匹配不上，
+RBT 会给出警告，而不是悄悄链接一个空的。
+
+**3. 第三方原样源码**既没有头文件+库，也没有规则 —— 就是别人的 `src/` 目录结构。
+由消费方项目通过 `overlay` 提供规则：
+
+```jsonc
+"glfw": {
+  "git": "https://github.com/glfw/glfw.git", "tag": "3.4",
+  "overlay": "Overlays/glfw.module.cs"
+}
+```
+
+overlay 会被复制进包内，这样它里面相对路径形式的 `SourceDirectories`、`SourceFiles`、
+`ExcludeDirectories`、`ExcludeFiles` 才能正确解析到上游代码树 —— 这几个成员本来就是
+为这类库准备的。
 
 ### 传递依赖
 

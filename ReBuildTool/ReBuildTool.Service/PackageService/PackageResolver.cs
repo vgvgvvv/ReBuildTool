@@ -1,4 +1,5 @@
 using NiceIO;
+using ReBuildTool.Service.CompileService;
 using ReBuildTool.Service.PackageService.Fetchers;
 using ResetCore.Common;
 
@@ -134,7 +135,11 @@ public class PackageResolver
 			Resolved[name] = new ResolvedEntry
 			{
 				PinKey = pinKey,
-				Package = new RestoredPackage(name, fetched.Root, manifest),
+				Package = new RestoredPackage(
+					name,
+					fetched.Root,
+					manifest,
+					ResolveOverlay(name, dependency, declaringDirectory)),
 				Locked = locked
 			};
 
@@ -156,5 +161,34 @@ public class PackageResolver
 		}
 
 		Log.Info($"[package] {name} -> {Resolved[name].Locked.Resolved}");
+	}
+
+	/// <summary>
+	/// Resolves a dependency's <c>overlay</c> against the manifest that declared it - the rule file
+	/// belongs to whoever is consuming the package, not to the package itself.
+	/// </summary>
+	private static NPath? ResolveOverlay(string name, PackageDependency dependency, NPath declaringDirectory)
+	{
+		if (string.IsNullOrWhiteSpace(dependency.Overlay))
+		{
+			return null;
+		}
+
+		var overlay = System.IO.Path.IsPathRooted(dependency.Overlay)
+			? dependency.Overlay.ToNPath()
+			: declaringDirectory.Combine(dependency.Overlay);
+		if (!overlay.FileExists())
+		{
+			throw new PackageException(
+				$"package \"{name}\" declares overlay \"{dependency.Overlay}\", which resolves to " +
+				$"\"{overlay}\" - that file does not exist.");
+		}
+		if (!overlay.FileName.EndsWith(ICppProject.ModuleDefineExtension, StringComparison.OrdinalIgnoreCase))
+		{
+			throw new PackageException(
+				$"package \"{name}\": overlay \"{dependency.Overlay}\" must be a " +
+				$"{ICppProject.ModuleDefineExtension} file.");
+		}
+		return overlay;
 	}
 }

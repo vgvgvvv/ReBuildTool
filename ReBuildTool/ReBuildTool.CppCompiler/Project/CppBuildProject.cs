@@ -8,6 +8,7 @@ using ReBuildTool.Service.IDEService;
 using ReBuildTool.Service.IDEService.CMake;
 using ReBuildTool.Service.IDEService.VisualStudio;
 using ReBuildTool.Service.PackageService;
+using ReBuildTool.ToolChain.Package;
 using ResetCore.Common;
 using ResetCore.Common.Parser.Ini;
 
@@ -52,10 +53,10 @@ public class CppBuildProject : ICppSourceProvider, ICppProject
 
 		// Packages contribute modules, never targets: what to build is the consuming project's
 		// decision, and a package's target would otherwise silently join the build.
-		foreach (var package in RestoredPackages)
+		foreach (var root in PackageRuleRoots)
 		{
-			moduleFiles.AddRange(package.Root.Files($"*{ICppProject.ModuleDefineExtension}", true));
-			extraFiles.AddRange(package.Root.Files($"*{ICppProject.ExtensionDefineExtension}", true));
+			moduleFiles.AddRange(root.Files($"*{ICppProject.ModuleDefineExtension}", true));
+			extraFiles.AddRange(root.Files($"*{ICppProject.ExtensionDefineExtension}", true));
 		}
 
 		foreach (var targetFile in targetFiles)
@@ -208,6 +209,18 @@ public:
 		var result = service.Value.Restore(ProjectRoot, PackageArgs.Get().ToRestoreOptions());
 		RestoredPackages.Clear();
 		RestoredPackages.AddRange(result.Packages);
+
+		PackageRuleRoots.Clear();
+		PackageRuleRoots.AddRange(RestoredPackages.Select(package => package.Root));
+		if (RestoredPackages.Count > 0)
+		{
+			// Packages that ship prebuilt binaries (or upstream sources with no rule of their own)
+			// have their module rule synthesized here, into extra directories that get globbed
+			// alongside the packages themselves.
+			PackageRuleRoots.AddRange(PackageModuleBinder.Bind(
+				ProjectRoot.Combine(PackageRestoreService.PackagesFolderName),
+				RestoredPackages));
+		}
 	}
 
 	public void Setup()
@@ -582,6 +595,12 @@ public:
 
 	/// <summary>Packages materialized by the last <see cref="RestorePackages"/>, in dependency order.</summary>
 	private List<RestoredPackage> RestoredPackages { get; } = new();
+
+	/// <summary>
+	/// Directories <see cref="ParseRules"/> globs for rule files on top of <c>Source/</c>: each
+	/// restored package, plus the generated-rule directories synthesized for binary packages.
+	/// </summary>
+	private List<NPath> PackageRuleRoots { get; } = new();
 	
 	private IAssemblyCompileUnit BuildRuleCompileUnit { get; set; }
 	private NPath CppBuildRuleProjectOutput => IntermediaFolder.Combine("CppBuildRule/Project");

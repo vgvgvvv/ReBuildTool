@@ -119,14 +119,27 @@ Parse()
   │    ├─ PackageResolver：深度优先遍历
   │    │     拉取 → 读取该包自己的清单 → 递归
   │    │     只接受精确 pin；pin 冲突与依赖成环均为硬错误
-  │    ├─ 按来源分派 IPackageFetcher      Git（clone/fetch/reset）| Path（原地使用）
+  │    ├─ 按来源分派 IPackageFetcher      Git（clone/fetch/reset）
+  │    │                                  HttpArchive（下载、sha256 校验、解压）
+  │    │                                  Path（原地使用）
   │    └─ 写出 RBTPackage.lock.json      仅在内容变化时
-  └─ ParseRules()                         glob Source/ 以及每个已 restore 的包根目录
+  ├─ PackageModuleBinder                  为二进制包合成规则；
+  │                                       安装消费方提供的 overlay 规则
+  └─ ParseRules()                         glob Source/ + 包根目录 + 生成的规则目录
 ```
 
-主要类型都在 `ReBuildTool.Service/PackageService/` 下：`PackageManifest`、
+主要类型在 `ReBuildTool.Service/PackageService/` 下：`PackageManifest`、
 `PackageLockFile`、`PackageResolver`、`PackageRestoreService`，以及
-`Fetchers/IPackageFetcher`。`--Offline` / `--ForceRestore` / `--UpdateLock` 三个参数
+`Fetchers/IPackageFetcher`。压缩包 fetcher 需要的下载 / 解压 / SHA256 三个辅助类放在
+`ReBuildTool.Common/Misc/`（`Downloader`、`ArchiveExtractor`、`Hashing`）——
+这是 rbt 里第一处不靠 shell 调用 git 的网络访问。
+
+在它们之上，`ReBuildTool.CppCompiler/Package/` 里：`PackageModuleBinder` 负责为预编译
+二进制包生成模块规则、并安装消费方提供的 `overlay` 规则；`PackageArtifactSelector` 负责在
+`Setup` 阶段挑选正确的预编译产物。选择「生成规则文件」而不是「直接把 `IModuleInterface`
+注册进 `ModuleRules`」，是为了让下游的一切原样继续工作：`InitAllRule` 里的
+`ModuleRulePaths` 查找（找不到路径就抛异常）、`SetupInternal` 生命周期、`_API` 宏代码生成、
+四种 IDE 生成器，以及 HeaderTool 插件。`--Offline` / `--ForceRestore` / `--UpdateLock` 三个参数
 定义在 `ReBuildTool.CppCompiler/Project/PackageArgs.cs` —— 特意放在该程序集而不是服务旁边，
 因为 `CmdParser` 通过扫描 `AppDomain.CurrentDomain.GetAssemblies()` 发现参数组，
 而 .NET 的程序集是惰性加载的。
