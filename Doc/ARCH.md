@@ -34,7 +34,7 @@ Arrows in the dependency graph point from a project to what it **depends on**.
 | **ReBuildTool.CppCompiler** | The core. Parses C++ build rules, resolves modules/targets, drives compile + link + archive through platform toolchains and SDKs. ~9k LOC. |
 | **ReBuildTool.CSharpCompiler** | Compiles the user's `*.target.cs` / `*.module.cs` rule files into a `CompileRules.dll` at runtime (Roslyn-based). |
 | **ReBuildTool.IDE** | Generators that emit Visual Studio (`.vcxproj`/`.sln`) and CMake projects. |
-| **ReBuildTool.Ini** | The `IIniProject` implementation — an alternate, INI-driven project front end run alongside the C++ project. |
+| ~~**ReBuildTool.Ini**~~ | Removed. `Program.cs` no longer creates an `IIniProject`; `ServiceContext.Config.cs::InitFromIni()` remains as a stub that returns `false`. |
 | **ReBuildTool.Common** | Shared utilities: `Shell` (process wrapper), `NiceIO` path helpers, misc. |
 | **ReBuildTool.Updater** | Standalone self-update executable, shipped next to `rbt`. |
 | **ReBuildTool.CppCompiler.Standalone** | Thin standalone host around the C++ compiler for isolated runs/testing. |
@@ -120,6 +120,49 @@ These rule files are **not** compiled ahead of time. At runtime
 `NeedReBuildRuleAssembly()` compares timestamps so the rule DLL is only
 recompiled when a rule file (or `rbt` itself) is newer — with a bounded retry
 counter for load failures.
+
+### 4.1 Package management and why it runs first
+
+`CppBuildProject.Parse()` calls `RestorePackages()` **before** `ParseRules()`.
+That ordering is forced by the step above: `CompileRules.dll` is loaded exactly
+once with `Assembly.LoadFile` and .NET cannot unload it, so there is no way to
+compile rules, discover a dependency, and then add its rules to the same
+assembly. Every package's `.module.cs` therefore has to be on disk before the
+glob runs.
+
+That constraint is also why the manifest is JSON rather than C#: resolving
+transitive dependencies means repeatedly reading the manifest of a package that
+has not been downloaded yet, which a plain file read does trivially and a
+compile-and-load cycle cannot.
+
+```
+Parse()
+  ├─ RestorePackages()                    IPackageService (ReBuildTool.Service/PackageService)
+  │    ├─ read <ProjectRoot>/RBTPackage.json        (absent → returns immediately, zero cost)
+  │    ├─ PackageResolver: depth-first walk
+  │    │     fetch → read the package's own manifest → recurse
+  │    │     exact pins only; conflicting pins and cycles are hard errors
+  │    ├─ IPackageFetcher per source      Git (clone/fetch/reset) | Path (used in place)
+  │    └─ write RBTPackage.lock.json      only when changed
+  └─ ParseRules()                         globs Source/ + each restored package root
+```
+
+Key types, all in `ReBuildTool.Service/PackageService/`: `PackageManifest`,
+`PackageLockFile`, `PackageResolver`, `PackageRestoreService`, and
+`Fetchers/IPackageFetcher`. The `--Offline` / `--ForceRestore` / `--UpdateLock`
+flags live in `ReBuildTool.CppCompiler/Project/PackageArgs.cs` — deliberately in
+that assembly rather than beside the service, because `CmdParser` discovers
+argument groups by scanning `AppDomain.CurrentDomain.GetAssemblies()` and .NET
+loads assemblies lazily.
+
+Packages contribute **modules and extensions, never targets**: a `*.target.cs`
+inside a package is ignored, so what gets built stays the consuming project's
+decision. Restored packages land in `<ProjectRoot>/Packages/`, not under
+`Intermedia/` — see §8.
+
+`CppTargetRule.GitLibraries` is the superseded predecessor of all this. It is
+marked `[Obsolete]` and never read; it could not have worked, for the ordering
+reason above.
 
 ---
 
@@ -264,6 +307,22 @@ platform / configuration / architecture, e.g.:
   <Platform>/<Config>/<Arch>/ObjectCache/   per-source .obj/.o mirror of Source/
 ```
 
+Restored packages deliberately sit **outside** that tree:
+
+```
+<ProjectRoot>/
+  RBTPackage.json                           dependency manifest, hand written
+  RBTPackage.lock.json                      resolved commits, generated, commit it
+  Packages/<name>/                          materialized package (git clone, or absent
+                                            for a path dependency, which is used in place)
+```
+
+`Packages/` is not under `Intermedia/` because `Clean()` empties that directory,
+and `CleanIfNeed()` triggers a clean on its own whenever the rbt binaries are
+newer than the last build — every dependency would be re-downloaded after each
+rebuild and each rbt update. Restore adds `/Packages/` to the project's
+`.gitignore`.
+
 The `ObjectCache` mirrors the source tree so incremental timestamp checks
 (`IsCompileUnitUpToDate`) can map each source file to its object deterministically.
 
@@ -289,6 +348,7 @@ The `ObjectCache` mirrors the source tree so incremental timestamp checks
 | CLI dispatch | `ReBuildTool/Program.cs` |
 | Service wiring | `ReBuildTool.Service/Context/ServiceContext*.cs` |
 | Rule compile + load | `ReBuildTool.CppCompiler/Project/CppBuildProject.cs` |
+| Package restore / resolution | `ReBuildTool.Service/PackageService/` (start at `PackageResolver.cs`) |
 | Compile scheduling / incremental | `ReBuildTool.CppCompiler/Common/CppBuilder.Process.Compile.cs` |
 | Adding a toolchain | `ReBuildTool.CppCompiler/ToolChain/IToolChain.cs` + an existing `ToolChain/<Name>/` |
 | SDK discovery | `ReBuildTool.CppCompiler/SDK/` |

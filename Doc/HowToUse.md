@@ -75,7 +75,7 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 | Flag | Meaning |
 |---|---|
 | `--ProjectRoot <path>` | Project root folder. Defaults to the current working directory. |
-| `--Mode <RunMode>` | **Required.** One of `Init`, `Build`, `Clean`, `ReBuild`. |
+| `--Mode <RunMode>` | **Required.** One of `Init`, `Build`, `Clean`, `ReBuild`, `Restore`. |
 | `--Target <name>` | Target to build. Defaults to the `ProjectRoot` folder name. |
 | `--IDEProjectType <type>` | Which project to generate in `Init` mode: `VisualStudio`, `CMake`, `VSCode`, or `CompileCommands`. Defaults to Visual Studio on Windows, CMake elsewhere. |
 | `--BoosterSource <path>` | Internal; set by the Booster scripts so RBT can regenerate them. Don't set manually. |
@@ -98,6 +98,11 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 - **Build** — compiles the given target.
 - **Clean** — removes build outputs.
 - **ReBuild** — `Clean` followed by `Build`.
+- **Restore** — fetches the packages declared in `RBTPackage.json` and writes
+  the lock file, then stops. Every other mode restores implicitly first, so this
+  is only needed to populate a checkout up front (warming a CI cache, or pulling
+  dependencies down while a machine still has network). See
+  [§5 Package management](#5-package-management).
 
 ### C++-specific flags
 
@@ -155,7 +160,11 @@ public class MyGameTarget : CppTargetRule
 
 Key members of `CppTargetRule`:
 - `List<string> UsedModules` — modules linked into this target (entry points).
-- `List<GitLibrary> GitLibraries` — external git dependencies (`Name`, `Url`, `Branch`).
+- ~~`List<GitLibrary> GitLibraries`~~ — **deprecated and never read.** Declare
+  dependencies in `RBTPackage.json` instead ([§5](#5-package-management)). It
+  could not work where it sits: the list hangs off a target rule, which only
+  exists once the rule assembly has been compiled, whereas a package's own
+  `.module.cs` has to be on disk *before* that compile.
 - `List<ITargetCompilePlugin> Plugins` — pre/post-compile hooks.
 - `virtual void Setup(ICppBuildContext)` / `virtual void PostBuild()` — override for custom logic.
 
@@ -219,7 +228,89 @@ builds and auto-generates `<Module>.internal.h/.cpp` import/export macro pairs.
           MyGameModule.cpp
 ```
 
-## 5. Programmatic / lifecycle API
+## 5. Package management
+
+A project declares its external dependencies in an `RBTPackage.json` next to
+`Source/`. Before every build RBT fetches whatever is missing, materializes it
+under `Packages/`, and records exactly what it resolved to in
+`RBTPackage.lock.json`.
+
+```jsonc
+{
+  "name": "MyGame",
+  "dependencies": {
+    // a git package, pinned to a tag
+    "GreeterLib": { "git": "https://github.com/x/greeter.git", "tag": "v1.2.0" },
+    // pinned to an exact commit
+    "FooLib":     { "git": "https://github.com/x/foo.git", "commit": "a1b2c3d4..." },
+    // a directory on this machine, for local co-development
+    "LocalLib":   { "path": "../LocalLib" }
+  }
+}
+```
+
+Each dependency sets **exactly one** source (`git` or `path`), and a git source
+must carry a `commit`, `tag` or `branch` — RBT resolves exact pins only and will
+never pick a version for you.
+
+### What a package is
+
+A package is just a directory containing `.module.cs` rule files. Once restored,
+its rules are globbed into the very same `CompileRules.dll` as the project's own,
+so a package module is depended on by name like any local one:
+
+```csharp
+Dependencies.Add("GeometryModule");
+```
+
+Packages contribute **modules, not targets** — what to build stays the consuming
+project's decision, so a `*.target.cs` inside a package is ignored. A package's
+name and its modules' names are independent; see
+[Sample/PackageConsumer](../Sample/PackageConsumer) and the package it consumes,
+[Sample/GeometryPackage](../Sample/GeometryPackage).
+
+### Transitive dependencies
+
+A package declares its own dependencies in its own `RBTPackage.json`, and RBT
+walks the graph: fetch a package, read the manifest it brought with it, fetch
+what that names, and so on. A package reachable twice is fetched once.
+
+Because there is no version solver, two packages pinning the same dependency
+differently is a **hard error**. Name the winner explicitly in the root manifest:
+
+```jsonc
+{ "overrides": { "FooLib": { "git": "https://github.com/x/foo.git", "tag": "v2.0" } } }
+```
+
+Dependency cycles are rejected with the whole chain named.
+
+### The lock file
+
+`RBTPackage.lock.json` records the commit each pin actually resolved to — a tag
+can be moved upstream, a commit cannot — so a later restore reproduces the same
+tree and needs no network. **Commit it.** It is rewritten only when its content
+actually changes, so it does not churn your working tree.
+
+### Flags
+
+| Flag | Meaning |
+|---|---|
+| `--Offline` | Never access the network. Fails if the lock is not already satisfied on disk. |
+| `--ForceRestore` | Re-fetch every package even when the lock is already satisfied. |
+| `--UpdateLock` | Re-resolve moving pins (tags and branches) and rewrite the lock, like `cargo update`. |
+
+### Where things land
+
+`Packages/` sits in the project root, **not** under `Intermedia/`: `Clean` wipes
+`Intermedia/`, and RBT cleans on its own whenever its binaries are newer than the
+last build, so dependencies would be re-downloaded after every rebuild and every
+RBT update. Restore adds `/Packages/` to the project's `.gitignore`; a `path`
+dependency is used where it lies and never copied.
+
+A project with no `RBTPackage.json` is completely unaffected — no `Packages/`
+directory, no lock file, no `.gitignore` edit.
+
+## 6. Programmatic / lifecycle API
 
 Every project exposes the same lifecycle, also used internally by `Program.cs`'s
 mode dispatch and by the NUnit tests in
@@ -233,7 +324,7 @@ project.Clean();
 project.ReBuild(targetName);
 ```
 
-## 6. Self-update
+## 7. Self-update
 
 `ReBuildTool.Updater` (invoked via `rbt-updater.sh` / `rbt-updater.bat`) pulls
 the latest `ReBuildTool` git repo into `$RBT_HOME` and rebuilds it from
@@ -244,7 +335,7 @@ repository:
 ./BuildScript/rbt-updater.sh
 ```
 
-## 7. Quick reference
+## 8. Quick reference
 
 ```bash
 # one-time setup in an empty project folder

@@ -12,6 +12,7 @@ public abstract class CppTargetRule : ITargetInterface, IPostBuildTarget
 
     public virtual Dictionary<string, string> CustomInfo { get; } = new();
 
+    [Obsolete("Declare dependencies in RBTPackage.json instead - this list is never read.")]
     public virtual List<GitLibrary> GitLibraries { get; } = new();
 
     public ICppBuildContext BuildContext { get; private set; }

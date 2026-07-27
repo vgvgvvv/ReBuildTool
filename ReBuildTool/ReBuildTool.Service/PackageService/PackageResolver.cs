@@ -1,0 +1,160 @@
+using NiceIO;
+using ReBuildTool.Service.PackageService.Fetchers;
+using ResetCore.Common;
+
+namespace ReBuildTool.Service.PackageService;
+
+/// <summary>
+/// Walks the dependency graph depth-first, fetching each package and then reading the manifest it
+/// brought with it to discover the next level.
+///
+/// rbt resolves <em>exact pins only</em>: there is no version-range solving, so two packages that
+/// pin the same dependency differently is a hard error the user resolves with an explicit
+/// <c>overrides</c> entry. That keeps the algorithm a plain graph walk with no backtracking, and
+/// keeps builds reproducible without a solver.
+/// </summary>
+public class PackageResolver
+{
+	public PackageResolver(NPath packagesRoot, IEnumerable<IPackageFetcher> fetchers)
+	{
+		PackagesRoot = packagesRoot;
+		Fetchers = fetchers.ToDictionary(fetcher => fetcher.Kind);
+	}
+
+	private NPath PackagesRoot { get; }
+
+	private Dictionary<PackageSourceKind, IPackageFetcher> Fetchers { get; }
+
+	private Dictionary<string, ResolvedEntry> Resolved { get; } = new();
+
+	/// <summary>The DFS path currently being expanded, used to name the members of a dependency cycle.</summary>
+	private List<string> Visiting { get; } = new();
+
+	private Dictionary<string, PackageDependency> Overrides { get; set; } = new();
+
+	private PackageLockFile? ExistingLock { get; set; }
+
+	private PackageRestoreOptions Options { get; set; } = new();
+
+	private class ResolvedEntry
+	{
+		public required string PinKey { get; init; }
+		public required RestoredPackage Package { get; init; }
+		public required LockedPackage Locked { get; init; }
+	}
+
+	public PackageRestoreResult Resolve(
+		PackageManifest rootManifest,
+		NPath rootDirectory,
+		PackageLockFile? existingLock,
+		PackageRestoreOptions options,
+		out PackageLockFile newLock)
+	{
+		Resolved.Clear();
+		Visiting.Clear();
+		Overrides = rootManifest.Overrides;
+		ExistingLock = existingLock;
+		Options = options;
+
+		foreach (var (name, dependency) in rootManifest.Dependencies)
+		{
+			ResolveOne(name, dependency, rootDirectory);
+		}
+
+		newLock = new PackageLockFile
+		{
+			Packages = Resolved.Values.Select(entry => entry.Locked).ToList()
+		};
+
+		// Deepest-first: a package is listed after everything it needed, which is the order a
+		// reader wants and costs nothing to produce here.
+		return new PackageRestoreResult(Resolved.Values.Select(entry => entry.Package).ToList());
+	}
+
+	private void ResolveOne(string name, PackageDependency declared, NPath declaringDirectory)
+	{
+		var dependency = Overrides.TryGetValue(name, out var overridden) ? overridden : declared;
+		var pinKey = dependency.PinKey(name);
+
+		// Cycle check first: a package is recorded in Resolved before its own dependencies are
+		// walked (so that a diamond is fetched once), which means an ancestor looks "already
+		// resolved" too. Only Visiting distinguishes "seen before" from "currently on the stack".
+		if (Visiting.Contains(name))
+		{
+			var cycle = string.Join(" -> ", Visiting.Concat(new[] { name }));
+			throw new PackageException($"dependency cycle between packages: {cycle}");
+		}
+
+		if (Resolved.TryGetValue(name, out var already))
+		{
+			if (already.PinKey != pinKey)
+			{
+				throw new PackageException(
+					$"conflicting pins for package \"{name}\":{Environment.NewLine}" +
+					$"  {already.PinKey}{Environment.NewLine}" +
+					$"  {pinKey}{Environment.NewLine}" +
+					$"rbt does not pick a version for you. Add an \"overrides\" entry for \"{name}\" " +
+					$"in the project's {PackageManifest.FileName} to say which one wins.");
+			}
+			return;
+		}
+
+		var kind = dependency.ResolveKind(name);
+		if (!Fetchers.TryGetValue(kind, out var fetcher))
+		{
+			throw new PackageException(
+				$"package \"{name}\" uses the {kind} source, which this build of rbt cannot fetch yet.");
+		}
+
+		Visiting.Add(name);
+		try
+		{
+			var request = new FetchRequest(
+				name,
+				dependency,
+				declaringDirectory,
+				PackagesRoot,
+				Options,
+				ExistingLock?.Find(name));
+			var fetched = fetcher.Fetch(request);
+			var manifest = PackageManifest.ReadFrom(fetched.Root);
+
+			// Recorded before descending so a cycle back to this package is caught by Visiting
+			// rather than by re-fetching.
+			var locked = new LockedPackage
+			{
+				Name = name,
+				Source = kind.ToString(),
+				Origin = dependency.Git ?? dependency.Url ?? dependency.Path ?? dependency.Vcpkg,
+				Resolved = fetched.Resolved,
+				Pin = pinKey,
+				Dependencies = manifest?.Dependencies.Keys.OrderBy(key => key, StringComparer.Ordinal).ToList()
+				               ?? new List<string>()
+			};
+			Resolved[name] = new ResolvedEntry
+			{
+				PinKey = pinKey,
+				Package = new RestoredPackage(name, fetched.Root, manifest),
+				Locked = locked
+			};
+
+			if (manifest != null)
+			{
+				foreach (var (childName, childDependency) in manifest.Dependencies)
+				{
+					if (childName == name)
+					{
+						throw new PackageException($"package \"{name}\" depends on itself.");
+					}
+					ResolveOne(childName, childDependency, fetched.Root);
+				}
+			}
+		}
+		finally
+		{
+			Visiting.Remove(name);
+		}
+
+		Log.Info($"[package] {name} -> {Resolved[name].Locked.Resolved}");
+	}
+}

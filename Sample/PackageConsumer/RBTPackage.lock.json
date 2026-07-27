@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "packages": [
+    {
+      "name": "GeometryPackage",
+      "source": "Path",
+      "origin": "../GeometryPackage",
+      "resolved": "../GeometryPackage",
+      "pin": "path:../GeometryPackage",
+      "dependencies": []
+    }
+  ]
+}

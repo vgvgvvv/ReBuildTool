@@ -73,7 +73,7 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 | 参数 | 含义 |
 |---|---|
 | `--ProjectRoot <path>` | 项目根目录，默认为当前工作目录。 |
-| `--Mode <RunMode>` | **必填。** 取值为 `Init`、`Build`、`Clean`、`ReBuild` 之一。 |
+| `--Mode <RunMode>` | **必填。** 取值为 `Init`、`Build`、`Clean`、`ReBuild`、`Restore` 之一。 |
 | `--Target <name>` | 要构建的目标名称，默认为 `ProjectRoot` 文件夹名。 |
 | `--IDEProjectType <type>` | `Init` 模式下生成哪种工程：`VisualStudio`、`CMake`、`VSCode` 或 `CompileCommands`。默认 Windows 为 Visual Studio，其他平台为 CMake。 |
 | `--BoosterSource <path>` | 内部参数，由 Booster 脚本设置，用于 RBT 重新生成这些脚本。请勿手动设置。 |
@@ -93,6 +93,10 @@ ReBuildTool --ProjectRoot <path> --Mode <RunMode> --Target <name> [options...]
 - **Build** —— 编译指定的目标。
 - **Clean** —— 清理构建产物。
 - **ReBuild** —— 先 `Clean` 再 `Build`。
+- **Restore** —— 拉取 `RBTPackage.json` 里声明的包并写出 lock 文件，然后停止。
+  其它模式都会先隐式执行一次 restore，所以这个模式只用于提前把依赖准备好
+  （预热 CI 缓存，或者趁机器还有网络时先把依赖拉下来）。
+  见 [§5 包管理](#5-包管理)。
 
 ### C++ 相关的专用参数
 
@@ -150,7 +154,10 @@ public class MyGameTarget : CppTargetRule
 
 `CppTargetRule` 的主要成员：
 - `List<string> UsedModules` —— 链接进该 Target 的模块（入口模块）。
-- `List<GitLibrary> GitLibraries` —— 外部 git 依赖库（`Name`、`Url`、`Branch`）。
+- ~~`List<GitLibrary> GitLibraries`~~ —— **已废弃，且从未被读取。** 请改用
+  `RBTPackage.json` 声明依赖（[§5](#5-包管理)）。它待在这个位置上就不可能工作：
+  该列表挂在 target rule 上，而 target rule 只有在规则程序集编译完成后才存在，
+  但包自带的 `.module.cs` 必须在那次编译**之前**就落到磁盘上。
 - `List<ITargetCompilePlugin> Plugins` —— 编译前/后钩子。
 - `virtual void Setup(ICppBuildContext)` / `virtual void PostBuild()` —— 可重写以实现自定义逻辑。
 
@@ -212,7 +219,82 @@ Target 规则不同：它的 `UsedModules` / `Plugins` 在任何 target `Setup` 
           MyGameModule.cpp
 ```
 
-## 5. 编程式 / 生命周期 API
+## 5. 包管理
+
+项目在 `Source/` 旁边的 `RBTPackage.json` 里声明外部依赖。每次构建前 RBT 会拉取
+缺失的包，把它们物化到 `Packages/` 下，并把实际解析到的结果记录进
+`RBTPackage.lock.json`。
+
+```jsonc
+{
+  "name": "MyGame",
+  "dependencies": {
+    // git 包，固定到某个 tag
+    "GreeterLib": { "git": "https://github.com/x/greeter.git", "tag": "v1.2.0" },
+    // 固定到精确 commit
+    "FooLib":     { "git": "https://github.com/x/foo.git", "commit": "a1b2c3d4..." },
+    // 本机上的目录，用于本地联调
+    "LocalLib":   { "path": "../LocalLib" }
+  }
+}
+```
+
+每条依赖**有且只有一个**来源（`git` 或 `path`）；git 来源必须带上 `commit`、`tag`
+或 `branch` —— RBT 只接受精确 pin，永远不会替你挑版本。
+
+### 什么是一个包
+
+包就是一个装着 `.module.cs` 规则文件的目录。restore 之后，它的规则会和项目自己的
+规则一起被 glob 进同一个 `CompileRules.dll`，因此包里的模块和本地模块一样按名字依赖：
+
+```csharp
+Dependencies.Add("GeometryModule");
+```
+
+包提供的是**模块，而不是 target** —— 构建什么始终由消费方项目决定，所以包里的
+`*.target.cs` 会被忽略。包名和它里面的模块名互相独立；参见
+[Sample/PackageConsumer](../Sample/PackageConsumer) 及它消费的
+[Sample/GeometryPackage](../Sample/GeometryPackage)。
+
+### 传递依赖
+
+包在自己的 `RBTPackage.json` 里声明自己的依赖，RBT 会沿着图往下走：拉一个包，读它
+带来的清单，再拉清单里点名的包，如此往复。被多条路径引用到的包只会拉取一次。
+
+因为没有版本求解器，两个包对同一个依赖给出不同的 pin 属于**硬错误**。请在根清单里
+显式指定哪个胜出：
+
+```jsonc
+{ "overrides": { "FooLib": { "git": "https://github.com/x/foo.git", "tag": "v2.0" } } }
+```
+
+依赖成环会被拒绝，并把整条链路打印出来。
+
+### lock 文件
+
+`RBTPackage.lock.json` 记录每个 pin 实际解析到的 commit —— tag 可能被上游移动，
+commit 不会 —— 这样后续 restore 能复现同一棵树，且完全不需要网络。**请提交它。**
+它只在内容真正变化时才重写，不会污染工作区。
+
+### 相关参数
+
+| 参数 | 作用 |
+|---|---|
+| `--Offline` | 绝不访问网络。若 lock 尚未在磁盘上被满足则直接失败。 |
+| `--ForceRestore` | 即使 lock 已满足也重新拉取所有包。 |
+| `--UpdateLock` | 重新解析会移动的 pin（tag / branch）并重写 lock，相当于 `cargo update`。 |
+
+### 东西放在哪
+
+`Packages/` 位于项目根目录，**不在** `Intermedia/` 下：`Clean` 会清空
+`Intermedia/`，而且只要 RBT 的二进制比上次构建新，它就会自行触发一次 clean ——
+放在那里意味着每次 rebuild、每次 RBT 升级都要重新下载全部依赖。restore 会把
+`/Packages/` 加进项目的 `.gitignore`；`path` 依赖在原地使用，不会被复制。
+
+没有 `RBTPackage.json` 的项目完全不受影响 —— 不会有 `Packages/` 目录、不会有 lock
+文件、也不会改动 `.gitignore`。
+
+## 6. 编程式 / 生命周期 API
 
 所有工程类型都暴露相同的生命周期方法，`Program.cs` 中的模式分发逻辑，以及
 [ReBuildTool.Test](../ReBuildTool/ReBuildTool.Test) 中的 NUnit 测试内部都用到了它：
@@ -225,7 +307,7 @@ project.Clean();
 project.ReBuild(targetName);
 ```
 
-## 6. 自我更新
+## 7. 自我更新
 
 `ReBuildTool.Updater`（通过 `rbt-updater.sh` / `rbt-updater.bat` 调用）会拉取
 `$RBT_HOME` 下最新的 `ReBuildTool` git 仓库，并从源码重新构建
@@ -235,7 +317,7 @@ project.ReBuild(targetName);
 ./BuildScript/rbt-updater.sh
 ```
 
-## 7. 快速参考
+## 8. 快速参考
 
 ```bash
 # 在空项目文件夹中做一次性初始化

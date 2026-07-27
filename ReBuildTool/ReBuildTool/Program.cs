@@ -59,6 +59,9 @@ try
             case RunMode.ReBuild:
                 project.ReBuild(targetName);
                 break;
+            case RunMode.Restore:
+                // Parse() already restored; this mode just stops before doing anything else.
+                break;
             default:
                 break;
         }

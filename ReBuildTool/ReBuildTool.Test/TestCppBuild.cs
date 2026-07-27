@@ -24,11 +24,14 @@ public class Tests
     }
 
     // One subdirectory under Sample/ per compile scenario: plain executable (BuildCpp),
-    // static-library linking, dynamic-library linking, and a three-level module chain.
+    // static-library linking, dynamic-library linking, a three-level module chain, and a project
+    // whose dependency arrives through package restore (PackageConsumer -> Sample/GeometryPackage,
+    // a path dependency so the case stays offline and deterministic on every CI host).
     [TestCase("BuildCpp")]
     [TestCase("StaticLibraryLink")]
     [TestCase("DynamicLibraryLink")]
     [TestCase("MultiModuleChain")]
+    [TestCase("PackageConsumer")]
     public void TestSampleProjectBuild(string sampleName)
     {
         CmdParser.Parse<Tests>();

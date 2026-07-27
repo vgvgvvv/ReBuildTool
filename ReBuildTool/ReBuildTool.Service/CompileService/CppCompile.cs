@@ -80,6 +80,12 @@ public interface ITargetCompilePlugin
 
 }
 
+/// <summary>
+/// Superseded by the RBTPackage.json / RBTPackage.lock.json package manifest.
+/// </summary>
+[Obsolete("Declare dependencies in RBTPackage.json instead. GitLibraries is never read: it hangs " +
+          "off a target rule, which only exists once the rule assembly has been compiled, whereas a " +
+          "package's own .module.cs has to be on disk before that compile. See Doc/HowToUse.md.")]
 public class GitLibrary
 {
 	public string Name { get; set; }
@@ -97,6 +103,7 @@ public interface ITargetInterface
 	
 	public Dictionary<string, string> CustomInfo { get; }
 	
+	[Obsolete("Declare dependencies in RBTPackage.json instead - this list is never read.")]
 	public List<GitLibrary> GitLibraries { get; }
 }
 
