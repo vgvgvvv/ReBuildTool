@@ -23,6 +23,12 @@ public class PackageArgs : CommandLineArgGroup<PackageArgs>
 	[CmdLine("re-resolve moving pins (tags and branches) and rewrite RBTPackage.lock.json")]
 	public CmdLineArg<bool> UpdateLock { get; set; } = CmdLineArg<bool>.FromObject(nameof(UpdateLock), false);
 
+	[CmdLine("add a dependency to RBTPackage.json, e.g. MyLib=git:https://github.com/x/y.git#v1.0")]
+	public CmdLineArg<string> PackageAdd { get; set; }
+
+	[CmdLine("remove a dependency from RBTPackage.json by name")]
+	public CmdLineArg<string> PackageRemove { get; set; }
+
 	public PackageRestoreOptions ToRestoreOptions()
 	{
 		return new PackageRestoreOptions

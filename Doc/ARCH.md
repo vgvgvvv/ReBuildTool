@@ -145,6 +145,7 @@ Parse()
   │    ├─ IPackageFetcher per source      Git (clone/fetch/reset)
   │    │                                  HttpArchive (download, sha256, unpack)
   │    │                                  Path (used in place)
+  │    │                                  Vcpkg (install, then describe as binary)
   │    └─ write RBTPackage.lock.json      only when changed
   ├─ PackageModuleBinder                  synthesizes a rule for a binary package;
   │                                       installs a consumer-supplied overlay rule

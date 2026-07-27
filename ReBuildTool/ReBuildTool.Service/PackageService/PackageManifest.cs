@@ -44,6 +44,12 @@ public class PackageDependency
 
 	[JsonProperty("vcpkg")] public string? Vcpkg { get; set; }
 
+	/// <summary>
+	/// vcpkg triplet, e.g. <c>x64-windows</c>. Defaults to the host's. Restore runs before any
+	/// build context exists, so a cross-compiled build has to name the triplet explicitly.
+	/// </summary>
+	[JsonProperty("triplet")] public string? Triplet { get; set; }
+
 	[JsonProperty("version")] public string? Version { get; set; }
 
 	/// <summary>
@@ -113,7 +119,7 @@ public class PackageDependency
 			PackageSourceKind.Git => $"git:{Git}@{GitRevision}",
 			PackageSourceKind.HttpArchive => $"url:{Url}@{Sha256}",
 			PackageSourceKind.Path => $"path:{Path}",
-			PackageSourceKind.Vcpkg => $"vcpkg:{Vcpkg}@{Version}",
+			PackageSourceKind.Vcpkg => $"vcpkg:{Vcpkg}@{Version}:{Triplet}",
 			_ => throw new PackageException($"unknown source kind for package \"{packageName}\"")
 		};
 	}
