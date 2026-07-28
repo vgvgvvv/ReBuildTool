@@ -184,7 +184,7 @@ public:
 
 	public void Parse()
 	{
-		RestorePackages();
+		Restore();
 		ParseRules();
 	}
 
@@ -197,7 +197,7 @@ public:
 	/// A project without an <c>RBTPackage.json</c> pays nothing: the service returns immediately
 	/// and no Packages/ directory or lock file is created.
 	/// </summary>
-	public void RestorePackages()
+	public void Restore()
 	{
 		var service = ServiceContext.Instance.FindService<IPackageService>();
 		if (!service)

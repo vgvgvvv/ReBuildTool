@@ -35,7 +35,7 @@ public class VcpkgPackageFetcher : IPackageFetcher
 	public FetchedPackage Fetch(FetchRequest request)
 	{
 		var port = request.Dependency.Vcpkg!;
-		var triplet = request.Dependency.Triplet ?? DefaultTriplet();
+		var triplet = request.Dependency.EffectiveTriplet;
 		var installed = VcpkgRoot.Combine("installed", triplet);
 		var destination = request.DefaultDestination;
 
@@ -176,10 +176,24 @@ public class VcpkgPackageFetcher : IPackageFetcher
 			return;
 		}
 
-		var bootstrap = VcpkgRoot.Combine(
-			PlatformHelper.IsWindows() ? "bootstrap-vcpkg.bat" : "bootstrap-vcpkg.sh");
 		Log.Info("[package] bootstrapping vcpkg");
-		ProcessRunner.RunOrThrow(bootstrap.ToString(), Array.Empty<string>(), VcpkgRoot, "bootstrapping vcpkg");
+		if (PlatformHelper.IsWindows())
+		{
+			// A .bat is not an executable image, so CreateProcess cannot launch it directly and
+			// ProcessRunner does not use ShellExecute. The interpreter has to be explicit.
+			ProcessRunner.RunOrThrow(
+				"cmd.exe",
+				new[] { "/c", VcpkgRoot.Combine("bootstrap-vcpkg.bat").ToString() },
+				VcpkgRoot,
+				"bootstrapping vcpkg");
+			return;
+		}
+
+		ProcessRunner.RunOrThrow(
+			VcpkgRoot.Combine("bootstrap-vcpkg.sh").ToString(),
+			Array.Empty<string>(),
+			VcpkgRoot,
+			"bootstrapping vcpkg");
 	}
 
 	private static NPath VcpkgExecutable()

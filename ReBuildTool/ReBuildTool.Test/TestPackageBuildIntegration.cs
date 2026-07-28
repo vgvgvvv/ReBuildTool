@@ -89,6 +89,36 @@ public class TestPackageBuildIntegration
     }
 
     /// <summary>
+    /// Restore has to do exactly that and stop. Routing it through Parse() would also compile and
+    /// load the rule assembly and - for a project that has no target yet - scaffold a default
+    /// Target/Module, which is not something a cache-warm or offline-prep run should write.
+    /// </summary>
+    [Test]
+    public void RestoreDoesNotCompileRulesOrScaffoldAProject()
+    {
+        var package = WorkDirectory.Combine("VendorPack").EnsureDirectoryExists();
+        PackageManifest.PathIn(package).WriteAllText("{ \"name\": \"VendorPack\" }");
+
+        // Deliberately no Source/ at all: this is the state that would get scaffolded.
+        var project = WorkDirectory.Combine("Bare").EnsureDirectoryExists();
+        PackageManifest.PathIn(project).WriteAllText(
+            "{ \"dependencies\": { \"VendorPack\": { \"path\": \"../VendorPack\" } } }");
+
+        CmdParser.Parse<TestPackageBuildIntegration>();
+        ServiceContext.Instance.Init();
+        var cppProject = ServiceContext.Instance.Create<ICppProject>(project).Value;
+        cppProject.Restore();
+
+        // The packages are there and the lock was written...
+        Assert.That(PackageLockFile.ReadFrom(project), Is.Not.Null);
+        // ...and nothing else was.
+        Assert.That(project.Combine("Source").DirectoryExists(), Is.False,
+            "Restore must not scaffold a default project");
+        Assert.That(project.Combine("Intermedia").DirectoryExists(), Is.False,
+            "Restore must not compile the rule assembly");
+    }
+
+    /// <summary>
     /// A header-only prebuilt package: no rule of its own, so rbt synthesizes one, and the include
     /// path it declares has to reach the consuming module's compile line for this to link.
     /// </summary>

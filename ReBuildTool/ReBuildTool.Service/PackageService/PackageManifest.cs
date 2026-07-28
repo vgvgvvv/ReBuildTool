@@ -109,6 +109,16 @@ public class PackageDependency
 	public string? GitRevision => Commit ?? Tag ?? Branch;
 
 	/// <summary>
+	/// The triplet a vcpkg dependency actually resolves to. An omitted <see cref="Triplet"/> means
+	/// the host's, so the default has to be applied here rather than only at fetch time - otherwise
+	/// <c>{ "vcpkg": "fmt" }</c> and <c>{ "vcpkg": "fmt", "triplet": "&lt;host&gt;" }</c> would look
+	/// like conflicting pins on the very machine where they are identical, and the lock would record
+	/// a pin that does not say which triplet was built.
+	/// </summary>
+	public string EffectiveTriplet =>
+		string.IsNullOrWhiteSpace(Triplet) ? Fetchers.VcpkgPackageFetcher.DefaultTriplet() : Triplet;
+
+	/// <summary>
 	/// Identity of this pin, used to detect conflicting declarations of the same package name
 	/// coming from different manifests. Two dependencies with the same key are interchangeable.
 	/// </summary>
@@ -119,7 +129,7 @@ public class PackageDependency
 			PackageSourceKind.Git => $"git:{Git}@{GitRevision}",
 			PackageSourceKind.HttpArchive => $"url:{Url}@{Sha256}",
 			PackageSourceKind.Path => $"path:{Path}",
-			PackageSourceKind.Vcpkg => $"vcpkg:{Vcpkg}@{Version}:{Triplet}",
+			PackageSourceKind.Vcpkg => $"vcpkg:{Vcpkg}@{Version}:{EffectiveTriplet}",
 			_ => throw new PackageException($"unknown source kind for package \"{packageName}\"")
 		};
 	}
