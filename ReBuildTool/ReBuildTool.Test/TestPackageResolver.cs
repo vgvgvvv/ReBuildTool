@@ -154,6 +154,42 @@ public class TestPackageResolver
         Assert.That(shared.Root.FileName, Is.EqualTo("CopyOne"));
     }
 
+    /// <summary>
+    /// A package fetched from a remote declares its own dependencies, so the names reaching this
+    /// walk are no more trustworthy than the manifest they came from - and every one of them
+    /// becomes a directory under Packages/.
+    /// </summary>
+    [TestCase("../outside")]
+    [TestCase("..")]
+    [TestCase("nested/name")]
+    [TestCase("back\\slash")]
+    public void APackageNameThatEscapesThePackagesDirectoryIsRejected(string name)
+    {
+        WorkDirectory.Combine("outside").EnsureDirectoryExists();
+        var root = PackageManifest.Parse(
+            $"{{ \"dependencies\": {{ \"{name.Replace("\\", "\\\\")}\": {{ \"path\": \"../outside\" }} }} }}",
+            WorkDirectory.Combine("root", PackageManifest.FileName));
+        var rootDirectory = WorkDirectory.Combine("root").EnsureDirectoryExists();
+
+        var exception = Assert.Throws<PackageException>(() => Resolve(root, rootDirectory));
+
+        Assert.That(exception!.Message, Does.Contain("not a usable package name"));
+    }
+
+    [TestCase("Fine")]
+    [TestCase("with.dots")]
+    [TestCase("with-dash_and_underscore")]
+    [TestCase("0leading-digit")]
+    public void OrdinaryPackageNamesAreAccepted(string name)
+    {
+        WritePackage(name);
+        var rootDirectory = WorkDirectory.Combine("root").EnsureDirectoryExists();
+
+        var result = Resolve(RootDependingOn(name), rootDirectory);
+
+        Assert.That(result.Packages.Single().Name, Is.EqualTo(name));
+    }
+
     [Test]
     public void MissingPathDependencyNamesWhatItLookedFor()
     {

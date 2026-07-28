@@ -233,6 +233,41 @@ public class TestPackageArchive
         Assert.That(project.Combine("Packages", "Geo").DirectoryExists(), Is.False);
     }
 
+    /// <summary>
+    /// Without a sha256 there is nothing to compare the unpacked tree against, so the cache hit has
+    /// to be keyed on the URL. Otherwise editing the manifest's url leaves the previous archive on
+    /// disk while the lock records the new origin - stale content under a fresh-looking pin.
+    /// </summary>
+    [Test]
+    public void ChangingTheUrlWithNoChecksumStillReplacesTheContent()
+    {
+        var first = CreateZip("first.zip", "pkg-1.0", ("first.txt", "1"));
+        var second = CreateZip("second.zip", "pkg-2.0", ("second.txt", "2"));
+
+        NPath project;
+        using (var server = new LocalServer(first))
+        {
+            project = CreateProject(
+                "{ \"dependencies\": { \"Geo\": { " +
+                $"\"url\": \"{server.Url}\", \"strip\": 1 }} }} }}");
+            new PackageRestoreService().Restore(project, new PackageRestoreOptions());
+        }
+        Assert.That(project.Combine("Packages", "Geo", "first.txt").FileExists(), Is.True);
+
+        using (var server = new LocalServer(second))
+        {
+            PackageManifest.PathIn(project).WriteAllText(
+                "{ \"dependencies\": { \"Geo\": { " +
+                $"\"url\": \"{server.Url}\", \"strip\": 1 }} }} }}");
+            new PackageRestoreService().Restore(project, new PackageRestoreOptions());
+        }
+
+        Assert.That(project.Combine("Packages", "Geo", "second.txt").FileExists(), Is.True,
+            "the new archive should have been fetched and unpacked");
+        Assert.That(project.Combine("Packages", "Geo", "first.txt").FileExists(), Is.False,
+            "the previous archive's content should be gone");
+    }
+
     [Test]
     public void ASecondRestoreOfAnArchivePackageNeedsNoNetwork()
     {

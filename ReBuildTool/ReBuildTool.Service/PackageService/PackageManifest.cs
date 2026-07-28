@@ -236,6 +236,56 @@ public class PackageManifest
 	}
 }
 
+/// <summary>
+/// Names that come out of a manifest are attacker-controlled in the same sense the manifest is: a
+/// package fetched from a remote declares its own transitive dependencies, and rbt turns those
+/// names into filesystem paths and, for a binary package, into generated C# that the build then
+/// compiles and runs. Both uses have to be gated.
+/// </summary>
+public static class PackageNames
+{
+	// Deliberately narrow. Anything outside this set has no legitimate use in a package name and
+	// is exactly what a traversal ("../..") or an injection would need.
+	private static readonly System.Text.RegularExpressions.Regex PackageNamePattern =
+		new("^[A-Za-z0-9][A-Za-z0-9._-]*$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+	// A generated rule declares "public class <name>", so the name has to be a plain C# identifier.
+	private static readonly System.Text.RegularExpressions.Regex IdentifierPattern =
+		new("^[A-Za-z_][A-Za-z0-9_]*$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+	/// <summary>
+	/// Validates a package name before it is combined into a path. Rejects separators, "." and
+	/// ".." - a dependency keyed "../outside" would otherwise place the package next to
+	/// <c>Packages/</c> rather than inside it.
+	/// </summary>
+	public static string ValidatePackageName(string name)
+	{
+		if (string.IsNullOrWhiteSpace(name) || !PackageNamePattern.IsMatch(name))
+		{
+			throw new PackageException(
+				$"\"{name}\" is not a usable package name. Names may contain letters, digits, " +
+				$"'.', '_' and '-', and must start with a letter or digit.");
+		}
+		return name;
+	}
+
+	/// <summary>
+	/// Validates a name that will be emitted into generated C# source. Beyond path safety, a name
+	/// carrying punctuation could close the class declaration and append arbitrary code to the
+	/// rule assembly - which rbt compiles and executes as part of the build.
+	/// </summary>
+	public static string ValidateModuleName(string name, string packageName)
+	{
+		if (string.IsNullOrWhiteSpace(name) || !IdentifierPattern.IsMatch(name))
+		{
+			throw new PackageException(
+				$"package \"{packageName}\" declares the module name \"{name}\", which is not a valid " +
+				$"C# identifier. rbt generates a rule class from it, so it must be a plain identifier.");
+		}
+		return name;
+	}
+}
+
 public class PackageException : Exception
 {
 	public PackageException(string message) : base(message)

@@ -15,7 +15,10 @@ namespace ReBuildTool.Service.PackageService.Fetchers;
 /// </summary>
 public class HttpArchivePackageFetcher : IPackageFetcher
 {
-	/// <summary>Records which archive the extracted directory came from. Kept beside the package, not inside it.</summary>
+	/// <summary>
+	/// Records which archive the extracted directory came from - the hash on the first line, the
+	/// URL it came from on the second. Kept beside the package, not inside it.
+	/// </summary>
 	private const string StampFileName = ".rbt-archive-sha256";
 
 	public PackageSourceKind Kind => PackageSourceKind.HttpArchive;
@@ -24,17 +27,23 @@ public class HttpArchivePackageFetcher : IPackageFetcher
 	{
 		var url = request.Dependency.Url!;
 		var destination = request.DefaultDestination;
-		var stamp = request.PackagesRoot.Combine($"{request.Name}{StampFileName}");
+		var stamp = request.SidecarFile(StampFileName);
 		var expected = request.Dependency.Sha256;
 
 		// Already unpacked from the very archive the manifest asks for: nothing to do, and no
 		// reason to touch the network.
 		if (!request.Options.Force && destination.DirectoryExists() && stamp.FileExists())
 		{
-			var current = stamp.ReadAllText().Trim();
-			if (expected == null || Hashing.Matches(expected, current))
+			var (stampedHash, stampedUrl) = ReadStamp(stamp);
+			// With a sha256 the hash decides. Without one there is nothing to compare the content
+			// against, so the URL has to: otherwise editing the manifest's url would leave the old
+			// tree on disk while the lock recorded the new origin.
+			var satisfied = expected != null
+				? Hashing.Matches(expected, stampedHash)
+				: stampedUrl == url;
+			if (satisfied)
 			{
-                return new FetchedPackage(destination, current);
+				return new FetchedPackage(destination, stampedHash);
 			}
 		}
 
@@ -87,7 +96,20 @@ public class HttpArchivePackageFetcher : IPackageFetcher
 			download.DeleteIfExists();
 		}
 
-		stamp.WriteAllText(actual);
+		stamp.WriteAllText($"{actual}{Environment.NewLine}{url}{Environment.NewLine}");
 		return new FetchedPackage(destination, actual);
+	}
+
+	/// <summary>
+	/// Reads the hash and origin URL back out of the stamp. A stamp written by an older rbt has
+	/// only the hash; it reports an empty URL, which simply makes the no-sha256 fast path miss and
+	/// re-download once.
+	/// </summary>
+	private static (string Hash, string Url) ReadStamp(NPath stamp)
+	{
+		var lines = stamp.ReadAllLines();
+		return (
+			lines.Length > 0 ? lines[0].Trim() : string.Empty,
+			lines.Length > 1 ? lines[1].Trim() : string.Empty);
 	}
 }

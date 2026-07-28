@@ -104,6 +104,29 @@ public class TestPackageBinaryModule
         Assert.That(File.GetLastWriteTimeUtc(generated), Is.EqualTo(writtenAt));
     }
 
+    /// <summary>
+    /// The module name is interpolated into a directory name and into the "public class &lt;name&gt;"
+    /// of a rule that rbt compiles and executes. A remote package's manifest is not the consuming
+    /// project's to trust, so anything but a plain identifier has to be refused - escaping it would
+    /// still leave a package able to name a class it has no business naming.
+    /// </summary>
+    [TestCase("../escape")]
+    [TestCase("Evil { } public class Injected : CppModuleRule { //")]
+    [TestCase("has space")]
+    [TestCase("1StartsWithDigit")]
+    public void AModuleNameThatIsNotAPlainIdentifierIsRejected(string moduleName)
+    {
+        var package = BinaryPackage("PrebuiltPack",
+            $"{{ \"module\": \"{moduleName.Replace("\\", "\\\\").Replace("\"", "\\\"")}\", \"artifacts\": [] }}");
+        var packagesRoot = WorkDirectory.Combine("Packages");
+
+        var exception = Assert.Throws<PackageException>(
+            () => PackageModuleBinder.Bind(packagesRoot, new[] { package }));
+
+        Assert.That(exception!.Message, Does.Contain("PrebuiltPack"));
+        Assert.That(exception.Message, Does.Contain("identifier"));
+    }
+
     [Test]
     public void AnOverlayIsCopiedIntoThePackageItDescribes()
     {
