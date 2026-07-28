@@ -35,7 +35,39 @@ public class FetchRequest
 	/// <summary>The matching lock entry, when the project already has one.</summary>
 	public LockedPackage? Locked { get; }
 
-	public NPath DefaultDestination => PackagesRoot.Combine(Name);
+	/// <summary>
+	/// Where a fetcher materializes this package. The name is validated by the resolver before the
+	/// request is built; it is re-checked here so that any future caller constructing a request
+	/// directly cannot land a package outside <see cref="PackagesRoot"/>.
+	/// </summary>
+	public NPath DefaultDestination
+	{
+		get
+		{
+			var destination = PackagesRoot.Combine(PackageNames.ValidatePackageName(Name));
+			if (!destination.IsChildOf(PackagesRoot))
+			{
+				throw new PackageException(
+					$"package \"{Name}\" would be placed at \"{destination}\", outside \"{PackagesRoot}\".");
+			}
+			return destination;
+		}
+	}
+
+	/// <summary>
+	/// Bookkeeping file a fetcher may keep for this package. Lives beside the package rather than
+	/// inside it, and is subject to the same containment rule as <see cref="DefaultDestination"/>.
+	/// </summary>
+	public NPath SidecarFile(string suffix)
+	{
+		var sidecar = PackagesRoot.Combine($"{PackageNames.ValidatePackageName(Name)}{suffix}");
+		if (!sidecar.IsChildOf(PackagesRoot))
+		{
+			throw new PackageException(
+				$"package \"{Name}\" would write \"{sidecar}\", outside \"{PackagesRoot}\".");
+		}
+		return sidecar;
+	}
 }
 
 public class FetchedPackage

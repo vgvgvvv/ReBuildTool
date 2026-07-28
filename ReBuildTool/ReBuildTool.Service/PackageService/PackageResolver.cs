@@ -74,6 +74,11 @@ public class PackageResolver
 
 	private void ResolveOne(string name, PackageDependency declared, NPath declaringDirectory)
 	{
+		// Checked here rather than in each fetcher: a package fetched from a remote declares its
+		// own dependencies, so every name reaching this walk - not just the ones in the project's
+		// own manifest - becomes a directory under Packages/.
+		PackageNames.ValidatePackageName(name);
+
 		var dependency = Overrides.TryGetValue(name, out var overridden) ? overridden : declared;
 		var pinKey = dependency.PinKey(name);
 

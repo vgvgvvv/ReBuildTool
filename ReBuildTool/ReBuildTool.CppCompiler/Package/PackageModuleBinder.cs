@@ -53,7 +53,13 @@ public static class PackageModuleBinder
 			return null;
 		}
 
-		var moduleName = string.IsNullOrWhiteSpace(binary.Module) ? package.Name : binary.Module!;
+		// The name comes out of the package's own manifest, which for a remote package is not the
+		// consuming project's to trust. It is interpolated into a directory name and into the
+		// "public class <name>" of a generated rule that rbt then compiles and runs, so anything
+		// other than a plain identifier is rejected rather than escaped.
+		var moduleName = PackageNames.ValidateModuleName(
+			string.IsNullOrWhiteSpace(binary.Module) ? package.Name : binary.Module!,
+			package.Name);
 		var moduleDirectory = packagesRoot.Combine(GeneratedFolderName, moduleName);
 		// The framework unconditionally registers a module's Public/ and Private/ directories; the
 		// source globbing warns once per missing path, so create them rather than emit noise.
