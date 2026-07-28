@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### IDE / Project Generation
-- **VSCode project generation** — new `VSCode` IDE project type alongside Visual Studio and CMake.
+- **VSCode project generation** — new `VSCode` IDE project type alongside Visual Studio and CMake, with generated tasks that forward `--TargetPlatform` and cross-compile flags, and modules set up before being read.
 - **`compile_commands.json`** — emitted for IDE code highlighting and go-to-definition jump.
 - **CMake build routed through `rbt`** — CMake build now drives `rbt` under the hood while keeping native IDE IntelliSense, mapping the IDE's `$<CONFIG>` selection to `rbt --BuildConfig`.
 - **Target platform propagation** — VS-generated NMake commands now forward `--TargetPlatform`; ARM platform names are correctly mapped to `rbt --TargetArch` CLI tokens.
@@ -29,18 +29,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe concurrent logging** — logger is now concurrency-safe; `Clean` preserves the `Logs/` directory.
 - **Build log file** — build logs are also written to `Intermedia/Logs/Build.log`.
 
+#### Header Tool / Bootstrap
+- **Unattended `ResetHeaderTool` bootstrap** — `rbt` can bootstrap `ResetHeaderTool` on its own; on Windows the bootstrap builds only the tool itself.
+
+#### CI
+- **Per-commit CI** — the project is now built and tested on Windows, Linux, and macOS for every commit.
+
 #### Samples
 - New sample projects for static/dynamic libraries and multi-module dependency chains.
 
 ### Changed
 
 - **Removed legacy INI project configuration** — the `.module.ini` / `.target.ini` configuration system has been removed in favor of C# rule files; orphaned INI files were cleaned up from Sample projects, and README / HowToUse docs updated accordingly.
+- **Module rules declared in `Setup`** — module rules are now declared inside `Setup` instead of captured via a state snapshot.
+- **Argument quoting centralized** — shell argument quoting moved out of the toolchains into per-consumer escape layers, with platform-correct quoting and per-format escaping.
 
 ### Fixed
 
 - Distinguish C vs C++ compiler and flags; fix Linux linker invocation.
+- **GNU ld link order** — pass object files before libraries so linking resolves correctly.
 - Carry generation-time build args into the `rbt` custom target for CMake.
 - Call `Setup` directly in `SetupAllModules` to avoid wiping build module state (VS project setup no longer pollutes build modules).
+- **Module rule state across re-setup** — restore a module rule's declared state (including framework module paths) on re-setup.
 - MSVC defaults to C++latest and drops the `UNICODE` defines; `.inl` files excluded from compilable sources.
 - Avoid duplicate `projectType` and empty `dllSearchPath` in the header tool.
 - Tolerate non-relative paths and `NPath` serialization errors; ignore invalid include/source paths.
