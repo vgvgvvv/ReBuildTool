@@ -127,6 +127,38 @@ public class TestPackageBinaryModule
         Assert.That(exception.Message, Does.Contain("identifier"));
     }
 
+    /// <summary>
+    /// Both packages would generate to Packages/.generated/&lt;module&gt;/&lt;module&gt;.module.cs - one file.
+    /// Left alone the second write wins and the build quietly depends on processing order, so the
+    /// collision has to be reported instead. (The same clash between two source packages is caught
+    /// later in ParseRules, where they are two distinct files claiming one name.)
+    /// </summary>
+    [Test]
+    public void TwoBinaryPackagesClaimingOneModuleNameIsAnError()
+    {
+        var first = BinaryPackage("FirstPack", "{ \"module\": \"SharedName\", \"artifacts\": [] }");
+        var second = BinaryPackage("SecondPack", "{ \"module\": \"SharedName\", \"artifacts\": [] }");
+
+        var exception = Assert.Throws<Exception>(
+            () => PackageModuleBinder.Bind(WorkDirectory.Combine("Packages"), new[] { first, second }));
+
+        // Both culprits have to be named, or the user has no idea which two packages to look at.
+        Assert.That(exception!.Message, Does.Contain("FirstPack"));
+        Assert.That(exception.Message, Does.Contain("SecondPack"));
+        Assert.That(exception.Message, Does.Contain("SharedName"));
+    }
+
+    [Test]
+    public void DistinctModuleNamesFromSeveralPackagesCoexist()
+    {
+        var first = BinaryPackage("FirstPack", "{ \"module\": \"FirstModule\", \"artifacts\": [] }");
+        var second = BinaryPackage("SecondPack", "{ \"module\": \"SecondModule\", \"artifacts\": [] }");
+
+        var roots = PackageModuleBinder.Bind(WorkDirectory.Combine("Packages"), new[] { first, second });
+
+        Assert.That(roots, Has.Count.EqualTo(2));
+    }
+
     [Test]
     public void AnOverlayIsCopiedIntoThePackageItDescribes()
     {

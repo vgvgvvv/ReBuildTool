@@ -170,6 +170,21 @@ public class TestPackageVcpkg
         Assert.That(manifest.Dependencies["implicit"].PinKey("fmt"), Does.Contain(host));
     }
 
+    /// <summary>
+    /// The pin ends up in the lock and in conflict messages, so it should read as the thing it
+    /// identifies - port and triplet, with no empty field standing in for a version rbt does not
+    /// support pinning (which vcpkg checkout you get is fixed by the pinned vcpkg tag instead).
+    /// </summary>
+    [Test]
+    public void TheVcpkgPinReadsAsPortAndTriplet()
+    {
+        var manifest = PackageManifest.Parse(
+            "{ \"dependencies\": { \"fmt\": { \"vcpkg\": \"fmt\", \"triplet\": \"x64-windows\" } } }",
+            "test".ToNPath());
+
+        Assert.That(manifest.Dependencies["fmt"].PinKey("fmt"), Is.EqualTo("vcpkg:fmt:x64-windows"));
+    }
+
     [Test]
     public void TheTripletIsPartOfThePin()
     {
