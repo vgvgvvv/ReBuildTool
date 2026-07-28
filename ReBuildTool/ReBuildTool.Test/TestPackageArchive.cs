@@ -87,27 +87,30 @@ public class TestPackageArchive
 
         public LocalServer(NPath file)
         {
-            // Port 0 is not available through HttpListener, so probe upward for a free one.
-            for (var port = 18800; port < 18900; port++)
+            // Port 0 is not available through HttpListener, so probe upward for a free one. The
+            // probe writes to a local and the fields are assigned once, so neither is ever observed
+            // half-initialized.
+            HttpListener? started = null;
+            var url = string.Empty;
+            for (var port = 18800; port < 18900 && started == null; port++)
             {
                 var listener = new HttpListener();
                 listener.Prefixes.Add($"http://127.0.0.1:{port}/");
                 try
                 {
                     listener.Start();
-                    Listener = listener;
-                    Url = $"http://127.0.0.1:{port}/{file.FileName}";
-                    break;
+                    started = listener;
+                    url = $"http://127.0.0.1:{port}/{file.FileName}";
                 }
                 catch (HttpListenerException)
                 {
                     listener.Close();
                 }
             }
-            if (Listener == null)
-            {
-                throw new InvalidOperationException("no free loopback port for the test server");
-            }
+
+            Listener = started
+                       ?? throw new InvalidOperationException("no free loopback port for the test server");
+            Url = url;
 
             var bytes = File.ReadAllBytes(file.ToString());
             Task.Run(() =>
@@ -130,7 +133,7 @@ public class TestPackageArchive
             });
         }
 
-        public string Url { get; } = string.Empty;
+        public string Url { get; }
 
         public void Dispose()
         {

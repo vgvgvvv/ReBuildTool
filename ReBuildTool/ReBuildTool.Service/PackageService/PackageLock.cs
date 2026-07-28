@@ -17,7 +17,11 @@ public class LockedPackage
 	/// <summary>The git/http URL, or the declared path for a path dependency.</summary>
 	[JsonProperty("origin")] public string? Origin { get; set; }
 
-	/// <summary>Commit sha for git, content sha256 for an archive, the absolute path for a path dependency.</summary>
+	/// <summary>
+	/// Commit sha for git, archive sha256 for a URL, <c>port:triplet</c> for vcpkg. For a path
+	/// dependency it is the path exactly as declared, not where it landed on this machine - an
+	/// absolute path would make the committed lock useless to every other checkout.
+	/// </summary>
 	[JsonProperty("resolved")] public string? Resolved { get; set; }
 
 	/// <summary>The pin this entry was produced from, so a changed manifest invalidates the lock.</summary>
