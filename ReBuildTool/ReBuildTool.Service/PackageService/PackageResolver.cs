@@ -67,8 +67,9 @@ public class PackageResolver
 			Packages = Resolved.Values.Select(entry => entry.Locked).ToList()
 		};
 
-		// Deepest-first: a package is listed after everything it needed, which is the order a
-		// reader wants and costs nothing to produce here.
+		// Discovery order, not dependency order: a package is recorded before its own dependencies
+		// are walked, so it precedes them here. Nothing downstream needs a topological order - the
+		// packages become rule-glob roots, and the lock is sorted by name when it is written.
 		return new PackageRestoreResult(Resolved.Values.Select(entry => entry.Package).ToList());
 	}
 

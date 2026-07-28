@@ -32,9 +32,15 @@ public static class PackageModuleBinder
 	public static List<NPath> Bind(NPath packagesRoot, IEnumerable<RestoredPackage> packages)
 	{
 		var roots = new List<NPath>();
+		// Two binary packages are free to pick the same binary.module name, and both would generate
+		// to Packages/.generated/<module>/<module>.module.cs - the same file. The second write would
+		// simply win, leaving the build silently dependent on which package happened to come last.
+		// (A collision between two *source* packages is caught later, in ParseRules, because those
+		// are two distinct files claiming one module name. This path has to catch its own.)
+		var generatedBy = new Dictionary<string, string>();
 		foreach (var package in packages)
 		{
-			var generated = BindOne(packagesRoot, package);
+			var generated = BindOne(packagesRoot, package, generatedBy);
 			if (generated != null)
 			{
 				roots.Add(generated);
@@ -43,7 +49,10 @@ public static class PackageModuleBinder
 		return roots;
 	}
 
-	private static NPath? BindOne(NPath packagesRoot, RestoredPackage package)
+	private static NPath? BindOne(
+		NPath packagesRoot,
+		RestoredPackage package,
+		Dictionary<string, string> generatedBy)
 	{
 		InstallOverlay(package);
 
@@ -60,6 +69,15 @@ public static class PackageModuleBinder
 		var moduleName = PackageNames.ValidateModuleName(
 			string.IsNullOrWhiteSpace(binary.Module) ? package.Name : binary.Module!,
 			package.Name);
+
+		if (generatedBy.TryGetValue(moduleName, out var owner))
+		{
+			throw new Exception(
+				$"packages \"{owner}\" and \"{package.Name}\" both provide a module named " +
+				$"\"{moduleName}\". Only one of them can, since a module is depended on by name - " +
+				$"set a distinct \"module\" in one package's {PackageManifest.FileName}.");
+		}
+		generatedBy.Add(moduleName, package.Name);
 		var moduleDirectory = packagesRoot.Combine(GeneratedFolderName, moduleName);
 		// The framework unconditionally registers a module's Public/ and Private/ directories; the
 		// source globbing warns once per missing path, so create them rather than emit noise.

@@ -50,7 +50,10 @@ public class PackageDependency
 	/// </summary>
 	[JsonProperty("triplet")] public string? Triplet { get; set; }
 
-	[JsonProperty("version")] public string? Version { get; set; }
+	// No "version" for a vcpkg dependency: which version of a port you get is decided by the vcpkg
+	// checkout, which VcpkgPackageFetcher pins to a fixed tag. Accepting a per-port version here
+	// would be a knob that silently does nothing - real per-port pinning needs vcpkg manifest mode
+	// and a versioning baseline, which this bridge does not set up.
 
 	/// <summary>
 	/// Path (relative to the manifest that declares this dependency) of a <c>.module.cs</c> to
@@ -129,7 +132,7 @@ public class PackageDependency
 			PackageSourceKind.Git => $"git:{Git}@{GitRevision}",
 			PackageSourceKind.HttpArchive => $"url:{Url}@{Sha256}",
 			PackageSourceKind.Path => $"path:{Path}",
-			PackageSourceKind.Vcpkg => $"vcpkg:{Vcpkg}@{Version}:{EffectiveTriplet}",
+			PackageSourceKind.Vcpkg => $"vcpkg:{Vcpkg}:{EffectiveTriplet}",
 			_ => throw new PackageException($"unknown source kind for package \"{packageName}\"")
 		};
 	}
