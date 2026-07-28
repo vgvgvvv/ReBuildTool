@@ -44,6 +44,15 @@ try
 
     foreach (var project in projects)
     {
+        // Restore does not go through Parse(): Parse() also compiles and loads the rule assembly,
+        // and scaffolds a default Target/Module when the project has none. Neither belongs in
+        // "fetch the packages and write the lock, then stop".
+        if (command.Mode.Value == RunMode.Restore)
+        {
+            project.Restore();
+            continue;
+        }
+
         project.Parse();
         switch (command.Mode.Value)
         {
@@ -58,9 +67,6 @@ try
                 break;
             case RunMode.ReBuild:
                 project.ReBuild(targetName);
-                break;
-            case RunMode.Restore:
-                // Parse() already restored; this mode just stops before doing anything else.
                 break;
             default:
                 break;

@@ -149,6 +149,27 @@ public class TestPackageVcpkg
         Assert.That(triplet, Does.Match(@"^(x64|x86)-(windows|osx|linux)$"));
     }
 
+    /// <summary>
+    /// An omitted triplet means the host's, so it has to be resolved before the pins are compared -
+    /// otherwise these two spellings of the same thing would be reported as a conflict on the very
+    /// machine where they are identical.
+    /// </summary>
+    [Test]
+    public void AnOmittedTripletPinsTheSameAsTheExplicitHostTriplet()
+    {
+        var host = VcpkgPackageFetcher.DefaultTriplet();
+        var manifest = PackageManifest.Parse(
+            "{ \"dependencies\": { \"implicit\": { \"vcpkg\": \"fmt\" }, " +
+            $"\"explicit\": {{ \"vcpkg\": \"fmt\", \"triplet\": \"{host}\" }} }} }}",
+            "test".ToNPath());
+
+        Assert.That(
+            manifest.Dependencies["implicit"].PinKey("fmt"),
+            Is.EqualTo(manifest.Dependencies["explicit"].PinKey("fmt")));
+        // And the recorded pin has to name the triplet that was actually built.
+        Assert.That(manifest.Dependencies["implicit"].PinKey("fmt"), Does.Contain(host));
+    }
+
     [Test]
     public void TheTripletIsPartOfThePin()
     {

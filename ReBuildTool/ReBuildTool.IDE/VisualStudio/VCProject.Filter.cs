@@ -128,36 +128,64 @@ public partial class VCProject
 	
 	private void GenerateModule(IModuleInterface moduleInterface)
 	{
-		// generate all path filters
-		var path = moduleInterface.ModuleDirectory.ToNPath();
-		while (path.FileName != InternalFilter.Source)
-		{
-			if (!AllFilters.ContainsKey(path.ToString()))
-			{
-				var filter = new Filter()
-				{
-					FilterName = path.RelativeTo(cppSource.ProjectRoot),
-					FilterGuid = Guid.NewGuid()
-				};
-				AllFilters.Add(path, filter);
-			}
+		var moduleDirectory = moduleInterface.ModuleDirectory.ToNPath();
 
+		// Walk up from the module, one filter per ancestor, stopping at the project's Source
+		// folder. Only a module that lives under Source/ ever reaches that sentinel: a package's
+		// module sits under Packages/, and a package pulled in by path is not under the project at
+		// all. So the walk has to stop at the project root and at the filesystem root too -
+		// without those guards it runs off the top of the tree and NPath.FileName throws
+		// ("not valid on a root level directory").
+		var path = moduleDirectory;
+		while (!path.IsRoot
+		       && path.FileName != InternalFilter.Source
+		       && path != cppSource.ProjectRoot
+		       && path.IsChildOf(cppSource.ProjectRoot))
+		{
+			GetOrAddFilter(path, moduleDirectory);
 			path = path.Parent;
 		}
-		
-		moduleInterface.ModuleDirectory.ToNPath().Files(true).ToList().ForEach(file =>
+
+		moduleDirectory.Files(true).ToList().ForEach(file =>
 		{
-			if (!AllFilters.TryGetValue(file.Parent, out var folderFilter))
-			{
-				folderFilter = new Filter()
-				{
-					FilterName = file.Parent.RelativeTo(cppSource.ProjectRoot),
-					FilterGuid = Guid.NewGuid()
-				};
-				AllFilters.Add(file.Parent, folderFilter);
-			}
-			folderFilter.Files.Add(file.RelativeTo(outputFolder));
+			GetOrAddFilter(file.Parent, moduleDirectory).Files.Add(file.RelativeTo(outputFolder));
 		});
+	}
+
+	private Filter GetOrAddFilter(NPath directory, NPath moduleDirectory)
+	{
+		if (AllFilters.TryGetValue(directory, out var existing))
+		{
+			return existing;
+		}
+
+		var filter = new Filter
+		{
+			FilterName = FilterNameFor(directory, moduleDirectory),
+			FilterGuid = Guid.NewGuid()
+		};
+		AllFilters.Add(directory, filter);
+		return filter;
+	}
+
+	/// <summary>
+	/// The virtual folder a file appears under in Solution Explorer. It has to be a downward
+	/// path: anything inside the project is named relative to it, but a package consumed through
+	/// a path dependency lives outside the project entirely, and naming that relative to the
+	/// project root would yield a "..\..\" filter. Those are grouped under
+	/// <see cref="InternalFilter.Modules"/> by the package directory's own name instead.
+	/// </summary>
+	private string FilterNameFor(NPath directory, NPath moduleDirectory)
+	{
+		if (directory.IsChildOf(cppSource.ProjectRoot))
+		{
+			return directory.RelativeTo(cppSource.ProjectRoot).ToString();
+		}
+
+		var moduleRoot = InternalFilter.Modules.ToNPath().Combine(moduleDirectory.FileName);
+		return directory == moduleDirectory
+			? moduleRoot.ToString()
+			: moduleRoot.Combine(directory.RelativeTo(moduleDirectory)).ToString();
 	}
 
 	private void FlushAllFilters()
