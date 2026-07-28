@@ -83,6 +83,10 @@ internal static class ProcessRunner
 
 		process.BeginOutputReadLine();
 		process.BeginErrorReadLine();
+		// The parameterless WaitForExit is the overload that also waits for the redirected streams
+		// to reach EOF and the async handlers above to drain - that is precisely what separates it
+		// from WaitForExit(int), which returns as soon as the process is gone and can leave the
+		// last lines uncollected. Do not "optimise" this into the timeout overload.
 		process.WaitForExit();
 
 		return new ProcessResult

@@ -141,12 +141,30 @@ public class TestPackageVcpkg
             Is.EqualTo(new[] { "libthing.a" }));
     }
 
+    /// <summary>
+    /// The architecture has to come from the host's real architecture, not merely its bitness:
+    /// rbt targets Apple Silicon and arm64 Linux, and an arm64 host handed an x64 triplet would
+    /// install binaries for the wrong machine.
+    /// </summary>
     [Test]
     public void TheHostTripletIsUsedWhenNoneIsDeclared()
     {
         var triplet = VcpkgPackageFetcher.DefaultTriplet();
 
-        Assert.That(triplet, Does.Match(@"^(x64|x86)-(windows|osx|linux)$"));
+        Assert.That(triplet, Does.Match(@"^(x64|x86|arm64|arm)-(windows|osx|linux)$"));
+
+        var expectedArchitecture = System.Runtime.InteropServices.RuntimeInformation.OSArchitecture switch
+        {
+            System.Runtime.InteropServices.Architecture.X64 => "x64",
+            System.Runtime.InteropServices.Architecture.X86 => "x86",
+            System.Runtime.InteropServices.Architecture.Arm64 => "arm64",
+            System.Runtime.InteropServices.Architecture.Arm => "arm",
+            _ => null
+        };
+        if (expectedArchitecture != null)
+        {
+            Assert.That(triplet, Does.StartWith($"{expectedArchitecture}-"));
+        }
     }
 
     /// <summary>

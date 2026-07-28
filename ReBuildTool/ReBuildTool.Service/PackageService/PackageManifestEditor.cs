@@ -15,9 +15,14 @@ namespace ReBuildTool.Service.PackageService;
 public static class PackageManifestEditor
 {
 	/// <summary>
-	/// Parses the compact spec accepted by <c>--PackageAdd</c>:
-	/// <c>git:&lt;url&gt;#&lt;tag-or-commit&gt;</c>, <c>path:&lt;dir&gt;</c>,
-	/// <c>url:&lt;href&gt;#&lt;sha256&gt;</c> or <c>vcpkg:&lt;port&gt;#&lt;triplet&gt;</c>.
+	/// Parses the compact spec accepted by <c>--PackageAdd</c>. The qualifier after '#' is required
+	/// only for git, which has no default revision to fall back on:
+	/// <list type="bullet">
+	/// <item><c>git:&lt;url&gt;#&lt;tag-or-commit&gt;</c></item>
+	/// <item><c>path:&lt;dir&gt;</c></item>
+	/// <item><c>url:&lt;href&gt;[#&lt;sha256&gt;]</c> - without a checksum the archive is not verified</item>
+	/// <item><c>vcpkg:&lt;port&gt;[#&lt;triplet&gt;]</c> - the triplet defaults to the host's</item>
+	/// </list>
 	/// </summary>
 	public static PackageDependency ParseSpec(string spec)
 	{
@@ -26,7 +31,8 @@ public static class PackageManifestEditor
 		{
 			throw new PackageException(
 				$"cannot read package spec \"{spec}\": expected one of " +
-				$"git:<url>#<tag>, path:<dir>, url:<href>#<sha256>, vcpkg:<port>#<triplet>.");
+				$"git:<url>#<tag-or-commit>, path:<dir>, url:<href>[#<sha256>], " +
+				$"vcpkg:<port>[#<triplet>].");
 		}
 
 		var kind = spec.Substring(0, separator).ToLowerInvariant();
