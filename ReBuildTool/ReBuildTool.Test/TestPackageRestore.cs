@@ -165,6 +165,28 @@ public class TestPackageRestore
     }
 
     [Test]
+    public void ChangingTheGitOriginReclonesInsteadOfUsingOldObjects()
+    {
+        var first = CreateLibraryRepository("First");
+        var second = CreateLibraryRepository("Second");
+        var project = CreateProject(
+            "{ \"dependencies\": { \"SharedName\": { " +
+            $"\"git\": \"{first.ToString(SlashMode.Forward)}\", \"tag\": \"v1.0\" }} }} }}");
+        new PackageRestoreService().Restore(project, new PackageRestoreOptions());
+
+        PackageManifest.PathIn(project).WriteAllText(
+            "{ \"dependencies\": { \"SharedName\": { " +
+            $"\"git\": \"{second.ToString(SlashMode.Forward)}\", \"tag\": \"v1.0\" }} }} }}");
+        new PackageRestoreService().Restore(project, new PackageRestoreOptions());
+
+        var package = project.Combine("Packages", "SharedName");
+        Assert.That(package.Combine("Second.module.cs").FileExists(), Is.True);
+        Assert.That(package.Combine("First.module.cs").FileExists(), Is.False);
+        Assert.That(Git(package, "remote", "get-url", "origin"),
+            Is.EqualTo(second.ToString(SlashMode.Forward)));
+    }
+
+    [Test]
     public void AnUnfetchedPackageCannotBeRestoredOffline()
     {
         var repository = CreateLibraryRepository("GreeterLib");
