@@ -87,8 +87,28 @@ public static class PackageArtifactSelector
 		       || string.Equals(declared, actual, StringComparison.OrdinalIgnoreCase);
 	}
 
+	/// <summary>
+	/// Turns a manifest path into one the toolchain can use.
+	///
+	/// A relative entry is the package describing its own layout, so it has to stay inside the
+	/// package: "../.." would otherwise let a package put arbitrary directories of the consuming
+	/// machine on the include or library search path. Absolute entries are left alone - that is
+	/// what the vcpkg bridge emits, since a vcpkg installed tree lives outside Packages/ by design.
+	/// </summary>
 	private static string Resolve(NPath packageRoot, string path)
 	{
-		return System.IO.Path.IsPathRooted(path) ? path : packageRoot.Combine(path).ToString();
+		if (System.IO.Path.IsPathRooted(path))
+		{
+			return path;
+		}
+
+		var resolved = packageRoot.Combine(path);
+		if (!resolved.IsChildOf(packageRoot))
+		{
+			throw new PackageException(
+				$"package at \"{packageRoot}\" declares the path \"{path}\", which resolves to " +
+				$"\"{resolved}\" - outside the package. Relative paths must stay within it.");
+		}
+		return resolved.ToString();
 	}
 }

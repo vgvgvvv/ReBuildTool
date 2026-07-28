@@ -39,8 +39,16 @@ internal static class ProcessRunner
 		{
 			startInfo.ArgumentList.Add(argument);
 		}
-		if (workingDirectory != null && workingDirectory.DirectoryExists())
+		if (workingDirectory != null)
 		{
+			// Skipping a missing directory would silently run the tool in rbt's own working
+			// directory instead - a git command against the wrong repository, and a failure that
+			// gives no hint why. If a caller named a directory, it has to be there.
+			if (!workingDirectory.DirectoryExists())
+			{
+				throw new PackageException(
+					$"cannot run \"{program}\": its working directory \"{workingDirectory}\" does not exist.");
+			}
 			startInfo.WorkingDirectory = workingDirectory.ToString();
 		}
 
