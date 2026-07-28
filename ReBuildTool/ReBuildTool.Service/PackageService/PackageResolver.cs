@@ -122,7 +122,7 @@ public class PackageResolver
 				declaringDirectory,
 				PackagesRoot,
 				Options,
-				ExistingLock?.Find(name));
+				LockedFor(name, pinKey));
 			var fetched = fetcher.Fetch(request);
 			var manifest = PackageManifest.ReadFrom(fetched.Root);
 
@@ -167,6 +167,22 @@ public class PackageResolver
 		}
 
 		Log.Info($"[package] {name} -> {Resolved[name].Locked.Resolved}");
+	}
+
+	/// <summary>
+	/// The lock entry for a package, but only when it was produced from the pin currently being
+	/// resolved.
+	///
+	/// A fetcher treats the entry as "what this pin resolved to last time" and may reuse it instead
+	/// of consulting the remote - that is what keeps an ordinary build reproducible and offline.
+	/// Handing over an entry from a different pin turns that shortcut into a trap: bumping a
+	/// dependency's tag in the manifest would resolve to the commit the *old* tag pointed at, and
+	/// the build would silently stay on the previous version.
+	/// </summary>
+	private LockedPackage? LockedFor(string name, string pinKey)
+	{
+		var locked = ExistingLock?.Find(name);
+		return locked?.Pin == pinKey ? locked : null;
 	}
 
 	/// <summary>

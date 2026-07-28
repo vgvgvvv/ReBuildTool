@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using NiceIO;
 using Newtonsoft.Json;
 using ReBuildTool.Service.Global;
@@ -208,7 +209,22 @@ public class VcpkgPackageFetcher : IPackageFetcher
 	/// </summary>
 	public static string DefaultTriplet()
 	{
-		var architecture = Environment.Is64BitOperatingSystem ? "x64" : "x86";
+		// Not Is64BitOperatingSystem: that only distinguishes 32- from 64-bit, so every arm64 host
+		// would silently be handed an x64 triplet - and rbt targets Apple Silicon and arm64 Linux
+		// (Vendor/ninja ships a linux-aarch64 binary, and CI runs a macOS arm64 leg).
+		var architecture = RuntimeInformation.OSArchitecture switch
+		{
+			Architecture.X64 => "x64",
+			Architecture.X86 => "x86",
+			Architecture.Arm64 => "arm64",
+			Architecture.Arm => "arm",
+			// Guessing here would install binaries for the wrong machine, which fails far away from
+			// the cause. Better to say so and let the user name the triplet.
+			var other => throw new PackageException(
+				$"no default vcpkg triplet for host architecture {other}. " +
+				$"Set \"triplet\" explicitly on the vcpkg dependency.")
+		};
+
 		if (PlatformHelper.IsWindows())
 		{
 			return $"{architecture}-windows";

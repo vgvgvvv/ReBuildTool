@@ -125,6 +125,45 @@ public class TestPackageRestore
             new PackageRestoreService().Restore(project, new PackageRestoreOptions { Offline = true }));
     }
 
+    /// <summary>
+    /// Bumping a dependency's tag has to actually move the checkout.
+    ///
+    /// The fetcher reuses the commit the lock recorded rather than asking the remote again - that
+    /// is what keeps an ordinary build reproducible and offline. Handing it a lock entry from a
+    /// different pin turns that shortcut into a trap: the old tag's commit still resolves locally,
+    /// so the build silently stays on the previous version while the manifest says otherwise.
+    /// </summary>
+    [Test]
+    public void ChangingTheTagReResolvesInsteadOfReusingTheLock()
+    {
+        var repository = CreateLibraryRepository("GreeterLib");
+        var project = CreateProject(
+            "{ \"dependencies\": { \"GreeterLib\": { " +
+            $"\"git\": \"{repository.ToString(SlashMode.Forward)}\", \"tag\": \"v1.0\" }} }} }}");
+        new PackageRestoreService().Restore(project, new PackageRestoreOptions());
+        var firstSha = PackageLockFile.ReadFrom(project)!.Find("GreeterLib")!.Resolved;
+
+        // A second release upstream, tagged v2.0.
+        repository.Combine("GreeterLib.module.cs").WriteAllText(
+            $"using ReBuildTool.ToolChain;{Environment.NewLine}" +
+            $"public class GreeterLib : CppModuleRule {{ /* v2 */ }}{Environment.NewLine}");
+        Git(repository, "add", ".");
+        Git(repository, "commit", "-m", "second");
+        Git(repository, "tag", "v2.0");
+        var secondSha = Git(repository, "rev-parse", "v2.0^{commit}");
+        Assert.That(secondSha, Is.Not.EqualTo(firstSha));
+
+        PackageManifest.PathIn(project).WriteAllText(
+            "{ \"dependencies\": { \"GreeterLib\": { " +
+            $"\"git\": \"{repository.ToString(SlashMode.Forward)}\", \"tag\": \"v2.0\" }} }} }}");
+        new PackageRestoreService().Restore(project, new PackageRestoreOptions());
+
+        Assert.That(PackageLockFile.ReadFrom(project)!.Find("GreeterLib")!.Resolved,
+            Is.EqualTo(secondSha), "the new tag should have been resolved, not the locked commit");
+        Assert.That(project.Combine("Packages", "GreeterLib", "GreeterLib.module.cs").ReadAllText(),
+            Does.Contain("v2"), "the working tree should have moved to the new commit");
+    }
+
     [Test]
     public void AnUnfetchedPackageCannotBeRestoredOffline()
     {
