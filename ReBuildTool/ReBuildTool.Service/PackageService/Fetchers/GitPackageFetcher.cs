@@ -35,7 +35,10 @@ public class GitPackageFetcher : IPackageFetcher
 			destination.EnsureParentDirectoryExists();
 			ProcessRunner.RunOrThrow(
 				"git",
-				new[] { "clone", "--recurse-submodules", url, destination.ToString() },
+				// "--" so the URL cannot be read as an option. The manifest validation already
+				// rejects a leading '-', but the marker costs nothing and does not rely on that
+				// check staying in place.
+				new[] { "clone", "--recurse-submodules", "--", url, destination.ToString() },
 				null,
 				$"cloning package \"{request.Name}\"");
 		}

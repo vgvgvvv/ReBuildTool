@@ -94,11 +94,18 @@ public class PackageDependency
 				$"set exactly one of \"git\", \"url\", \"path\" or \"vcpkg\".");
 		}
 
-		if (kinds[0] == PackageSourceKind.Git && Commit == null && Tag == null && Branch == null)
+		if (kinds[0] == PackageSourceKind.Git)
 		{
-			throw new PackageException(
-				$"package \"{packageName}\" pins no git revision: set \"commit\", \"tag\" or \"branch\". " +
-				$"rbt resolves exact pins only - it never picks a version for you.");
+			if (Commit == null && Tag == null && Branch == null)
+			{
+				throw new PackageException(
+					$"package \"{packageName}\" pins no git revision: set \"commit\", \"tag\" or \"branch\". " +
+					$"rbt resolves exact pins only - it never picks a version for you.");
+			}
+			// Both reach git as argv elements, so both are checked here, once, rather than at each
+			// call site that shells out.
+			PackageNames.ValidateGitArgument(Git!, packageName, "url");
+			PackageNames.ValidateGitArgument(GitRevision!, packageName, "revision");
 		}
 
 		return kinds[0];
@@ -270,6 +277,34 @@ public static class PackageNames
 				$"'.', '_' and '-', and must start with a letter or digit.");
 		}
 		return name;
+	}
+
+	/// <summary>
+	/// Validates a manifest string that is handed to git as an argv element.
+	///
+	/// <c>ArgumentList</c> already rules out shell injection, but git itself still parses a leading
+	/// '-' as an option - so a URL or revision out of a manifest could turn into a git flag
+	/// (<c>--upload-pack=...</c> and friends). Rejecting the shape outright is portable, unlike
+	/// <c>--end-of-options</c>, which needs git 2.24.
+	/// </summary>
+	public static string ValidateGitArgument(string value, string packageName, string what)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+		{
+			throw new PackageException($"package \"{packageName}\" declares an empty git {what}.");
+		}
+		if (value.StartsWith("-"))
+		{
+			throw new PackageException(
+				$"package \"{packageName}\" declares the git {what} \"{value}\", which starts with '-'. " +
+				$"git would read it as an option rather than a {what}.");
+		}
+		if (value.Any(character => char.IsControl(character)))
+		{
+			throw new PackageException(
+				$"package \"{packageName}\" declares a git {what} containing a control character.");
+		}
+		return value;
 	}
 
 	/// <summary>

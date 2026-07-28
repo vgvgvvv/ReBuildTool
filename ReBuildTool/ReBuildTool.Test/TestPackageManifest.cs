@@ -63,6 +63,44 @@ public class TestPackageManifest
         Assert.That(exception.Message, Does.Contain("tag"));
     }
 
+    /// <summary>
+    /// ArgumentList rules out shell injection, but git still reads a leading '-' as an option, so a
+    /// manifest string could become a git flag. Rejected by shape, which works on any git version -
+    /// unlike --end-of-options, which needs 2.24.
+    /// </summary>
+    [TestCase("--upload-pack=touch /tmp/pwned")]
+    [TestCase("-c")]
+    public void AGitUrlThatGitWouldReadAsAnOptionIsRejected(string url)
+    {
+        var dependency = DependencyFrom(
+            $"{{ \"git\": \"{url}\", \"tag\": \"v1\" }}");
+
+        var exception = Assert.Throws<PackageException>(() => dependency.ResolveKind("Some"));
+
+        Assert.That(exception!.Message, Does.Contain("option"));
+    }
+
+    [TestCase("--upload-pack=x")]
+    [TestCase("-c")]
+    public void AGitRevisionThatGitWouldReadAsAnOptionIsRejected(string revision)
+    {
+        var dependency = DependencyFrom(
+            $"{{ \"git\": \"https://x/y.git\", \"commit\": \"{revision}\" }}");
+
+        var exception = Assert.Throws<PackageException>(() => dependency.ResolveKind("Some"));
+
+        Assert.That(exception!.Message, Does.Contain("option"));
+    }
+
+    [Test]
+    public void AnOrdinaryGitUrlAndRevisionArePreserved()
+    {
+        var dependency = DependencyFrom(
+            "{ \"git\": \"https://github.com/x/y.git\", \"tag\": \"v1.2.0-rc.1\" }");
+
+        Assert.DoesNotThrow(() => dependency.ResolveKind("Some"));
+    }
+
     [Test]
     public void GitRevisionPrefersTheMostSpecificPin()
     {

@@ -205,6 +205,46 @@ public class TestPackageBinaryModule
         Assert.That(module.PublicLibraryDirectories.Single(), Is.EqualTo(root.Combine("lib").ToString()));
     }
 
+    /// <summary>
+    /// A relative path is the package describing its own layout. Letting it climb out would put
+    /// arbitrary directories of the consuming machine on the include or library search path.
+    /// </summary>
+    [TestCase("\\\"includes\\\": [\\\"../../elsewhere\\\"], \\\"artifacts\\\": []")]
+    [TestCase("\\\"artifacts\\\": [ { \\\"libraryDirectories\\\": [\\\"../../elsewhere\\\"] } ]")]
+    public void ARelativePathEscapingThePackageIsRejected(string binaryBody)
+    {
+        var context = BuildContext();
+        var root = WorkDirectory.Combine("Pack").EnsureDirectoryExists();
+        PackageManifest.PathIn(root).WriteAllText(
+            "{ \"name\": \"Pack\", \"binary\": { " + binaryBody.Replace("\\\"", "\"") + " } }");
+
+        var module = new SyntheticModule { ModuleDirectoryForTest = root.ToString() };
+        var exception = Assert.Throws<PackageException>(
+            () => PackageArtifactSelector.Apply(module, context, PackageManifest.PathIn(root).ToString()));
+
+        Assert.That(exception!.Message, Does.Contain("outside the package"));
+    }
+
+    /// <summary>
+    /// Absolute entries stay allowed: that is exactly what the vcpkg bridge emits, because a vcpkg
+    /// installed tree lives outside Packages/ by design.
+    /// </summary>
+    [Test]
+    public void AnAbsolutePathIsPassedThrough()
+    {
+        var context = BuildContext();
+        var elsewhere = WorkDirectory.Combine("vcpkg-ish").EnsureDirectoryExists();
+        var root = WorkDirectory.Combine("Pack").EnsureDirectoryExists();
+        PackageManifest.PathIn(root).WriteAllText(
+            "{ \"name\": \"Pack\", \"binary\": { \"includes\": [\"" +
+            elsewhere.ToString().Replace("\\", "\\\\") + "\"], \"artifacts\": [] } }");
+
+        var module = new SyntheticModule { ModuleDirectoryForTest = root.ToString() };
+        PackageArtifactSelector.Apply(module, context, PackageManifest.PathIn(root).ToString());
+
+        Assert.That(module.PublicIncludePaths.Single(), Is.EqualTo(elsewhere.ToString()));
+    }
+
     [Test]
     public void AnArtifactWithoutSelectorsMatchesEveryPlatform()
     {
