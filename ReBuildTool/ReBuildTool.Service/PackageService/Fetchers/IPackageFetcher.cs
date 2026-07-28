@@ -49,7 +49,12 @@ public class FetchedPackage
 	/// <summary>Where the package content lives. For a path dependency this is outside Packages/.</summary>
 	public NPath Root { get; }
 
-	/// <summary>What the pin actually resolved to: a commit sha, an archive hash, or an absolute path.</summary>
+	/// <summary>
+	/// What the pin actually resolved to, and what the lock records: a commit sha for git, an
+	/// archive sha256 for a URL, <c>port:triplet</c> for vcpkg. A path dependency reports the path
+	/// as declared rather than <see cref="Root"/> - the lock is committed and shared, so it must
+	/// not carry a location that is only meaningful on the machine that wrote it.
+	/// </summary>
 	public string Resolved { get; }
 }
 

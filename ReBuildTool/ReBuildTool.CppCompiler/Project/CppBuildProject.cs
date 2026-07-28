@@ -605,7 +605,7 @@ public:
 	private Dictionary<string, NPath> TargetRulePaths { get; } = new();
 	private Dictionary<string, NPath> ModuleRulePaths { get; } = new();
 
-	/// <summary>Packages materialized by the last <see cref="RestorePackages"/>, in dependency order.</summary>
+	/// <summary>Packages materialized by the last <see cref="Restore"/>, in dependency order.</summary>
 	private List<RestoredPackage> RestoredPackages { get; } = new();
 
 	/// <summary>
