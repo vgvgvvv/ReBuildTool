@@ -40,8 +40,8 @@ public class VcpkgPackageFetcher : IPackageFetcher
 		var installed = VcpkgRoot.Combine("installed", triplet);
 		var destination = request.DefaultDestination;
 
-		var alreadyInstalled = installed.DirectoryExists()
-		                       && VcpkgRoot.Combine("installed", "vcpkg", "info").DirectoryExists();
+		var infoRoot = VcpkgRoot.Combine("installed", "vcpkg", "info");
+		var alreadyInstalled = IsPortInstalled(installed, infoRoot, port, triplet);
 
 		if (!alreadyInstalled || request.Options.Force)
 		{
@@ -97,8 +97,16 @@ public class VcpkgPackageFetcher : IPackageFetcher
 
 		// vcpkg keeps the debug build in a parallel debug/ prefix. Mapping it to rbt's Debug
 		// configuration is the whole reason this is not a single artifact.
-		var release = LibrariesIn(installed.Combine("lib"));
-		var debug = LibrariesIn(installed.Combine("debug", "lib"));
+		var infoRoot = installed.Parent.Combine("vcpkg", "info");
+		var ownedFiles = PortInfoFiles(infoRoot, port, installed.FileName)
+			.SelectMany(file => file.ReadAllLines())
+			.Select(path => path.Replace('\\', '/'))
+			.ToList();
+		var release = LibrariesIn(installed.Combine("lib"), ownedFiles, $"{installed.FileName}/lib/");
+		var debug = LibrariesIn(
+			installed.Combine("debug", "lib"),
+			ownedFiles,
+			$"{installed.FileName}/debug/lib/");
 
 		if (debug.Count > 0)
 		{
@@ -144,16 +152,46 @@ public class VcpkgPackageFetcher : IPackageFetcher
 		return JsonConvert.SerializeObject(manifest, Formatting.Indented) + Environment.NewLine;
 	}
 
-	private static List<string> LibrariesIn(NPath directory)
+	internal static bool IsPortInstalled(NPath installed, NPath infoRoot, string port, string triplet)
+	{
+		return installed.DirectoryExists() && PortInfoFiles(infoRoot, port, triplet).Any();
+	}
+
+	private static IEnumerable<NPath> PortInfoFiles(NPath info, string port, string triplet)
+	{
+		if (!info.DirectoryExists())
+		{
+			return Array.Empty<NPath>();
+		}
+
+		var suffix = $"_{triplet}.list";
+		return info.Files("*.list")
+			.Where(file => file.FileName.StartsWith($"{port}_", StringComparison.OrdinalIgnoreCase)
+			               && file.FileName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+			.ToList();
+	}
+
+	private static List<string> LibrariesIn(
+		NPath directory,
+		IEnumerable<string> ownedFiles,
+		string relativePrefix)
 	{
 		if (!directory.DirectoryExists())
 		{
 			return new List<string>();
 		}
-		return directory.Files()
-			.Where(file => file.ExtensionWithDot is ".lib" or ".a")
-			.Select(file => file.FileName)
+
+		// The triplet's lib directories are shared by every installed port. The .list files under
+		// installed/vcpkg/info are vcpkg's ownership records; only entries owned by this port may
+		// become link inputs for the synthesized module.
+		return ownedFiles
+			.Where(path => path.StartsWith(relativePrefix, StringComparison.OrdinalIgnoreCase))
+			.Select(path => path.Substring(relativePrefix.Length))
+			.Where(path => !path.Contains('/'))
+			.Where(path => path.EndsWith(".lib", StringComparison.OrdinalIgnoreCase)
+			               || path.EndsWith(".a", StringComparison.OrdinalIgnoreCase))
 			.OrderBy(name => name, StringComparer.Ordinal)
+			.Distinct(StringComparer.OrdinalIgnoreCase)
 			.ToList();
 	}
 

@@ -36,14 +36,21 @@ public class TestPackageVcpkg
     {
         var installed = WorkDirectory.Combine("installed", "x64-linux");
         installed.Combine("include").EnsureDirectoryExists().Combine("thing.h").WriteAllText("#pragma once");
+        var ownedFiles = new List<string> { "x64-linux/include/thing.h" };
         foreach (var library in releaseLibraries)
         {
             installed.Combine("lib").EnsureDirectoryExists().Combine(library).WriteAllText("");
+            ownedFiles.Add($"x64-linux/lib/{library}");
         }
         foreach (var library in debugLibraries)
         {
             installed.Combine("debug", "lib").EnsureDirectoryExists().Combine(library).WriteAllText("");
+            ownedFiles.Add($"x64-linux/debug/lib/{library}");
         }
+        WorkDirectory.Combine("installed", "vcpkg", "info")
+            .EnsureDirectoryExists()
+            .Combine("someport_1.0_x64-linux.list")
+            .WriteAllLines(ownedFiles.ToArray());
         return installed;
     }
 
@@ -139,6 +146,37 @@ public class TestPackageVcpkg
         Assert.That(
             manifest.Binary!.Artifacts.SelectMany(artifact => artifact.StaticLibraries).Distinct(),
             Is.EqualTo(new[] { "libthing.a" }));
+    }
+
+    [Test]
+    public void LibrariesOwnedByOtherPortsAreNotLinked()
+    {
+        var installed = FakeInstalledTree(new[] { "libthing.a" }, Array.Empty<string>());
+        installed.Combine("lib", "libother.a").WriteAllText("");
+        WorkDirectory.Combine("installed", "vcpkg", "info", "other_2.0_x64-linux.list")
+            .WriteAllText("x64-linux/lib/libother.a");
+
+        var manifest = Describe("Thing", installed);
+
+        Assert.That(
+            manifest.Binary!.Artifacts.SelectMany(artifact => artifact.StaticLibraries).Distinct(),
+            Is.EqualTo(new[] { "libthing.a" }));
+    }
+
+    [Test]
+    public void AnotherInstalledPortDoesNotSatisfyThisPort()
+    {
+        var installed = FakeInstalledTree(Array.Empty<string>(), Array.Empty<string>());
+        var info = WorkDirectory.Combine("installed", "vcpkg", "info");
+        info.Combine("someport_1.0_x64-linux.list").Delete();
+        info.Combine("other_2.0_x64-linux.list").WriteAllText("x64-linux/include/other.h");
+
+        Assert.That(
+            VcpkgPackageFetcher.IsPortInstalled(installed, info, "someport", "x64-linux"),
+            Is.False);
+        Assert.That(
+            VcpkgPackageFetcher.IsPortInstalled(installed, info, "other", "x64-linux"),
+            Is.True);
     }
 
     /// <summary>

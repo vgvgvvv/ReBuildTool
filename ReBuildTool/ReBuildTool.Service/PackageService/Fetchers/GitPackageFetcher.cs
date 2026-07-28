@@ -22,6 +22,28 @@ public class GitPackageFetcher : IPackageFetcher
 		var destination = request.DefaultDestination;
 		var isClone = destination.Combine(".git").DirectoryExists();
 
+		if (isClone)
+		{
+			var existingUrl = ProcessRunner.RunOrThrow(
+				"git",
+				new[] { "remote", "get-url", "origin" },
+				destination,
+				$"reading the origin of package \"{request.Name}\"");
+			if (!string.Equals(existingUrl, url, StringComparison.Ordinal))
+			{
+				// Git objects and refs survive a remote URL change. Reusing this clone could
+				// therefore resolve a tag or commit from the old repository while the lock claims
+				// it came from the new one. A fresh clone is the only reliable way to keep the
+				// object database tied to the declared origin.
+				RequireNetwork(
+					request,
+					$"package \"{request.Name}\" changed its git origin from \"{existingUrl}\" to \"{url}\"");
+				Log.Info($"[package] origin changed for {request.Name}; cloning it again from {url}");
+				DeleteClone(destination);
+				isClone = false;
+			}
+		}
+
 		if (!isClone)
 		{
 			// A leftover directory that is not a clone (an interrupted fetch, or a rename) would
@@ -146,5 +168,27 @@ public class GitPackageFetcher : IPackageFetcher
 			throw new PackageException(
 				$"--Offline was requested but {why}. Run a restore without --Offline first.");
 		}
+	}
+
+	private static void DeleteClone(NPath destination)
+	{
+		// Git object files can be read-only on Windows. Directory.Delete reports those as
+		// UnauthorizedAccessException, so clear only that bit inside the exact package directory
+		// before replacing the clone.
+		if (OperatingSystem.IsWindows())
+		{
+			foreach (var file in Directory.EnumerateFiles(
+				         destination.ToString(),
+				         "*",
+				         SearchOption.AllDirectories))
+			{
+				var attributes = File.GetAttributes(file);
+				if ((attributes & FileAttributes.ReadOnly) != 0)
+				{
+					File.SetAttributes(file, attributes & ~FileAttributes.ReadOnly);
+				}
+			}
+		}
+		destination.DeleteIfExists(DeleteMode.Normal);
 	}
 }
